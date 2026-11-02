@@ -1,0 +1,26 @@
+# Ceph secrets: keyrings and anything holding a cephx key
+*.keyring
+keyring
+*.secret
+ceph.client.*
+
+# Other secrets and credentials
+.env
+*.pem
+*.key
+*.crt
+id_rsa*
+*.vault
+
+# Local and temporary files
+*.log
+*.bak
+*.swp
+*.tmp
+.DS_Store
+
+# fio results before review; copied into docs/evidence/ when kept
+benchmarks/results/
+
+# Raw screenshots before cropping and review
+screenshots/raw/

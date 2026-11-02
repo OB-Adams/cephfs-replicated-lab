@@ -1,0 +1,18 @@
+; Random 4 KiB reads: small random lookups, as in databases and VM images.
+; Run with BENCH_DIR set to the directory under test, e.g. via run-bench.sh.
+[global]
+directory=${BENCH_DIR}
+filename_format=bench.$jobnum.$filenum
+ioengine=libaio
+direct=1
+size=1g
+numjobs=4
+group_reporting=1
+time_based=1
+ramp_time=10
+runtime=60
+
+[rand-read-4k]
+rw=randread
+bs=4k
+iodepth=16

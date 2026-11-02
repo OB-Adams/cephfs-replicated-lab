@@ -1,0 +1,20 @@
+; Create and write many 4 KiB files: file creation and metadata cost.
+; Each job creates 2000 files of 4 KiB, one at a time, then deletes them (unlink=1),
+; so every run measures creation, not overwriting.
+; Run with BENCH_DIR set to the directory under test; run-bench.sh creates BENCH_DIR/small.
+[global]
+directory=${BENCH_DIR}/small
+ioengine=sync
+direct=1
+bs=4k
+filesize=4k
+nrfiles=2000
+openfiles=1
+file_service_type=sequential
+create_on_open=1
+unlink=1
+numjobs=4
+group_reporting=1
+
+[small-files]
+rw=write
