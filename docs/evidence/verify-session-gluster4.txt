@@ -1,0 +1,44 @@
+# Milestone 1: the finished cluster, session log from gluster4
+# Captured 2026-11-03 with script(1), times UTC. Private addresses masked.
+# Cleaned for reading: terminal control codes removed, and commands that were pasted together and drawn twice by the
+# terminal written once each. Output is unchanged. Read-only commands, except the remount on gluster4.
+# chrony, the client version and kernel, the fstab line, a remount from fstab, the mount, the files written in
+# Part 9 and the checksum of test10M.bin.
+#
+Script started on 2026-11-03 19:18:19+00:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="162" LINES="48"]
+root@gluster4:~# date -u
+grep -E '^(server|pool|makestep)' /etc/chrony.conf
+chronyc sources
+chronyc tracking | grep -E 'Reference ID|System time|Leap status'
+Tue Nov  3 07:22:49 PM UTC 2026
+server time.google.com iburst iburst
+makestep 1.0 -1
+MS Name/IP address         Stratum Poll Reach LastRx Last sample
+===============================================================================
+^* time1.google.com              1  10   377   922   +286us[ +468us] +/-   71ms
+Reference ID    : D8EF2300 (time1.google.com)
+System time     : 0.000541135 seconds fast of NTP time
+Leap status     : Normal
+root@gluster4:~# ceph -v
+uname -r
+grep cephfs /etc/fstab
+umount /mnt/cephfs && mount /mnt/cephfs
+findmnt /mnt/cephfs
+df -hT /mnt/cephfs
+ls /mnt/cephfs | wc -l
+cat /mnt/cephfs/hello.txt
+sha256sum /mnt/cephfs/test10M.bin
+ceph version 20.2.4 (7f793731f1b39eb4f465e960113d2363c311b964) tentacle (stable)
+5.14.0-759.el9.aarch64
+gluster4@.cephfs=/  /mnt/cephfs  ceph  noatime,_netdev  0 0
+TARGET      SOURCE                                                 FSTYPE OPTIONS
+/mnt/cephfs gluster4@01ada8b6-d718-11f1-9fbe-d6454780e5d3.cephfs=/ ceph   rw,noatime,seclabel,name=gluster4,secret=<hidden>,ms_mode=prefer-crc,acl,mon_addr=192.16
+Filesystem                                             Type  Size  Used Avail Use% Mounted on
+gluster4@01ada8b6-d718-11f1-9fbe-d6454780e5d3.cephfs=/ ceph   19G  8.0M   19G   1% /mnt/cephfs
+22
+hello ceph
+04e8ee196308cfebb07475bfc9c2d73fc37b214f7de8b15035f5c514ad486aa6  /mnt/cephfs/test10M.bin
+root@gluster4:~# exit
+exit
+
+Script done on 2026-11-03 19:23:30+00:00 [COMMAND_EXIT_CODE="0"]

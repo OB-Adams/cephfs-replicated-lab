@@ -1,0 +1,108 @@
+# Milestone 1: deploying Ceph, session log from gluster4, first part
+# Captured 2026-11-02 with script(1). Times are each VM's own clock. Private addresses masked.
+# Cleaned for reading: terminal control codes removed, progress bars kept at their final state, and commands that were
+# pasted together and drawn twice by the terminal written once each. Typing mistakes are left as typed. Output is unchanged.
+# Covers the removal of the Pacific repository and enabling CRB and EPEL on the client. The recording ends during the
+# EPEL metadata download. The finished client is recorded in verify-session-gluster4.txt.
+#
+Script started on 2026-11-02 23:34:08+00:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="152" LINES="45"]
+root@gluster4:~# dnf remove centos-ceph-pacific
+No match for argument: centos-ceph-pacific
+No packages marked for removal.
+Dependencies resolved.
+Nothing to do.
+Complete!
+root@gluster4:~# rpm -q --whatrequires centos-release-ceph-pacific
+dnf history list ceph-common
+dnf remove centos-release-ceph-pacific
+no package requires centos-release-ceph-pacific
+ID     | Command line                                                                                      | Date and time    | Action(s)      | Altered
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+     8 | install -y ceph-common                                                                            | 2026-10-25 14:14 | Install        |   20
+Dependencies resolved.
+========================================================================================================================================================
+ Package                                           Architecture               Version                          Repository                          Size
+========================================================================================================================================================
+Removing:
+ centos-release-ceph-pacific                       noarch                     1.0-2.el9s                       @extras-common                     926
+Removing unused dependencies:
+ centos-release-storage-common                     noarch                     2-5.el9s                         @extras-common                     1.4 k
+
+Transaction Summary
+========================================================================================================================================================
+Remove  2 Packages
+
+Freed space: 2.3 k
+Is this ok [y/N]: y
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Preparing        :                                                                                                                                1/1
+  Erasing          : centos-release-ceph-pacific-1.0-2.el9s.noarch                                                                                  1/2
+  Erasing          : centos-release-storage-common-2-5.el9s.noarch                                                                                  2/2
+  Verifying        : centos-release-ceph-pacific-1.0-2.el9s.noarch                                                                                  1/2
+  Verifying        : centos-release-storage-common-2-5.el9s.noarch                                                                                  2/2
+
+Removed:
+  centos-release-ceph-pacific-1.0-2.el9s.noarch                              centos-release-storage-common-2-5.el9s.noarch
+
+Complete!
+root@gluster4:~# dnf config-manager --set-enabled crb
+dnf -y install epel-release
+dnf repolist
+dnf repoquery --whatprovides 'libarrow.so.900()(64bit)' 'libparquet.so.900()(64bit)' 'libblake3.so.0()(64bit)' 'libthrift-0.15.0.so()(64bit)'
+CentOS Stream 9 - BaseOS                                                                                                 20 kB/s |  22 kB     00:01
+CentOS Stream 9 - AppStream                                                                                             4.8 kB/s |  22 kB     00:04
+CentOS Stream 9 - CRB                                                                                                   138 kB/s | 2.3 MB     00:17
+Dependencies resolved.
+========================================================================================================================================================
+ Package                                   Architecture                   Version                           Repository                             Size
+========================================================================================================================================================
+Installing:
+ epel-release                              noarch                         9-7.el9                           extras-common                          19 k
+Installing weak dependencies:
+ epel-next-release                         noarch                         9-7.el9                           extras-common                         8.1 k
+
+Transaction Summary
+========================================================================================================================================================
+Install  2 Packages
+
+Total download size: 27 k
+Installed size: 29 k
+Downloading Packages:
+(1/2): epel-next-release-9-7.el9.noarch.rpm                                                                             4.3 kB/s | 8.1 kB     00:01
+(2/2): epel-release-9-7.el9.noarch.rpm                                                                                  6.2 kB/s |  19 kB     00:03
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+Total                                                                                                                   6.3 kB/s |  27 kB     00:04
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Preparing        :                                                                                                                                1/1
+  Installing       : epel-release-9-7.el9.noarch                                                                                                    1/2
+  Running scriptlet: epel-release-9-7.el9.noarch                                                                                                    1/2
+Many EPEL packages require the CodeReady Builder (CRB) repository.
+It is recommended that you run /usr/bin/crb enable to enable the CRB repository.
+
+  Installing       : epel-next-release-9-7.el9.noarch                                                                                               2/2
+  Running scriptlet: epel-next-release-9-7.el9.noarch                                                                                               2/2
+  Verifying        : epel-next-release-9-7.el9.noarch                                                                                               1/2
+  Verifying        : epel-release-9-7.el9.noarch                                                                                                    2/2
+
+Installed:
+  epel-next-release-9-7.el9.noarch                                              epel-release-9-7.el9.noarch
+
+Complete!
+repo id                                            repo name
+appstream                                          CentOS Stream 9 - AppStream
+baseos                                             CentOS Stream 9 - BaseOS
+crb                                                CentOS Stream 9 - CRB
+epel                                               Extra Packages for Enterprise Linux 9 - aarch64
+epel-cisco-openh264                                Extra Packages for Enterprise Linux 9 openh264 (From Cisco) - aarch64
+epel-next                                          Extra Packages for Enterprise Linux 9 - Next - aarch64
+extras-common                                      CentOS Stream 9 - Extras packages
+Extra Packages for Enterprise Linux 9 - aarch64                                                                         318 kB/s |  20 MB     01:04
+Extra Packages for Enter

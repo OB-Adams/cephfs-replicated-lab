@@ -1,0 +1,279 @@
+# Milestone 1: deploying Ceph, session log from gluster3, first part
+# Captured 2026-11-02 with script(1). Times are each VM's own clock. Private addresses masked.
+# Cleaned for reading: terminal control codes removed, progress bars kept at their final state, and commands that were
+# pasted together and drawn twice by the terminal written once each. Typing mistakes are left as typed. Output is unchanged.
+# Covers runbook Part 2 and the package fixes, as on gluster1. The recording ends during the EPEL metadata download.
+#
+Script started on 2026-11-02 23:34:07+00:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="152" LINES="45"]
+root@gluster3:~# dnf -y install podman lvm2 chrony python3
+CentOS Stream 9 - BaseOS                                                                                                7.9 kB/s |  22 kB     00:02
+CentOS Stream 9 - AppStream                                                                                              17 kB/s |  22 kB     00:01
+CentOS Stream 9 - Extras packages                                                                                        19 kB/s |  25 kB     00:01
+Package podman-6:5.8.5-2.el9.aarch64 is already installed.
+Package lvm2-9:2.03.33-6.el9.aarch64 is already installed.
+Package chrony-4.8-1.el9.aarch64 is already installed.
+Package python3-3.9.25-10.el9.aarch64 is already installed.
+Dependencies resolved.
+Nothing to do.
+Complete!
+root@gluster3:~# systemctl enable --now chronyd
+root@gluster3:~# dnf -y install centos-release-ceph-tentacle
+Last metadata expiration check: 0:00:12 ago on Mon 02 Nov 2026 11:35:09 PM GMT.
+Dependencies resolved.
+========================================================================================================================================================
+ Package                                           Architecture                Version                         Repository                          Size
+========================================================================================================================================================
+Installing:
+ centos-release-ceph-tentacle                      noarch                      1.0-1.el9s                      extras-common                      7.3 k
+
+Transaction Summary
+========================================================================================================================================================
+Install  1 Package
+
+Total download size: 7.3 k
+Installed size: 937
+Downloading Packages:
+centos-release-ceph-tentacle-1.0-1.el9s.noarch.rpm                                                                       15 kB/s | 7.3 kB     00:00
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+Total                                                                                                                   4.2 kB/s | 7.3 kB     00:01
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Preparing        :                                                                                                                                1/1
+  Installing       : centos-release-ceph-tentacle-1.0-1.el9s.noarch                                                                                 1/1
+  Verifying        : centos-release-ceph-tentacle-1.0-1.el9s.noarch                                                                                 1/1
+
+Installed:
+  centos-release-ceph-tentacle-1.0-1.el9s.noarch
+
+Complete!
+root@gluster3:~# dnf -y install cephadm
+CentOS-9-stream - Ceph Tentacle                                                                                          66 kB/s | 254 kB     00:03
+Package cephadm-2:16.2.14-2.el9s.noarch is already installed.
+Dependencies resolved.
+========================================================================================================================================================
+ Package                        Architecture                  Version                                 Repository                                   Size
+========================================================================================================================================================
+Upgrading:
+ cephadm                        noarch                        2:20.2.4-1.el9s                         centos-ceph-tentacle                        607 k
+
+Transaction Summary
+========================================================================================================================================================
+Upgrade  1 Package
+
+Total download size: 607 k
+Downloading Packages:
+cephadm-20.2.4-1.el9s.noarch.rpm                                                                                        267 kB/s | 607 kB     00:02
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+Total                                                                                                                   173 kB/s | 607 kB     00:03
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Preparing        :                                                                                                                                1/1
+  Running scriptlet: cephadm-2:20.2.4-1.el9s.noarch                                                                                                 1/2
+  Upgrading        : cephadm-2:20.2.4-1.el9s.noarch                                                                                                 1/2
+  Cleanup          : cephadm-2:16.2.14-2.el9s.noarch                                                                                                2/2
+  Running scriptlet: cephadm-2:16.2.14-2.el9s.noarch                                                                                                2/2
+userdel: cephadm mail spool (/var/spool/mail/cephadm) not found
+userdel: error removing directory /var/lib/cephadm
+
+Creating group 'cephadm' with GID 990.
+Creating user 'cephadm' (cephadm user for mgr/cephadm) with UID 990 and GID 990.
+
+  Verifying        : cephadm-2:20.2.4-1.el9s.noarch                                                                                                 1/2
+  Verifying        : cephadm-2:16.2.14-2.el9s.noarch                                                                                                2/2
+
+Upgraded:
+  cephadm-2:20.2.4-1.el9s.noarch
+
+Complete!
+root@gluster3:~# cephadm version
+Traceback (most recent call last):
+  File "/usr/lib64/python3.9/runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/usr/lib64/python3.9/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/tmp/tmpldfwwadk.cephadm.build/app/__main__.py", line 134, in <module>
+  File "<frozen zipimport>", line 259, in load_module
+  File "/tmp/tmpldfwwadk.cephadm.build/app/cephadmlib/logging.py", line 17, in <module>
+  File "<frozen zipimport>", line 259, in load_module
+  File "/tmp/tmpldfwwadk.cephadm.build/app/cephadmlib/templating.py", line 11, in <module>
+ModuleNotFoundError: No module named 'jinja2'
+root@gluster3:~# lsblk -f /dev/vdb /dev/vdc
+NAME FSTYPE FSVER LABEL UUID FSAVAIL FSUSE% MOUNTPOINTS
+vdb
+vdc
+root@gluster3:~# df -h /var
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/cs-root   20G  2.8G   18G  14% /
+root@gluster3:~# free -h | head -2
+               total        used        free      shared  buff/cache   available
+Mem:           7.4Gi       459Mi       6.8Gi        37Mi       394Mi       7.0Gi
+root@gluster3:~# dnf -y install python3-jinja2 python3-pyyaml
+python3 -c 'import jinja2, yaml; print("ok")'
+Last metadata expiration check: 0:06:25 ago on Mon 02 Nov 2026 11:35:39 PM GMT.
+Package python3-pyyaml-5.4.1-6.el9.aarch64 is already installed.
+Dependencies resolved.
+========================================================================================================================================================
+ Package                                 Architecture                 Version                            Repository                                Size
+========================================================================================================================================================
+Installing:
+ python3-jinja2                          noarch                       3.0.1-2.el9s                       centos-ceph-pacific                      511 k
+Installing dependencies:
+ python3-babel                           noarch                       2.9.1-2.el9                        appstream                                6.0 M
+ python3-markupsafe                      aarch64                      2.0.0-2.el9s                       centos-ceph-pacific                       27 k
+ python3-pytz                            noarch                       2021.1-5.el9                       appstream                                 51 k
+
+Transaction Summary
+========================================================================================================================================================
+Install  4 Packages
+
+Total download size: 6.5 M
+Installed size: 30 M
+Downloading Packages:
+(1/4): python3-markupsafe-2.0.0-2.el9s.aarch64.rpm                                                                       16 kB/s |  27 kB     00:01
+(2/4): python3-pytz-2021.1-5.el9.noarch.rpm                                                                              69 kB/s |  51 kB     00:00
+(3/4): python3-babel-2.9.1-2.el9.noarch.rpm                                                                             1.9 MB/s | 6.0 MB     00:03
+(4/4): python3-jinja2-3.0.1-2.el9s.noarch.rpm                                                                           125 kB/s | 511 kB     00:04
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+Total                                                                                                                   1.0 MB/s | 6.5 MB     00:06
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Preparing        :                                                                                                                                1/1
+  Installing       : python3-pytz-2021.1-5.el9.noarch                                                                                               1/4
+  Installing       : python3-babel-2.9.1-2.el9.noarch                                                                                               2/4
+  Installing       : python3-markupsafe-2.0.0-2.el9s.aarch64                                                                                        3/4
+  Installing       : python3-jinja2-3.0.1-2.el9s.noarch                                                                                             4/4
+  Running scriptlet: python3-jinja2-3.0.1-2.el9s.noarch                                                                                             4/4
+  Verifying        : python3-jinja2-3.0.1-2.el9s.noarch                                                                                             1/4
+  Verifying        : python3-markupsafe-2.0.0-2.el9s.aarch64                                                                                        2/4
+  Verifying        : python3-babel-2.9.1-2.el9.noarch                                                                                               3/4
+  Verifying        : python3-pytz-2021.1-5.el9.noarch                                                                                               4/4
+
+Installed:
+  python3-babel-2.9.1-2.el9.noarch   python3-jinja2-3.0.1-2.el9s.noarch   python3-markupsafe-2.0.0-2.el9s.aarch64   python3-pytz-2021.1-5.el9.noarch
+
+Complete!
+ok
+root@gluster3:~# cephadm check-host --expect-hostname $(hostname -s)
+podman (/usr/bin/podman) version 5.8.5 is present
+systemctl is present
+lvcreate is present
+Unit chronyd.service is enabled and running
+Hostname "gluster3" matches what is expected.
+Host looks OK
+root@gluster3:~# cephadm pull
+Pulling container image quay.io/ceph/ceph:v20...
+{
+    "ceph_version": "ceph version 20.2.5 (ed27c686770872022f4c1de04f6b0ac5d5384ded) tentacle (stable)",
+    "image_id": "505b5c083868cc5dff3595fc3f23ecd66118da55dd771677a6ec5fb14fc29244",
+    "repo_digests": [
+        "quay.io/ceph/ceph@sha256:049acd51a7a9a6e10051ed60ae3ee2d8d4b3988a90b62487eeea2897b5d90f0d",
+        "quay.io/ceph/ceph@sha256:4337ac8ac81d40df136e5eac92ca53bb52360a5e039f3d1f7935e729eb5ef42c"
+    ]
+}
+root@gluster3:~# dnf remove centos-ceph-pacific
+No match for argument: centos-ceph-pacific
+No packages marked for removal.
+Dependencies resolved.
+Nothing to do.
+Complete!
+root@gluster3:~# rpm -q --whatrequires centos-release-ceph-pacific
+dnf history list ceph-common
+dnf remove centos-release-ceph-pacific
+no package requires centos-release-ceph-pacific
+ID     | Command line                                                                                      | Date and time    | Action(s)      | Altered
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+     8 | install -y ceph-common                                                                            | 2026-10-25 14:14 | Install        |   20
+Dependencies resolved.
+========================================================================================================================================================
+ Package                                          Architecture                Version                         Repository                           Size
+========================================================================================================================================================
+Removing:
+ centos-release-ceph-pacific                      noarch                      1.0-2.el9s                      @extras-common                      926
+
+Transaction Summary
+========================================================================================================================================================
+Remove  1 Package
+
+Freed space: 926
+Is this ok [y/N]: y
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Preparing        :                                                                                                                                1/1
+  Erasing          : centos-release-ceph-pacific-1.0-2.el9s.noarch                                                                                  1/1
+  Verifying        : centos-release-ceph-pacific-1.0-2.el9s.noarch                                                                                  1/1
+
+Removed:
+  centos-release-ceph-pacific-1.0-2.el9s.noarch
+
+Complete!
+root@gluster3:~# dnf config-manager --set-enabled crb
+dnf -y install epel-release
+dnf repolist
+dnf repoquery --whatprovides 'libarrow.so.900()(64bit)' 'libparquet.so.900()(64bit)' 'libblake3.so.0()(64bit)' 'libthrift-0.15.0.so()(64bit)'
+CentOS Stream 9 - BaseOS                                                                                                7.7 kB/s |  22 kB     00:02
+CentOS Stream 9 - AppStream                                                                                             8.1 kB/s |  22 kB     00:02
+CentOS Stream 9 - CRB                                                                                                   186 kB/s | 2.3 MB     00:12
+Dependencies resolved.
+========================================================================================================================================================
+ Package                                   Architecture                   Version                           Repository                             Size
+========================================================================================================================================================
+Installing:
+ epel-release                              noarch                         9-7.el9                           extras-common                          19 k
+Installing weak dependencies:
+ epel-next-release                         noarch                         9-7.el9                           extras-common                         8.1 k
+
+Transaction Summary
+========================================================================================================================================================
+Install  2 Packages
+
+Total download size: 27 k
+Installed size: 29 k
+Downloading Packages:
+(1/2): epel-next-release-9-7.el9.noarch.rpm                                                                             4.5 kB/s | 8.1 kB     00:01
+(2/2): epel-release-9-7.el9.noarch.rpm                                                                                  8.3 kB/s |  19 kB     00:02
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+Total                                                                                                                   8.1 kB/s |  27 kB     00:03
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Preparing        :                                                                                                                                1/1
+  Installing       : epel-release-9-7.el9.noarch                                                                                                    1/2
+  Running scriptlet: epel-release-9-7.el9.noarch                                                                                                    1/2
+Many EPEL packages require the CodeReady Builder (CRB) repository.
+It is recommended that you run /usr/bin/crb enable to enable the CRB repository.
+
+  Installing       : epel-next-release-9-7.el9.noarch                                                                                               2/2
+  Running scriptlet: epel-next-release-9-7.el9.noarch                                                                                               2/2
+  Verifying        : epel-next-release-9-7.el9.noarch                                                                                               1/2
+  Verifying        : epel-release-9-7.el9.noarch                                                                                                    2/2
+
+Installed:
+  epel-next-release-9-7.el9.noarch                                              epel-release-9-7.el9.noarch
+
+Complete!
+repo id                                             repo name
+appstream                                           CentOS Stream 9 - AppStream
+baseos                                              CentOS Stream 9 - BaseOS
+centos-ceph-tentacle                                CentOS-9-stream - Ceph Tentacle
+crb                                                 CentOS Stream 9 - CRB
+epel                                                Extra Packages for Enterprise Linux 9 - aarch64
+epel-cisco-openh264                                 Extra Packages for Enterprise Linux 9 openh264 (From Cisco) - aarch64
+epel-next                                           Extra Packages for Enterprise Linux 9 - Next - aarch64
+extras-common                                       CentOS Stream 9 - Extras packages
+Extra Packages for Enterprise Linux 9 - aarch64                                                                         348 kB/s |  20 MB     00:59
+Extra Packages for Enterprise Linux 9 openh264 (From Cisco) - aarch64                                                   706  B/s | 2.5 kB     00:03
+Extra Packages for Enterprise Linux 9 - Next - aarch64   29% [================                                        ] 355 kB/s | 110 kB     00:00 ETA

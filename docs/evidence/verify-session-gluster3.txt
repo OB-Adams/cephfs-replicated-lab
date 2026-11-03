@@ -1,0 +1,24 @@
+# Milestone 1: the finished cluster, session log from gluster3
+# Captured 2026-11-03 with script(1), times UTC. Private addresses masked.
+# Cleaned for reading: terminal control codes removed, and commands that were pasted together and drawn twice by the
+# terminal written once each. Output is unchanged. Read-only commands, except the remount on gluster4.
+# chrony.
+#
+Script started on 2026-11-03 19:18:15+00:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="162" LINES="48"]
+root@gluster3:~# date -u
+grep -E '^(server|pool|makestep)' /etc/chrony.conf
+chronyc sources
+chronyc tracking | grep -E 'Reference ID|System time|Leap status'
+Tue Nov  3 07:22:47 PM UTC 2026
+server time.google.com iburst iburst
+makestep 1.0 -1
+MS Name/IP address         Stratum Poll Reach LastRx Last sample
+===============================================================================
+^* time2.google.com              1  10   377   910   -666us[ -914us] +/-   73ms
+Reference ID    : D8EF2304 (time2.google.com)
+System time     : 0.000426614 seconds slow of NTP time
+Leap status     : Normal
+root@gluster3:~# exit
+exit
+
+Script done on 2026-11-03 19:23:31+00:00 [COMMAND_EXIT_CODE="0"]

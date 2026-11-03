@@ -1,0 +1,195 @@
+# Milestone 1: the finished cluster, session log from gluster1
+# Captured 2026-11-03 with script(1), times UTC. Private addresses masked.
+# Cleaned for reading: terminal control codes removed, and commands that were pasted together and drawn twice by the
+# terminal written once each. Output is unchanged. Read-only commands, except the remount on gluster4.
+# Versions and repositories, health, hosts, daemons, OSDs and disks, memory limits, the OSD spec, the file system,
+# pools and placement-group autoscaler, client.gluster4's capabilities (the key itself filtered out), clock skew and
+# chrony. The manager-log query returns nothing: the journal is not kept across reboots, and the VMs had restarted
+# 82 minutes earlier. gluster2's OSD attempts are in verify-session-gluster2.txt instead.
+#
+Script started on 2026-11-03 19:18:13+00:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="162" LINES="48"]
+root@gluster1:~# ceph versions
+ceph -v
+dnf list installed ceph-common cephadm python3-jinja2 python3-pyyaml
+dnf repolist | grep -iE 'ceph|epel|crb'
+{
+    "mon": {
+        "ceph version 20.2.5 (ed27c686770872022f4c1de04f6b0ac5d5384ded) tentacle (stable - RelWithDebInfo)": 3
+    },
+    "mgr": {
+        "ceph version 20.2.5 (ed27c686770872022f4c1de04f6b0ac5d5384ded) tentacle (stable - RelWithDebInfo)": 2
+    },
+    "osd": {
+        "ceph version 20.2.5 (ed27c686770872022f4c1de04f6b0ac5d5384ded) tentacle (stable - RelWithDebInfo)": 6
+    },
+    "mds": {
+        "ceph version 20.2.5 (ed27c686770872022f4c1de04f6b0ac5d5384ded) tentacle (stable - RelWithDebInfo)": 2
+    },
+    "overall": {
+        "ceph version 20.2.5 (ed27c686770872022f4c1de04f6b0ac5d5384ded) tentacle (stable - RelWithDebInfo)": 13
+    }
+}
+ceph version 20.2.4 (7f793731f1b39eb4f465e960113d2363c311b964) tentacle (stable)
+Installed Packages
+ceph-common.aarch64                                                       2:20.2.4-1.el9s                                                    @centos-ceph-tentacle
+cephadm.noarch                                                            2:20.2.4-1.el9s                                                    @centos-ceph-tentacle
+python3-jinja2.noarch                                                     3.0.1-2.el9s                                                       @centos-ceph-pacific
+python3-pyyaml.aarch64                                                    5.4.1-6.el9                                                        @anaconda
+centos-ceph-tentacle CentOS-9-stream - Ceph Tentacle
+crb                  CentOS Stream 9 - CRB
+epel                 Extra Packages for Enterprise Linux 9 - aarch64
+epel-cisco-openh264  Extra Packages for Enterprise Linux 9 openh264 (From Cisco) - aarch64
+epel-next            Extra Packages for Enterprise Linux 9 - Next - aarch64
+root@gluster1:~# ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_OK
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 81m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 30m), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 81m), 6 in (since 17h)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 28 objects, 11 MiB
+    usage:   197 MiB used, 60 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+root@gluster1:~# ceph health detail
+HEALTH_OK
+root@gluster1:~# ceph orch host ls
+HOST      ADDR           LABELS  STATUS
+gluster1  192.168.x.x  _admin
+gluster2  192.168.x.x
+gluster3  192.168.x.x
+3 hosts in cluster
+root@gluster1:~# ceph orch ps
+NAME                        HOST      PORTS        STATUS         REFRESHED  AGE  MEM USE  MEM LIM  VERSION  IMAGE ID      CONTAINER ID
+crash.gluster1              gluster1               running (82m)    44s ago  19h    12.5M        -  20.2.5   505b5c083868  1815c69c35a8
+crash.gluster2              gluster2               running (82m)    44s ago  18h    20.2M        -  20.2.5   505b5c083868  e5bf08549be9
+crash.gluster3              gluster3               running (82m)    44s ago  18h    12.3M        -  20.2.5   505b5c083868  93a2b3db2c5b
+mds.cephfs.gluster1.wmvdvt  gluster1               running (82m)    44s ago  17h    39.4M        -  20.2.5   505b5c083868  f56d64b89d7c
+mds.cephfs.gluster2.stwcqc  gluster2               running (82m)    44s ago  17h    58.5M        -  20.2.5   505b5c083868  338708553d51
+mgr.gluster1.bxuyky         gluster1  *:9283,8765  running (82m)    44s ago  19h     304M        -  20.2.5   505b5c083868  02e61ea7a506
+mgr.gluster2.qhtcrw         gluster2  *:8765       running (82m)    44s ago  18h     234M        -  20.2.5   505b5c083868  540ceab94247
+mon.gluster1                gluster1               running (82m)    44s ago  19h     128M    2048M  20.2.5   505b5c083868  7a4d634199da
+mon.gluster2                gluster2               running (82m)    44s ago  18h    97.6M    2048M  20.2.5   505b5c083868  d88e9e74f96f
+mon.gluster3                gluster3               running (82m)    44s ago  18h     118M    2048M  20.2.5   505b5c083868  b208be87f28b
+osd.0                       gluster3               running (82m)    44s ago  18h     101M    1536M  20.2.5   505b5c083868  c504ad7c2d7b
+osd.1                       gluster1               running (82m)    44s ago  18h    72.2M    1536M  20.2.5   505b5c083868  6b6ad65859d2
+osd.2                       gluster1               running (82m)    44s ago  18h     104M    1536M  20.2.5   505b5c083868  499daeec36e5
+osd.3                       gluster3               running (82m)    44s ago  18h    76.6M    1536M  20.2.5   505b5c083868  3f726f61f5ad
+osd.4                       gluster2               running (82m)    44s ago  18h    80.1M    1536M  20.2.5   505b5c083868  b63538c53c3c
+osd.5                       gluster2               running (82m)    44s ago  18h    99.4M    1536M  20.2.5   505b5c083868  04a31936fafe
+root@gluster1:~# ceph osd tree
+ceph orch device ls
+ID  CLASS  WEIGHT   TYPE NAME          STATUS  REWEIGHT  PRI-AFF
+-1         0.05878  root default
+-3         0.01959      host gluster1
+ 1    hdd  0.00980          osd.1          up   1.00000  1.00000
+ 2    hdd  0.00980          osd.2          up   1.00000  1.00000
+-7         0.01959      host gluster2
+ 4    hdd  0.00980          osd.4          up   1.00000  1.00000
+ 5    hdd  0.00980          osd.5          up   1.00000  1.00000
+-5         0.01959      host gluster3
+ 0    hdd  0.00980          osd.0          up   1.00000  1.00000
+ 3    hdd  0.00980          osd.3          up   1.00000  1.00000
+HOST      PATH      TYPE  DEVICE ID                SIZE  AVAILABLE  REFRESHED  REJECT REASONS
+gluster1  /dev/sda  hdd   Apple_Virtual_Disk-0:0  12.8G  No         11m ago    Has a FileSystem, id_bus, read-only
+gluster1  /dev/vdb  hdd   F6766C50FDA84EEE829F    10.0G  No         11m ago    Has a FileSystem, Insufficient space (<10 extents) on vgs, LVM detected
+gluster1  /dev/vdc  hdd   AC66AF4D1E504BDFAA27    10.0G  No         11m ago    Has a FileSystem, Insufficient space (<10 extents) on vgs, LVM detected
+gluster2  /dev/sda  hdd   Apple_Virtual_Disk-0:0  12.8G  No         11m ago    Has a FileSystem, id_bus, read-only
+gluster2  /dev/vdb  hdd   F6766C50FDA84EEE829F    10.0G  No         11m ago    Has a FileSystem, Insufficient space (<10 extents) on vgs, LVM detected
+gluster2  /dev/vdc  hdd   AB47AFCFD0ED489187FE    10.0G  No         11m ago    Has a FileSystem, Insufficient space (<10 extents) on vgs, LVM detected
+gluster3  /dev/sda  hdd   Apple_Virtual_Disk-0:0  12.8G  No         11m ago    Has a FileSystem, id_bus, read-only
+gluster3  /dev/vdb  hdd   F6766C50FDA84EEE829F    10.0G  No         11m ago    Has a FileSystem, Insufficient space (<10 extents) on vgs, LVM detected
+gluster3  /dev/vdc  hdd   35801A4268444D45A4B0    10.0G  No         11m ago    Has a FileSystem, Insufficient space (<10 extents) on vgs, LVM detected
+root@gluster1:~# ceph config dump | grep -E 'osd_memory_target|mds_cache_memory_limit'
+ceph config show osd.4 osd_memory_target
+osd               basic     osd_memory_target                      1610612736
+osd               advanced  osd_memory_target_autotune             false
+mds               basic     mds_cache_memory_limit                 1073741824
+1610612736
+root@gluster1:~# ceph orch ls osd --export
+service_type: osd
+service_id: data-disks
+service_name: osd.data-disks
+placement:
+  host_pattern: gluster[1-3]
+spec:
+  data_devices:
+    paths:
+    - /dev/vdb
+    - /dev/vdc
+  filter_logic: AND
+  objectstore: bluestore
+root@gluster1:~# ceph fs status cephfs
+cephfs - 1 clients
+======
+RANK  STATE            MDS               ACTIVITY     DNS    INOS   DIRS   CAPS
+ 0    active  cephfs.gluster1.wmvdvt  Reqs:    0 /s    33     35     12     23
+       POOL           TYPE     USED  AVAIL
+cephfs.cephfs.meta  metadata   389k  18.9G
+cephfs.cephfs.data    data    30.0M  18.9G
+     STANDBY MDS
+cephfs.gluster2.stwcqc
+MDS version: ceph version 20.2.5 (ed27c686770872022f4c1de04f6b0ac5d5384ded) tentacle (stable - RelWithDebInfo)
+root@gluster1:~# ceph osd pool ls detail | grep cephfs
+pool 2 'cephfs.cephfs.meta' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 16 pgp_num 16 autoscale_mode on last_change 71 lfor 0/0/42 flags hashpspool stripe_width 0 pg_autoscale_bias 4 pg_num_min 16 recovery_priority 5 application cephfs read_balance_score 1.50
+pool 3 'cephfs.cephfs.data' replicated size 3 min_size 2 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode on last_change 46 lfor 0/0/44 flags hashpspool,bulk stripe_width 0 application cephfs read_balance_score 1.22
+root@gluster1:~# ceph osd pool autoscale-status
+POOL                  SIZE  TARGET SIZE  RATE  RAW CAPACITY   RATIO  FINAL RATIO  TARGET RATIO  EFFECTIVE RATIO  BIAS  PG_NUM  NEW PG_NUM  AUTOSCALE  BULK
+.mgr                452.0k                3.0        61416M  0.0000       0.0050                                  1.0       1              on         False
+cephfs.cephfs.meta  129.9k                3.0        61416M  0.0000       0.0800                                  4.0      16              on         False
+cephfs.cephfs.data  10244k                3.0        61416M  0.0005       0.6400                                  1.0     128              on         True
+root@gluster1:~# ceph auth get client.gluster4 | grep caps
+        caps mds = "allow rw fsname=cephfs"
+        caps mon = "allow r fsname=cephfs"
+        caps osd = "allow rw tag cephfs data=cephfs"
+root@gluster1:~# ceph time-sync-status
+{
+    "time_skew_status": {
+        "gluster1": {
+            "skew": 0,
+            "latency": 0,
+            "health": "HEALTH_OK"
+        },
+        "gluster2": {
+            "skew": -0.0055708007749023436,
+            "latency": 0.0025644846917151367,
+            "health": "HEALTH_OK"
+        },
+        "gluster3": {
+            "skew": -0.009370099412841797,
+            "latency": 0.0031788826694350361,
+            "health": "HEALTH_OK"
+        }
+    },
+    "timechecks": {
+        "epoch": 20,
+        "round": 38,
+        "round_status": "finished"
+    }
+}
+root@gluster1:~# cephadm logs --name mgr.gluster1.bxuyky -- --since "2026-11-03 00:40" --until "2026-11-03 01:30" --no-pager | grep -iE 'gluster2' | grep -iE 'osd|ceph-volume|timed out|timeout|fail' | tail -20
+Inferring fsid 01ada8b6-d718-11f1-9fbe-d6454780e5d3
+root@gluster1:~# date -u
+grep -E '^(server|pool|makestep)' /etc/chrony.conf
+chronyc sources
+chronyc tracking | grep -E 'Reference ID|System time|Leap status'
+Tue Nov  3 07:22:42 PM UTC 2026
+server time.google.com iburst iburst
+makestep 1.0 -1
+MS Name/IP address         Stratum Poll Reach LastRx Last sample
+===============================================================================
+^* time4.google.com              1  10   377   533    +28ms[  +28ms] +/-   91ms
+Reference ID    : D8EF230C (time4.google.com)
+System time     : 0.000046048 seconds slow of NTP time
+Leap status     : Normal
+root@gluster1:~# exit
+exit
+
+Script done on 2026-11-03 19:23:34+00:00 [COMMAND_EXIT_CODE="0"]

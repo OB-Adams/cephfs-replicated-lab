@@ -1,0 +1,56 @@
+# Milestone 1: the finished cluster, session log from gluster2
+# Captured 2026-11-03 with script(1), times UTC. Private addresses masked.
+# Cleaned for reading: terminal control codes removed, and commands that were pasted together and drawn twice by the
+# terminal written once each. Output is unchanged. Read-only commands, except the remount on gluster4.
+# ceph-volume's log of the OSD attempts on gluster2 (lines cut at 220 characters), then chrony. Its timestamps are
+# gluster2's clock, which ran about 15 minutes behind real time until chrony was corrected; see ../deploy.md.
+#
+Script started on 2026-11-03 19:18:14+00:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="162" LINES="48"]
+root@gluster2:~# LOG=/var/log/ceph/01ada8b6-d718-11f1-9fbe-d6454780e5d3/ceph-volume.log
+grep -E 'lvm batch|osd new|vgcreate|--mkfs|successful' "$LOG" | cut -c1-220
+[2026-11-03 00:31:48,519][ceph_volume.main][INFO  ] Running command: ceph-volume  lvm batch --no-auto /dev/vdb /dev/vdc --objectstore bluestore --yes --no-systemd --report --format json
+[2026-11-03 00:31:50,805][ceph_volume.main][INFO  ] Running command: ceph-volume  lvm batch --no-auto /dev/vdb /dev/vdc --objectstore bluestore --yes --no-systemd
+[2026-11-03 00:31:51,781][ceph_volume.process][INFO  ] Running command: /usr/bin/ceph --cluster ceph --name client.bootstrap-osd --keyring /var/lib/ceph/bootstrap-osd/ceph.keyring -i - osd new 5e9ab267-d404-4888-a672-6d8
+[2026-11-03 00:46:47,411][ceph_volume.main][INFO  ] Running command: ceph-volume  lvm batch --no-auto /dev/vdb /dev/vdc --objectstore bluestore --yes --no-systemd --report --format json
+[2026-11-03 00:46:53,930][ceph_volume.main][INFO  ] Running command: ceph-volume  lvm batch --no-auto /dev/vdb /dev/vdc --objectstore bluestore --yes --no-systemd
+[2026-11-03 00:46:54,700][ceph_volume.process][INFO  ] Running command: /usr/bin/ceph --cluster ceph --name client.bootstrap-osd --keyring /var/lib/ceph/bootstrap-osd/ceph.keyring -i - osd new 3950a386-6e48-4f79-95bf-097
+[2026-11-03 01:01:52,137][ceph_volume.main][INFO  ] Running command: ceph-volume  lvm batch --no-auto /dev/vdb /dev/vdc --objectstore bluestore --yes --no-systemd --report --format json
+[2026-11-03 01:01:53,694][ceph_volume.main][INFO  ] Running command: ceph-volume  lvm batch --no-auto /dev/vdb /dev/vdc --objectstore bluestore --yes --no-systemd --report --format json
+[2026-11-03 01:01:55,350][ceph_volume.main][INFO  ] Running command: ceph-volume  lvm batch --no-auto /dev/vdb /dev/vdc --objectstore bluestore --yes --no-systemd
+[2026-11-03 01:01:56,186][ceph_volume.process][INFO  ] Running command: /usr/bin/ceph --cluster ceph --name client.bootstrap-osd --keyring /var/lib/ceph/bootstrap-osd/ceph.keyring -i - osd new 38129cf8-f071-4f38-989c-fef
+[2026-11-03 01:05:10,228][ceph_volume.util.system][INFO  ] Executable vgcreate found on the host, will use /sbin/vgcreate
+[2026-11-03 01:05:10,229][ceph_volume.process][INFO  ] Running command: nsenter --mount=/rootfs/proc/1/ns/mnt --ipc=/rootfs/proc/1/ns/ipc --net=/rootfs/proc/1/ns/net --uts=/rootfs/proc/1/ns/uts /sbin/vgcreate --force --y
+[2026-11-03 01:05:10,247][ceph_volume.process][INFO  ] stdout Physical volume "/dev/vdb" successfully created.
+[2026-11-03 01:05:10,249][ceph_volume.util.system][INFO  ] Executable vgcreate found on the host, will use /sbin/vgcreate
+[2026-11-03 01:05:10,250][ceph_volume.process][INFO  ] Running command: nsenter --mount=/rootfs/proc/1/ns/mnt --ipc=/rootfs/proc/1/ns/ipc --net=/rootfs/proc/1/ns/net --uts=/rootfs/proc/1/ns/uts /sbin/vgcreate --force --y
+[2026-11-03 01:05:10,262][ceph_volume.process][INFO  ] stdout Volume group "ceph-c7cde8d7-0f54-49d1-953d-25958e6f44ce" successfully created
+[2026-11-03 01:05:10,338][ceph_volume.util.system][INFO  ] Executable vgcreate found on the host, will use /sbin/vgcreate
+[2026-11-03 01:05:10,338][ceph_volume.process][INFO  ] Running command: nsenter --mount=/rootfs/proc/1/ns/mnt --ipc=/rootfs/proc/1/ns/ipc --net=/rootfs/proc/1/ns/net --uts=/rootfs/proc/1/ns/uts /sbin/vgcreate --force --y
+[2026-11-03 01:05:11,848][ceph_volume.process][INFO  ] Running command: /usr/bin/ceph-osd --cluster ceph --osd-objectstore bluestore --mkfs -i 5 --monmap /var/lib/ceph/osd/ceph-5/activate.monmap --keyfile - --osdspec-aff
+[2026-11-03 01:05:15,197][ceph_volume.process][INFO  ] Running command: /usr/bin/ceph --cluster ceph --name client.bootstrap-osd --keyring /var/lib/ceph/bootstrap-osd/ceph.keyring -i - osd new 12d43ab0-7625-48b1-a731-a60
+[2026-11-03 01:05:15,747][ceph_volume.util.system][INFO  ] Executable vgcreate found on the host, will use /sbin/vgcreate
+[2026-11-03 01:05:15,747][ceph_volume.process][INFO  ] Running command: nsenter --mount=/rootfs/proc/1/ns/mnt --ipc=/rootfs/proc/1/ns/ipc --net=/rootfs/proc/1/ns/net --uts=/rootfs/proc/1/ns/uts /sbin/vgcreate --force --y
+[2026-11-03 01:05:15,757][ceph_volume.process][INFO  ] stdout Physical volume "/dev/vdc" successfully created.
+[2026-11-03 01:05:15,786][ceph_volume.process][INFO  ] stdout Volume group "ceph-e4b4f8bb-1908-4b5c-a833-bd9b996b4e51" successfully created
+[2026-11-03 01:05:17,167][ceph_volume.process][INFO  ] Running command: /usr/bin/ceph-osd --cluster ceph --osd-objectstore bluestore --mkfs -i 4 --monmap /var/lib/ceph/osd/ceph-4/activate.monmap --keyfile - --osdspec-aff
+[2026-11-03 01:05:18,084][ceph_volume.main][INFO  ] Running command: ceph-volume  lvm batch --no-auto /dev/vdb /dev/vdc --objectstore bluestore --yes --no-systemd
+[2026-11-03 01:05:35,645][ceph_volume.main][INFO  ] Running command: ceph-volume  lvm batch --no-auto /dev/vdb /dev/vdc --objectstore bluestore --yes --no-systemd --report --format json
+[2026-11-03 01:05:37,427][ceph_volume.main][INFO  ] Running command: ceph-volume  lvm batch --no-auto /dev/vdb /dev/vdc --objectstore bluestore --yes --no-systemd
+[2026-11-03 01:59:54,548][ceph_volume.main][INFO  ] Running command: ceph-volume  lvm batch --no-auto /dev/vdb /dev/vdc --objectstore bluestore --yes --no-systemd --report --format json
+root@gluster2:~# date -u
+grep -E '^(server|pool|makestep)' /etc/chrony.conf
+chronyc sources
+chronyc tracking | grep -E 'Reference ID|System time|Leap status'
+Tue Nov  3 07:22:44 PM UTC 2026
+server time.google.com iburst iburst
+makestep 1.0 -1
+MS Name/IP address         Stratum Poll Reach LastRx Last sample
+===============================================================================
+^* time3.google.com              1  10   377   916  +3537us[+4915us] +/-   72ms
+Reference ID    : D8EF2308 (time3.google.com)
+System time     : 0.000033564 seconds fast of NTP time
+Leap status     : Normal
+root@gluster2:~# exit
+exit
+
+Script done on 2026-11-03 19:23:33+00:00 [COMMAND_EXIT_CODE="0"]

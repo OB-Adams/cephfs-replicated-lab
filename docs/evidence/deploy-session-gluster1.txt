@@ -1,0 +1,609 @@
+# Milestone 1: deploying Ceph, session log from gluster1, first part
+# Captured 2026-11-02 with script(1). Times are each VM's own clock. Private addresses masked.
+# Cleaned for reading: terminal control codes removed, progress bars kept at their final state, and commands that were
+# pasted together and drawn twice by the terminal written once each. Typing mistakes are left as typed. Output is unchanged.
+# Covers runbook Parts 2 and 3 and the package fixes: cephadm upgraded from a Pacific 16.2.14 already on the VM,
+# the missing jinja2 module, a first bootstrap that failed on an IPv6 link-local address, the bootstrap that worked,
+# the Pacific ceph-common client unable to read the new admin key (key value replaced by <redacted>), removal of the
+# Pacific repository, and enabling CRB and EPEL. The recording ends during the EPEL metadata download: the session
+# was cut there. The finished cluster is recorded in verify-session-gluster1.txt.
+#
+Script started on 2026-11-02 23:34:04+00:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="152" LINES="45"]
+root@gluster1:~# dnf -y install podman lvm2 chrony python3
+CentOS Stream 9 - BaseOS                                                                                                 19 kB/s |  22 kB     00:01
+CentOS Stream 9 - AppStream                                                                                              22 kB/s |  22 kB     00:01
+CentOS Stream 9 - Extras packages                                                                                        22 kB/s |  25 kB     00:01
+Package podman-6:5.8.5-2.el9.aarch64 is already installed.
+Package lvm2-9:2.03.33-6.el9.aarch64 is already installed.
+Package chrony-4.8-1.el9.aarch64 is already installed.
+Package python3-3.9.25-10.el9.aarch64 is already installed.
+Dependencies resolved.
+Nothing to do.
+Complete!
+root@gluster1:~# systemctl enable --now chronyd
+root@gluster1:~# dnf -y install centos-release-ceph-tentacle
+Last metadata expiration check: 0:00:30 ago on Mon 02 Nov 2026 11:34:45 PM GMT.
+Dependencies resolved.
+========================================================================================================================================================
+ Package                                           Architecture                Version                         Repository                          Size
+========================================================================================================================================================
+Installing:
+ centos-release-ceph-tentacle                      noarch                      1.0-1.el9s                      extras-common                      7.3 k
+
+Transaction Summary
+========================================================================================================================================================
+Install  1 Package
+
+Total download size: 7.3 k
+Installed size: 937
+Downloading Packages:
+centos-release-ceph-tentacle-1.0-1.el9s.noarch.rpm                                                                      6.7 kB/s | 7.3 kB     00:01
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+Total                                                                                                                   3.1 kB/s | 7.3 kB     00:02
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Preparing        :                                                                                                                                1/1
+  Installing       : centos-release-ceph-tentacle-1.0-1.el9s.noarch                                                                                 1/1
+  Verifying        : centos-release-ceph-tentacle-1.0-1.el9s.noarch                                                                                 1/1
+
+Installed:
+  centos-release-ceph-tentacle-1.0-1.el9s.noarch
+
+Complete!
+root@gluster1:~# dnf -y install cephadm
+CentOS-9-stream - Ceph Tentacle                                0% [                                                             ]  64 kB/s |   0  BCentOS-9-stream - Ceph Tentacle                                0% [                                                             ]  64 kB/s |   0  BCentOS-9-stream - Ceph Tentacle                                0% [                                                             ]  64 kB/s |   0  BCentOS-9-stream - Ceph Tentacle                                                                                          44 kB/s | 254 kB     00:05
+Last metadata expiration check: 0:00:01 ago on Mon 02 Nov 2026 11:35:35 PM GMT.
+Package cephadm-2:16.2.14-2.el9s.noarch is already installed.
+Dependencies resolved.
+========================================================================================================================================================
+ Package                        Architecture                  Version                                 Repository                                   Size
+========================================================================================================================================================
+Upgrading:
+ cephadm                        noarch                        2:20.2.4-1.el9s                         centos-ceph-tentacle                        607 k
+
+Transaction Summary
+========================================================================================================================================================
+Upgrade  1 Package
+
+Total download size: 607 k
+Downloading Packages:
+cephadm-20.2.4-1.el9s.noarch.rpm                                                                                        506 kB/s | 607 kB     00:01
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+Total                                                                                                                   229 kB/s | 607 kB     00:02
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Preparing        :                                                                                                                                1/1
+  Running scriptlet: cephadm-2:20.2.4-1.el9s.noarch                                                                                                 1/2
+  Upgrading        : cephadm-2:20.2.4-1.el9s.noarch                                                                                                 1/2
+  Cleanup          : cephadm-2:16.2.14-2.el9s.noarch                                                                                                2/2
+  Running scriptlet: cephadm-2:16.2.14-2.el9s.noarch                                                                                                2/2
+userdel: cephadm mail spool (/var/spool/mail/cephadm) not found
+userdel: error removing directory /var/lib/cephadm
+
+Creating group 'cephadm' with GID 990.
+Creating user 'cephadm' (cephadm user for mgr/cephadm) with UID 990 and GID 990.
+
+  Verifying        : cephadm-2:20.2.4-1.el9s.noarch                                                                                                 1/2
+  Verifying        : cephadm-2:16.2.14-2.el9s.noarch                                                                                                2/2
+
+Upgraded:
+  cephadm-2:20.2.4-1.el9s.noarch
+
+Complete!
+root@gluster1:~# cephadm version
+Traceback (most recent call last):
+  File "/usr/lib64/python3.9/runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/usr/lib64/python3.9/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/tmp/tmpldfwwadk.cephadm.build/app/__main__.py", line 134, in <module>
+  File "<frozen zipimport>", line 259, in load_module
+  File "/tmp/tmpldfwwadk.cephadm.build/app/cephadmlib/logging.py", line 17, in <module>
+  File "<frozen zipimport>", line 259, in load_module
+  File "/tmp/tmpldfwwadk.cephadm.build/app/cephadmlib/templating.py", line 11, in <module>
+ModuleNotFoundError: No module named 'jinja2'
+root@gluster1:~# lsblk -f /dev/vdb /dev/vdc
+NAME FSTYPE FSVER LABEL UUID FSAVAIL FSUSE% MOUNTPOINTS
+vdb
+vdc
+root@gluster1:~# df -h /var
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/cs-root   20G  2.8G   18G  14% /
+root@gluster1:~# free -h | head -2
+               total        used        free      shared  buff/cache   available
+Mem:           7.4Gi       460Mi       6.8Gi        37Mi       394Mi       7.0Gi
+root@gluster1:~# cephadm check-host --expect-hostname $(hostname -s)
+Traceback (most recent call last):
+  File "/usr/lib64/python3.9/runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/usr/lib64/python3.9/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/tmp/tmpldfwwadk.cephadm.build/app/__main__.py", line 134, in <module>
+  File "<frozen zipimport>", line 259, in load_module
+  File "/tmp/tmpldfwwadk.cephadm.build/app/cephadmlib/logging.py", line 17, in <module>
+  File "<frozen zipimport>", line 259, in load_module
+  File "/tmp/tmpldfwwadk.cephadm.build/app/cephadmlib/templating.py", line 11, in <module>
+ModuleNotFoundError: No module named 'jinja2'
+root@gluster1:~# ceph pull
+Error initializing cluster client: ObjectNotFound('RADOS object not found (error calling conf_read_file)')
+root@gluster1:~# dnf -y install python3-jinja2 python3-pyyaml
+python3 -c 'import jinja2, yaml; print("ok")'
+Last metadata expiration check: 0:06:26 ago on Mon 02 Nov 2026 11:35:35 PM GMT.
+Package python3-pyyaml-5.4.1-6.el9.aarch64 is already installed.
+Dependencies resolved.
+========================================================================================================================================================
+ Package                                 Architecture                 Version                            Repository                                Size
+========================================================================================================================================================
+Installing:
+ python3-jinja2                          noarch                       3.0.1-2.el9s                       centos-ceph-pacific                      511 k
+Installing dependencies:
+ python3-babel                           noarch                       2.9.1-2.el9                        appstream                                6.0 M
+ python3-markupsafe                      aarch64                      2.0.0-2.el9s                       centos-ceph-pacific                       27 k
+ python3-pytz                            noarch                       2021.1-5.el9                       appstream                                 51 k
+
+Transaction Summary
+========================================================================================================================================================
+Install  4 Packages
+
+Total download size: 6.5 M
+Installed size: 30 M
+Downloading Packages:
+(1/4): python3-markupsafe-2.0.0-2.el9s.aarch64.rpm                                                                       24 kB/s |  27 kB     00:01
+(2/4): python3-pytz-2021.1-5.el9.noarch.rpm                                                                              60 kB/s |  51 kB     00:00
+(3/4): python3-jinja2-3.0.1-2.el9s.noarch.rpm                                                                           225 kB/s | 511 kB     00:02
+(4/4): python3-babel-2.9.1-2.el9.noarch.rpm                                                                             2.5 MB/s | 6.0 MB     00:02
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+Total                                                                                                                   1.1 MB/s | 6.5 MB     00:05
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Preparing        :                                                                                                                                1/1
+  Installing       : python3-pytz-2021.1-5.el9.noarch                                                                                               1/4
+  Installing       : python3-babel-2.9.1-2.el9.noarch                                                                                               2/4
+  Installing       : python3-markupsafe-2.0.0-2.el9s.aarch64                                                                                        3/4
+  Installing       : python3-jinja2-3.0.1-2.el9s.noarch                                                                                             4/4
+  Running scriptlet: python3-jinja2-3.0.1-2.el9s.noarch                                                                                             4/4
+  Verifying        : python3-jinja2-3.0.1-2.el9s.noarch                                                                                             1/4
+  Verifying        : python3-markupsafe-2.0.0-2.el9s.aarch64                                                                                        2/4
+  Verifying        : python3-babel-2.9.1-2.el9.noarch                                                                                               3/4
+  Verifying        : python3-pytz-2021.1-5.el9.noarch                                                                                               4/4
+
+Installed:
+  python3-babel-2.9.1-2.el9.noarch   python3-jinja2-3.0.1-2.el9s.noarch   python3-markupsafe-2.0.0-2.el9s.aarch64   python3-pytz-2021.1-5.el9.noarch
+
+Complete!
+ok
+root@gluster1:~# cephadm check-host --expect-hostname $(hostname -s)
+podman (/usr/bin/podman) version 5.8.5 is present
+systemctl is present
+lvcreate is present
+Unit chronyd.service is enabled and running
+Hostname "gluster1" matches what is expected.
+Host looks OK
+root@gluster1:~# cephadm pull
+Pulling container image quay.io/ceph/ceph:v20...
+{
+    "ceph_version": "ceph version 20.2.5 (ed27c686770872022f4c1de04f6b0ac5d5384ded) tentacle (stable)",
+    "image_id": "505b5c083868cc5dff3595fc3f23ecd66118da55dd771677a6ec5fb14fc29244",
+    "repo_digests": [
+        "quay.io/ceph/ceph@sha256:049acd51a7a9a6e10051ed60ae3ee2d8d4b3988a90b62487eeea2897b5d90f0d",
+        "quay.io/ceph/ceph@sha256:4337ac8ac81d40df136e5eac92ca53bb52360a5e039f3d1f7935e729eb5ef42c"
+    ]
+}
+root@gluster1:~# cephadm ls
+[]
+root@gluster1:~# MON_IP=$(getent hosts gluster1 | awk '{print $1}')
+root@gluster1:~# echoh $MON_IP
+bash: echoh: command not found
+root@gluster1:~# echo $MON_IP
+fe80::x
+root@gluster1:~# cephadm bootstrap --mon-ip "$MON_IP" --skip-dashboard --skip-monitoring-stack
+Verifying podman|docker is present...
+Verifying lvm2 is present...
+Verifying time synchronization is in place...
+Unit chronyd.service is enabled and running
+Repeating the final host check...
+podman (/usr/bin/podman) version 5.8.5 is present
+systemctl is present
+lvcreate is present
+Unit chronyd.service is enabled and running
+Host looks OK
+Cluster fsid: d4262af8-d717-11f1-849c-d6454780e5d3
+Verifying IP fe80::x port 3300 ...
+OSError: [Errno 22] Invalid argument
+
+        ***************
+        Cephadm hit an issue during cluster installation. Current cluster files will be deleted automatically.
+        To disable this behaviour you can pass the --no-cleanup-on-failure flag. In case of any previous
+        broken installation, users must use the following command to completely delete the broken cluster:
+
+        > cephadm rm-cluster --force --zap-osds --fsid <fsid>
+
+        for more information please refer to https://docs.ceph.com/en/latest/cephadm/operations/#purging-a-cluster
+        ***************
+
+Deleting cluster with fsid: d4262af8-d717-11f1-849c-d6454780e5d3
+Traceback (most recent call last):
+  File "/usr/lib64/python3.9/runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/usr/lib64/python3.9/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/tmp/tmpldfwwadk.cephadm.build/app/__main__.py", line 5322, in <module>
+  File "/tmp/tmpldfwwadk.cephadm.build/app/__main__.py", line 5310, in main
+  File "/tmp/tmpldfwwadk.cephadm.build/app/__main__.py", line 2553, in _rollback
+  File "/tmp/tmpldfwwadk.cephadm.build/app/__main__.py", line 435, in _default_image
+  File "/tmp/tmpldfwwadk.cephadm.build/app/__main__.py", line 2675, in command_bootstrap
+  File "/tmp/tmpldfwwadk.cephadm.build/app/__main__.py", line 1959, in prepare_mon_addresses
+  File "/tmp/tmpldfwwadk.cephadm.build/app/cephadmlib/net_utils.py", line 108, in check_ip_port
+  File "/tmp/tmpldfwwadk.cephadm.build/app/cephadmlib/net_utils.py", line 56, in attempt_bind
+  File "/tmp/tmpldfwwadk.cephadm.build/app/cephadmlib/net_utils.py", line 49, in attempt_bind
+OSError: [Errno 22] Invalid argument
+root@gluster1:~# MON_IP=192.168.x.x
+root@gluster1:~# echo $MON_IP
+192.168.x.x
+root@gluster1:~# cephadm bootstrap --mon-ip "$MON_IP" --skip-dashboard --skip-monitoring-stack
+Verifying podman|docker is present...
+Verifying lvm2 is present...
+Verifying time synchronization is in place...
+Unit chronyd.service is enabled and running
+Repeating the final host check...
+podman (/usr/bin/podman) version 5.8.5 is present
+systemctl is present
+lvcreate is present
+Unit chronyd.service is enabled and running
+Host looks OK
+Cluster fsid: 01ada8b6-d718-11f1-9fbe-d6454780e5d3
+Verifying IP 192.168.x.x port 3300 ...
+Verifying IP 192.168.x.x port 6789 ...
+Mon IP `192.168.x.x` is in CIDR network `192.168.x.x/24`
+Mon IP `192.168.x.x` is in CIDR network `192.168.x.x/24`
+Internal network (--cluster-network) has not been provided, OSD replication will default to the public_network
+Pulling container image quay.io/ceph/ceph:v20...
+Ceph version: ceph version 20.2.5 (ed27c686770872022f4c1de04f6b0ac5d5384ded) tentacle (stable)
+Extracting ceph user uid/gid from container image...
+Creating initial keys...
+Creating initial monmap...
+Creating mon...
+firewalld ready
+Enabling firewalld service ceph-mon in current zone...
+Waiting for mon to start...
+Waiting for mon...
+mon is available
+Assimilating anything we can from ceph.conf...
+Generating new minimal ceph.conf...
+Restarting the monitor...
+Setting public_network to 192.168.x.x/24 in global config section
+Wrote config to /etc/ceph/ceph.conf
+Wrote keyring to /etc/ceph/ceph.client.admin.keyring
+Creating mgr...
+Verifying port 0.0.0.0:9283 ...
+Verifying port 0.0.0.0:8765 ...
+firewalld ready
+Enabling firewalld service ceph in current zone...
+firewalld ready
+Enabling firewalld port 9283/tcp in current zone...
+Enabling firewalld port 8765/tcp in current zone...
+Waiting for mgr to start...
+Waiting for mgr...
+mgr not available, waiting (1/15)...
+mgr is available
+Enabling cephadm module...
+Waiting for the mgr to restart...
+Waiting for mgr epoch 4...
+mgr epoch 4 is available
+Verifying orchestrator module is enabled...
+Setting orchestrator backend to cephadm...
+Generating ssh key...
+Wrote public SSH key to /etc/ceph/ceph.pub
+Adding key to root@localhost authorized_keys...
+Adding host gluster1...
+Deploying mon service with default placement...
+Deploying mgr service with default placement...
+Deploying crash service with default placement...
+Enabling client.admin keyring and conf on hosts with "admin" label
+Saving cluster configuration to /var/lib/ceph/01ada8b6-d718-11f1-9fbe-d6454780e5d3/config directory
+You can access the Ceph CLI as following in case of multi-cluster or non-default config:
+
+        sudo /usr/sbin/cephadm shell --fsid 01ada8b6-d718-11f1-9fbe-d6454780e5d3 -c /etc/ceph/ceph.conf -k /etc/ceph/ceph.client.admin.keyring
+
+Or, if you are only running a single cluster on this host:
+
+        sudo /usr/sbin/cephadm shell
+
+Please consider enabling telemetry to help improve Ceph:
+
+        ceph telemetry on
+
+For more information see:
+
+        https://docs.ceph.com/en/latest/mgr/telemetry/
+
+Bootstrap complete.
+Enabling the logrotate.timer service to perform daily log rotation.
+root@gluster1:~# dnf -y install ceph-common
+Last metadata expiration check: 0:03:14 ago on Mon 02 Nov 2026 11:49:33 PM GMT.
+Package ceph-common-2:16.2.15-1.el9s.aarch64 is already installed.
+Error:
+ Problem: cannot install the best candidate for the job
+  - nothing provides libarrow.so.900()(64bit) needed by ceph-common-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libblake3.so.0()(64bit) needed by ceph-common-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libparquet.so.900()(64bit) needed by ceph-common-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle
+(try to add '--skip-broken' to skip uninstallable packages or '--nobest' to use not only best candidate packages)
+root@gluster1:~# ceph -v
+ceph version 16.2.15 (618f440892089921c3e944a991122ddc44e60516) pacific (stable)
+root@gluster1:~# ceph -a
+2026-11-02T23:52:58.188+0000 ffff99826120 -1 auth: error parsing file /etc/ceph/ceph.client.admin.keyring: error setting modifier for [client.admin] type=key val=<redacted>: Malformed input
+
+2026-11-02T23:52:58.188+0000 ffff99826120 -1 auth: failed to load /etc/ceph/ceph.client.admin.keyring: (5) Input/output error
+
+2026-11-02T23:52:58.188+0000 ffff99826120 -1 auth: error parsing file /etc/ceph/ceph.client.admin.keyring: error setting modifier for [client.admin] type=key val=<redacted>: Malformed input
+
+2026-11-02T23:52:58.188+0000 ffff99826120 -1 auth: failed to load /etc/ceph/ceph.client.admin.keyring: (5) Input/output error
+
+2026-11-02T23:52:58.188+0000 ffff99826120 -1 auth: error parsing file /etc/ceph/ceph.client.admin.keyring: error setting modifier for [client.admin] type=key val=<redacted>: Malformed input
+
+2026-11-02T23:52:58.188+0000 ffff99826120 -1 auth: failed to load /etc/ceph/ceph.client.admin.keyring: (5) Input/output error
+
+2026-11-02T23:52:58.188+0000 ffff99826120 -1 monclient: keyring not found
+
+[errno 5] RADOS I/O error (error connecting to the cluster)
+root@gluster1:~# ceph -s
+2026-11-02T23:53:05.888+0000 ffffa0fa1120 -1 auth: error parsing file /etc/ceph/ceph.client.admin.keyring: error setting modifier for [client.admin] type=key val=<redacted>: Malformed input
+
+2026-11-02T23:53:05.888+0000 ffffa0fa1120 -1 auth: failed to load /etc/ceph/ceph.client.admin.keyring: (5) Input/output error
+
+2026-11-02T23:53:05.888+0000 ffffa0fa1120 -1 auth: error parsing file /etc/ceph/ceph.client.admin.keyring: error setting modifier for [client.admin] type=key val=<redacted>: Malformed input
+
+2026-11-02T23:53:05.888+0000 ffffa0fa1120 -1 auth: failed to load /etc/ceph/ceph.client.admin.keyring: (5) Input/output error
+
+2026-11-02T23:53:05.888+0000 ffffa0fa1120 -1 auth: error parsing file /etc/ceph/ceph.client.admin.keyring: error setting modifier for [client.admin] type=key val=<redacted>: Malformed input
+
+2026-11-02T23:53:05.888+0000 ffffa0fa1120 -1 auth: failed to load /etc/ceph/ceph.client.admin.keyring: (5) Input/output error
+
+2026-11-02T23:53:05.888+0000 ffffa0fa1120 -1 monclient: keyring not found
+
+[errno 5] RADOS I/O error (error connecting to the cluster)
+root@gluster1:~# ceph -v
+cephadm version
+dnf list installed ceph-common librados2 python3-rados
+dnf repolist | grep -i ceph
+ceph version 16.2.15 (618f440892089921c3e944a991122ddc44e60516) pacific (stable)
+cephadm version 20.2.4 (7f793731f1b39eb4f465e960113d2363c311b964) tentacle (stable)
+Installed Packages
+ceph-common.aarch64                                                 2:16.2.15-1.el9s                                                @centos-ceph-pacific
+librados2.aarch64                                                   2:16.2.15-1.el9s                                                @centos-ceph-pacific
+python3-rados.aarch64                                               2:16.2.15-1.el9s                                                @centos-ceph-pacific
+centos-ceph-pacific               CentOS-9-stream - Ceph Pacific
+centos-ceph-tentacle              CentOS-9-stream - Ceph Tentacle
+root@gluster1:~# cephadm shell -- ceph -s
+Inferring fsid 01ada8b6-d718-11f1-9fbe-d6454780e5d3
+Inferring config /var/lib/ceph/01ada8b6-d718-11f1-9fbe-d6454780e5d3/mon.gluster1/config
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            OSD count 0 < osd_pool_default_size 3
+
+  services:
+    mon: 1 daemons, quorum gluster1 (age 5m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 5m)
+    osd: 0 osds: 0 up, 0 in
+
+  data:
+    pools:   0 pools, 0 pgs
+    objects: 0 objects, 0 B
+    usage:   0 B used, 0 B / 0 B avail
+    pgs:
+
+root@gluster1:~# dnf remove centos-ceph-pacific
+No match for argument: centos-ceph-pacific
+No packages marked for removal.
+Dependencies resolved.
+Nothing to do.
+Complete!
+root@gluster1:~# dnf repolist | grep -i ceph
+centos-ceph-pacific               CentOS-9-stream - Ceph Pacific
+centos-ceph-tentacle              CentOS-9-stream - Ceph Tentacle
+root@gluster1:~# dnf -y upgrade ceph-common
+Last metadata expiration check: 0:16:08 ago on Mon 02 Nov 2026 11:49:33 PM GMT.
+Error:
+ Problem: cannot install the best update candidate for package ceph-common-2:16.2.15-1.el9s.aarch64
+  - nothing provides libarrow.so.900()(64bit) needed by ceph-common-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libblake3.so.0()(64bit) needed by ceph-common-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libparquet.so.900()(64bit) needed by ceph-common-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle
+(try to add '--skip-broken' to skip uninstallable packages or '--nobest' to use not only best candidate packages)
+root@gluster1:~# dnf update
+Last metadata expiration check: 0:16:28 ago on Mon 02 Nov 2026 11:49:33 PM GMT.
+Error:
+ Problem 1: cannot install the best update candidate for package ceph-common-2:16.2.15-1.el9s.aarch64
+  - nothing provides libarrow.so.900()(64bit) needed by ceph-common-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libblake3.so.0()(64bit) needed by ceph-common-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libparquet.so.900()(64bit) needed by ceph-common-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle
+ Problem 2: cannot install the best update candidate for package librados2-2:16.2.15-1.el9s.aarch64
+  - nothing provides libthrift-0.15.0.so()(64bit) needed by librados2-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle
+ Problem 3: cannot install the best update candidate for package librgw2-2:16.2.15-1.el9s.aarch64
+  - nothing provides libarrow.so.900()(64bit) needed by librgw2-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libblake3.so.0()(64bit) needed by librgw2-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libparquet.so.900()(64bit) needed by librgw2-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle
+ Problem 4: package python3-rgw-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle requires librgw2 = 2:20.2.4-1.el9s, but none of the providers can be installed
+  - cannot install the best update candidate for package python3-rgw-2:16.2.15-1.el9s.aarch64
+  - nothing provides libarrow.so.900()(64bit) needed by librgw2-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libblake3.so.0()(64bit) needed by librgw2-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libparquet.so.900()(64bit) needed by librgw2-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle
+ Problem 5: package python3-rados-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle requires librados2 = 2:20.2.4-1.el9s, but none of the providers canbe installed
+  - cannot install the best update candidate for package python3-rados-2:16.2.15-1.el9s.aarch64
+  - nothing provides libthrift-0.15.0.so()(64bit) needed by librados2-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle
+ Problem 6: package librbd1-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle requires librados2 = 2:20.2.4-1.el9s, but none of the providers can be installed
+  - cannot install the best update candidate for package librbd1-2:16.2.15-1.el9s.aarch64
+  - nothing provides libthrift-0.15.0.so()(64bit) needed by librados2-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle
+ Problem 7: package libradosstriper1-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle requires librados2 = 2:20.2.4-1.el9s, but none of the providers can be installed
+  - cannot install the best update candidate for package libradosstriper1-2:16.2.15-1.el9s.aarch64
+  - nothing provides libthrift-0.15.0.so()(64bit) needed by librados2-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle
+ Problem 8: package python3-cephfs-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle requires python3-rados = 2:20.2.4-1.el9s, but none of the providers can be installed
+  - package python3-rados-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle requires librados2 = 2:20.2.4-1.el9s, but none of the providers can be installed
+  - cannot install the best update candidate for package python3-cephfs-2:16.2.15-1.el9s.aarch64
+  - nothing provides libthrift-0.15.0.so()(64bit) needed by librados2-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle
+ Problem 9: package python3-rbd-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle requires librbd1 = 2:20.2.4-1.el9s, but none of the providers can be installed
+  - package librbd1-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle requires librados2 = 2:20.2.4-1.el9s, but none of the providers can be installed
+  - cannot install the best update candidate for package python3-rbd-2:16.2.15-1.el9s.aarch64
+  - nothing provides libthrift-0.15.0.so()(64bit) needed by librados2-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle
+ Problem 10: problem with installed package python3-cephfs-2:16.2.15-1.el9s.aarch64
+  - package python3-cephfs-2:16.2.15-1.el9s.aarch64 from @System requires libcephfs2 = 2:16.2.15-1.el9s, but none of the providers can be installed
+  - package python3-cephfs-2:16.2.15-1.el9s.aarch64 from centos-ceph-pacific requires libcephfs2 = 2:16.2.15-1.el9s, but none of the providers can be installed
+  - package python3-cephfs-2:20.1.0-1.el9s.aarch64 from centos-ceph-tentacle requires python3-rados = 2:20.1.0-1.el9s, but none of the providers can beinstalled
+  - package python3-cephfs-2:20.1.1-1.el9s.aarch64 from centos-ceph-tentacle requires python3-rados = 2:20.1.1-1.el9s, but none of the providers can beinstalled
+  - package python3-cephfs-2:20.1.1-2.el9s.aarch64 from centos-ceph-tentacle requires python3-rados = 2:20.1.1-2.el9s, but none of the providers can beinstalled
+  - package python3-cephfs-2:20.2.0-1.el9s.aarch64 from centos-ceph-tentacle requires python3-rados = 2:20.2.0-1.el9s, but none of the providers can beinstalled
+  - package python3-cephfs-2:20.2.1-1.el9s.aarch64 from centos-ceph-tentacle requires python3-rados = 2:20.2.1-1.el9s, but none of the providers can beinstalled
+  - package python3-cephfs-2:20.2.2-1.el9s.aarch64 from centos-ceph-tentacle requires python3-rados = 2:20.2.2-1.el9s, but none of the providers can beinstalled
+  - package python3-cephfs-2:20.2.3-1.el9s.aarch64 from centos-ceph-tentacle requires python3-rados = 2:20.2.3-1.el9s, but none of the providers can beinstalled
+  - package python3-cephfs-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle requires python3-rados = 2:20.2.4-1.el9s, but none of the providers can beinstalled
+  - cannot install both libcephfs2-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle and libcephfs2-2:16.2.15-1.el9s.aarch64 from @System
+  - cannot install both libcephfs2-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle and libcephfs2-2:16.2.15-1.el9s.aarch64 from centos-ceph-pacific
+  - package python3-rados-2:20.1.0-1.el9s.aarch64 from centos-ceph-tentacle requires librados2 = 2:20.1.0-1.el9s, but none of the providers can be installed
+  - package python3-rados-2:20.1.1-1.el9s.aarch64 from centos-ceph-tentacle requires librados2 = 2:20.1.1-1.el9s, but none of the providers can be installed
+  - package python3-rados-2:20.1.1-2.el9s.aarch64 from centos-ceph-tentacle requires librados2 = 2:20.1.1-2.el9s, but none of the providers can be installed
+  - package python3-rados-2:20.2.0-1.el9s.aarch64 from centos-ceph-tentacle requires librados2 = 2:20.2.0-1.el9s, but none of the providers can be installed
+  - package python3-rados-2:20.2.1-1.el9s.aarch64 from centos-ceph-tentacle requires librados2 = 2:20.2.1-1.el9s, but none of the providers can be installed
+  - package python3-rados-2:20.2.2-1.el9s.aarch64 from centos-ceph-tentacle requires librados2 = 2:20.2.2-1.el9s, but none of the providers can be installed
+  - package python3-rados-2:20.2.3-1.el9s.aarch64 from centos-ceph-tentacle requires librados2 = 2:20.2.3-1.el9s, but none of the providers can be installed
+  - package python3-rados-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle requires librados2 = 2:20.2.4-1.el9s, but none of the providers can be installed
+  - cannot install the best update candidate for package libcephfs2-2:16.2.15-1.el9s.aarch64
+  - nothing provides libthrift-0.15.0.so()(64bit) needed by librados2-2:20.1.0-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libthrift-0.15.0.so()(64bit) needed by librados2-2:20.1.1-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libthrift-0.15.0.so()(64bit) needed by librados2-2:20.1.1-2.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libthrift-0.15.0.so()(64bit) needed by librados2-2:20.2.0-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libthrift-0.15.0.so()(64bit) needed by librados2-2:20.2.1-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libthrift-0.15.0.so()(64bit) needed by librados2-2:20.2.2-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libthrift-0.15.0.so()(64bit) needed by librados2-2:20.2.3-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libthrift-0.15.0.so()(64bit) needed by librados2-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle
+ Problem 11: problem with installed package ceph-common-2:16.2.15-1.el9s.aarch64
+  - package ceph-common-2:16.2.15-1.el9s.aarch64 from @System requires python3-ceph-argparse = 2:16.2.15-1.el9s, but none of the providers can be installed
+  - package ceph-common-2:16.2.15-1.el9s.aarch64 from centos-ceph-pacific requires python3-ceph-argparse = 2:16.2.15-1.el9s, but none of the providers can be installed
+  - cannot install both python3-ceph-argparse-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle and python3-ceph-argparse-2:16.2.15-1.el9s.aarch64 from@System
+  - cannot install both python3-ceph-argparse-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle and python3-ceph-argparse-2:16.2.15-1.el9s.aarch64 fromcentos-ceph-pacific
+  - cannot install the best update candidate for package python3-ceph-argparse-2:16.2.15-1.el9s.aarch64
+  - nothing provides libarrow.so.900()(64bit) needed by ceph-common-2:20.1.0-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libblake3.so.0()(64bit) needed by ceph-common-2:20.1.0-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libparquet.so.900()(64bit) needed by ceph-common-2:20.1.0-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libarrow.so.900()(64bit) needed by ceph-common-2:20.1.1-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libblake3.so.0()(64bit) needed by ceph-common-2:20.1.1-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libparquet.so.900()(64bit) needed by ceph-common-2:20.1.1-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libarrow.so.900()(64bit) needed by ceph-common-2:20.1.1-2.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libblake3.so.0()(64bit) needed by ceph-common-2:20.1.1-2.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libparquet.so.900()(64bit) needed by ceph-common-2:20.1.1-2.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libarrow.so.900()(64bit) needed by ceph-common-2:20.2.0-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libblake3.so.0()(64bit) needed by ceph-common-2:20.2.0-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libparquet.so.900()(64bit) needed by ceph-common-2:20.2.0-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libarrow.so.900()(64bit) needed by ceph-common-2:20.2.1-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libblake3.so.0()(64bit) needed by ceph-common-2:20.2.1-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libparquet.so.900()(64bit) needed by ceph-common-2:20.2.1-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libarrow.so.900()(64bit) needed by ceph-common-2:20.2.2-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libblake3.so.0()(64bit) needed by ceph-common-2:20.2.2-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libparquet.so.900()(64bit) needed by ceph-common-2:20.2.2-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libarrow.so.900()(64bit) needed by ceph-common-2:20.2.3-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libblake3.so.0()(64bit) needed by ceph-common-2:20.2.3-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libparquet.so.900()(64bit) needed by ceph-common-2:20.2.3-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libarrow.so.900()(64bit) needed by ceph-common-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libblake3.so.0()(64bit) needed by ceph-common-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle
+  - nothing provides libparquet.so.900()(64bit) needed by ceph-common-2:20.2.4-1.el9s.aarch64 from centos-ceph-tentacle
+(try to add '--allowerasing' to command line to replace conflicting packages or '--skip-broken' to skip uninstallable packages or '--nobest' to use notonly best candidate packages)
+root@gluster1:~# rpm -q --whatrequires centos-release-ceph-pacific
+dnf history list ceph-common
+dnf remove centos-release-ceph-pacific
+no package requires centos-release-ceph-pacific
+ID     | Command line                                                                                      | Date and time    | Action(s)      | Altered
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+     8 | install -y ceph-common                                                                            | 2026-10-25 14:14 | Install        |   20
+Dependencies resolved.
+========================================================================================================================================================
+ Package                                          Architecture                Version                         Repository                           Size
+========================================================================================================================================================
+Removing:
+ centos-release-ceph-pacific                      noarch                      1.0-2.el9s                      @extras-common                      926
+
+Transaction Summary
+========================================================================================================================================================
+Remove  1 Package
+
+Freed space: 926
+Is this ok [y/N]: y
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Preparing        :                                                                                                                                1/1
+  Erasing          : centos-release-ceph-pacific-1.0-2.el9s.noarch                                                                                  1/1
+  Verifying        : centos-release-ceph-pacific-1.0-2.el9s.noarch                                                                                  1/1
+
+Removed:
+  centos-release-ceph-pacific-1.0-2.el9s.noarch
+
+Complete!
+root@gluster1:~# dnf config-manager --set-enabled crb
+dnf -y install epel-release
+dnf repolist
+dnf repoquery --whatprovides 'libarrow.so.900()(64bit)' 'libparquet.so.900()(64bit)' 'libblake3.so.0()(64bit)' 'libthrift-0.15.0.so()(64bit)'
+CentOS Stream 9 - BaseOS                                                                                                 16 kB/s |  22 kB     00:01
+CentOS Stream 9 - AppStream                                                                                              22 kB/s |  22 kB     00:01
+CentOS Stream 9 - CRB                                                                                                    44 kB/s | 2.3 MB     00:53
+Dependencies resolved.
+========================================================================================================================================================
+ Package                                   Architecture                   Version                           Repository                             Size
+========================================================================================================================================================
+Installing:
+ epel-release                              noarch                         9-7.el9                           extras-common                          19 k
+Installing weak dependencies:
+ epel-next-release                         noarch                         9-7.el9                           extras-common                         8.1 k
+
+Transaction Summary
+========================================================================================================================================================
+Install  2 Packages
+
+Total download size: 27 k
+Installed size: 29 k
+Downloading Packages:
+(1/2): epel-next-release-9-7.el9.noarch.rpm                                                                             6.1 kB/s | 8.1 kB     00:01
+(2/2): epel-release-9-7.el9.noarch.rpm                                                                                   12 kB/s |  19 kB     00:01
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+Total                                                                                                                    11 kB/s |  27 kB     00:02
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Preparing        :                                                                                                                                1/1
+  Installing       : epel-release-9-7.el9.noarch                                                                                                    1/2
+  Running scriptlet: epel-release-9-7.el9.noarch                                                                                                    1/2
+Many EPEL packages require the CodeReady Builder (CRB) repository.
+It is recommended that you run /usr/bin/crb enable to enable the CRB repository.
+
+  Installing       : epel-next-release-9-7.el9.noarch                                                                                               2/2
+  Running scriptlet: epel-next-release-9-7.el9.noarch                                                                                               2/2
+  Verifying        : epel-next-release-9-7.el9.noarch                                                                                               1/2
+  Verifying        : epel-release-9-7.el9.noarch                                                                                                    2/2
+
+Installed:
+  epel-next-release-9-7.el9.noarch                                              epel-release-9-7.el9.noarch
+
+Complete!
+repo id                                             repo name
+appstream                                           CentOS Stream 9 - AppStream
+baseos                                              CentOS Stream 9 - BaseOS
+centos-ceph-tentacle                                CentOS-9-stream - Ceph Tentacle
+crb                                                 CentOS Stream 9 - CRB
+epel                                                Extra Packages for Enterprise Linux 9 - aarch64
+epel-cisco-openh264                                 Extra Packages for Enterprise Linux 9 openh264 (From Cisco) - aarch64
+epel-next                                           Extra Packages for Enterprise Linux 9 - Next - aarch64
+extras-common                                       CentOS Stream 9 - Extras packages
+Extra Packages for Enterprise Linux 9 - aarch64                                                                         526 kB/s |  20 MB     00:39
+Extra Packages for Enterprise Linux 9 openh264 (From Cisco) - aarch64                                                   975  B/s | 2.5 kB     00:02
+Extra Packages for Enterprise Linux 9 - Next - aarch64                                                                  112 kB/s | 411 kB     00:03
