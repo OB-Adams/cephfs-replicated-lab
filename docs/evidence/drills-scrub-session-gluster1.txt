@@ -1,0 +1,44 @@
+# After the drills: deep scrub of both CephFS pools, session log from gluster1
+# Captured 2026-11-04 with script(1), times UTC. Private addresses masked.
+# Cleaned for reading: terminal control codes removed, and commands that were pasted together and drawn twice by the
+# terminal written once each. Typing mistakes are left as typed. Output is unchanged.
+#
+Script started on 2026-11-04 17:37:56+00:00 [TERM="xterm-256color" TTY="/dev/pts/2" COLUMNS="162" LINES="48"]
+root@gluster1:~# ceph osd pool deep-scrub cephfs.cephfs.data
+ceph osd pool deep-scrub cephfs.cephfs.meta
+root@gluster1:~# ceph pg ls scrubbing
+PG    OBJECTS  DEGRADED  MISPLACED  UNFOUND  BYTES  OMAP_BYTES*  OMAP_KEYS*  LOG  LOG_DUPS  STATE                        SINCE  VERSION  REPORTED  UP         ACTING     SCRUB_STAMP                      DEEP_SCRUB_STAMP                 LAST_SCRUB_DURATION  SCRUB_SCHEDULING
+3.5c       34         0          0        0    140            0           0   41         0  active+clean+scrubbing+deep     2s   148'41   148:535  [4,0,1]p4  [4,0,1]p4  2026-11-04T13:46:54.908740+0000  2026-11-03T01:29:21.908252+0000                    1  deep scrubbing for 1s
+3.5d       29         0          0        0    119            0           0   44         0  active+clean+scrubbing+deep     4s   148'44   148:415  [0,4,1]p0  [0,4,1]p0  2026-11-04T15:11:41.458842+0000  2026-11-03T01:29:21.908252+0000                    1  deep scrubbing for 1s
+
+* NOTE: Omap statistics are gathered during deep scrub and may be inaccurate soon afterwards depending on utilization. See http://docs.ceph.com/en/latest/dev/placement-group/#omap-statistics for further details.
+root@gluster1:~# ceph pg ls scrubbing
+root@gluster1:~# ceph pg ls scrubbing
+root@gluster1:~# ceph health detail
+rados list-inconsistent-pg cephfs.cephfs.data
+rados list-inconsistent-pg cephfs.cephfs.meta
+ceph -s
+HEALTH_OK
+[]
+[]
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_OK
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 21m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 3h), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 21m), 6 in (since 69m)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 3.84k objects, 35 MiB
+    usage:   627 MiB used, 59 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+root@gluster1:~# exit
+exit
+
+Script done on 2026-11-04 17:41:31+00:00 [COMMAND_EXIT_CODE="0"]

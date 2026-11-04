@@ -1,0 +1,239 @@
+# Drill 3: a majority lost (gluster3, then gluster2), session log from gluster1
+# Captured 2026-11-04 with script(1), times UTC. Private addresses masked.
+# Cleaned for reading: terminal control codes removed, and commands that were pasted together and drawn twice by the
+# terminal written once each. Typing mistakes are left as typed. Output is unchanged.
+# The two commands ending in 'Cluster connection aborted' were interrupted with Ctrl-C while there was no quorum.
+#
+Script started on 2026-11-04 17:09:02+00:00 [TERM="xterm-256color" TTY="/dev/pts/2" COLUMNS="162" LINES="48"]
+root@gluster1:~# ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_OK
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 6m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 3h), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 6m), 6 in (since 39m)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 2.91k objects, 29 MiB
+    usage:   559 MiB used, 59 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+  io:
+    client:   10 KiB/s wr, 0 op/s rd, 4 op/s wr
+
+root@gluster1:~# ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_OK
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 6m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 3h), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 6m), 6 in (since 39m)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 2.91k objects, 29 MiB
+    usage:   559 MiB used, 59 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+  io:
+    client:   10 KiB/s wr, 0 op/s rd, 4 op/s wr
+
+root@gluster1:~# ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            1/3 mons down, quorum gluster1,gluster2
+            2 osds down
+            1 host (2 osds) down
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2 (age 0.883403s) [leader: gluster1], out of quorum: gluster3
+    mgr: gluster1.bxuyky(active, since 3h), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 4 up (since 14s), 6 in (since 39m)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 2.91k objects, 29 MiB
+    usage:   559 MiB used, 59 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+  io:
+    client:   10 KiB/s wr, 0 op/s rd, 4 op/s wr
+
+root@gluster1:~# ceph osd tree
+ID  CLASS  WEIGHT   TYPE NAME          STATUS  REWEIGHT  PRI-AFF
+-1         0.05878  root default
+-3         0.01959      host gluster1
+ 1    hdd  0.00980          osd.1          up   1.00000  1.00000
+ 2    hdd  0.00980          osd.2          up   1.00000  1.00000
+-7         0.01959      host gluster2
+ 4    hdd  0.00980          osd.4          up   1.00000  1.00000
+ 5    hdd  0.00980          osd.5          up   1.00000  1.00000
+-5         0.01959      host gluster3
+ 0    hdd  0.00980          osd.0        down   1.00000  1.00000
+ 3    hdd  0.00980          osd.3        down   1.00000  1.00000
+root@gluster1:~# ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            1/3 mons down, quorum gluster1,gluster2
+            2 osds down
+            1 host (2 osds) down
+            Degraded data redundancy: 2954/8862 objects degraded (33.333%), 143 pgs degraded
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2 (age 18s) [leader: gluster1], out of quorum: gluster3
+    mgr: gluster1.bxuyky(active, since 3h), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 4 up (since 32s), 6 in (since 40m)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 2.95k objects, 29 MiB
+    usage:   561 MiB used, 59 GiB / 60 GiB avail
+    pgs:     2954/8862 objects degraded (33.333%)
+             143 active+undersized+degraded
+             2   active+undersized
+
+  io:
+    client:   19 KiB/s wr, 0 op/s rd, 8 op/s wr
+
+root@gluster1:~# ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            1 filesystem is degraded
+            insufficient standby MDS daemons available
+            1/3 mons down, quorum gluster1,gluster2
+            2 osds down
+            1 host (2 osds) down
+            Degraded data redundancy: 2982/8946 objects degraded (33.333%), 143 pgs degraded
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2 (age 39s) [leader: gluster1], out of quorum: gluster3
+    mgr: gluster1.bxuyky(active, since 3h), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up
+    osd: 6 osds: 4 up (since 53s), 6 in (since 40m)
+
+  data:
+    volumes: 0/1 healthy, 1 recovering
+    pools:   3 pools, 145 pgs
+    objects: 2.98k objects, 29 MiB
+    usage:   561 MiB used, 59 GiB / 60 GiB avail
+    pgs:     2982/8946 objects degraded (33.333%)
+             143 active+undersized+degraded
+             2   active+undersized
+
+  io:
+    client:   15 KiB/s wr, 0 op/s rd, 5 op/s wr
+
+root@gluster1:~# ceph osd tree
+^CCluster connection aborted
+root@gluster1:~# ceph -s
+^CCluster connection aborted
+root@gluster1:~# clear
+root@gluster1:~# timeout 20 ceph -s; echo "exit $?"
+exit 124
+root@gluster1:~# ceph --admin-daemon /var/run/ceph/01ada8b6-d718-11f1-9fbe-d6454780e5d3/ceph-mon.gluster1.asok mon_status | grep -E '"(name|state|rank)"|"quorum"'
+    "name": "gluster1",
+    "rank": 0,
+    "state": "probing",
+    "quorum": [],
+            "name": "aes256k",
+                "name": "aes256k",
+            "name": "aes256k",
+                "rank": 0,
+                "name": "gluster1",
+                "rank": 1,
+                "name": "gluster2",
+                "rank": 2,
+                "name": "gluster3",
+root@gluster1:~# ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            1 hosts fail cephadm check
+            clock skew detected on mon.gluster2
+            1/3 mons down, quorum gluster1,gluster2
+            2 osds down
+            1 host (2 osds) down
+            Degraded data redundancy: 3013/9039 objects degraded (33.333%), 143 pgs degraded
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2 (age 22s) [leader: gluster1], out of quorum: gluster3
+    mgr: gluster1.bxuyky(active, since 3h), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 4 up (since 15s), 6 in (since 47m)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 3.01k objects, 30 MiB
+    usage:   424 MiB used, 60 GiB / 60 GiB avail
+    pgs:     3013/9039 objects degraded (33.333%)
+             143 active+undersized+degraded
+             2   active+undersized
+
+  io:
+    client:   0 B/s rd, 33 KiB/s wr, 13 op/s rd, 5 op/s wr
+
+root@gluster1:~# ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            1 hosts fail cephadm check
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 42s) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 3h), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 34s), 6 in (since 49m)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 3.15k objects, 30 MiB
+    usage:   464 MiB used, 60 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+  io:
+    client:   13 KiB/s wr, 0 op/s rd, 4 op/s wr
+
+root@gluster1:~# ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            1 hosts fail cephadm check
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 7m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 3h), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 7m), 6 in (since 56m)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 3.44k objects, 32 MiB
+    usage:   562 MiB used, 59 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+  io:
+    client:   13 KiB/s rd, 13 op/s rd, 0 op/s wr
+
+root@gluster1:~# exit
+exit
+
+Script done on 2026-11-04 17:27:55+00:00 [COMMAND_EXIT_CODE="0"]

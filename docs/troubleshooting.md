@@ -68,10 +68,33 @@ Issues that were actually hit during this lab, followed by the diagnostic comman
 - **Cause:** most likely, `script` buffers what it records and writes it out in blocks; the SSH sessions were dropped while the Mac slept, `script` was killed with them, and the buffer was lost. Later commands were typed in new, unrecorded terminals.
 - **Fix:** keep the Mac awake (`caffeinate -dis`), and check that a recording ends with `Script done` before relying on it.
 
+### `ceph` commands hang with no monitor quorum
+
+- **Where:** milestone 2, drill 3, with only `gluster1` up.
+- **Symptom:** `ceph -s`, `ceph osd tree` and every other `ceph` command wait with no output; Ctrl-C prints `Cluster connection aborted`.
+- **Cause:** the `ceph` command asks the monitors, and a monitor without a majority will not answer. This is the quorum rule working, not a fault.
+- **What still works:** each daemon's admin socket, which talks to that one daemon and needs no quorum: `ceph --admin-daemon /var/run/ceph/<fsid>/ceph-mon.gluster1.asok mon_status` showed `"state": "probing"` and `"quorum": []`. Put `timeout` in front of `ceph` commands during such a test so a shell is not lost.
+- **Fix:** bring back enough monitors for a majority, here one more.
+
+### A writer log shows failures from a run that had none
+
+- **Where:** milestone 2, drill 3.
+- **Symptom:** `grep -c FAIL ~/drill3-writes.log` printed 15 after a run with no failures.
+- **Cause:** the writer appends to its log, and `~/drill3-writes.log` on `gluster4` already held 68 lines from the Gluster lab's drill 3, in that writer's older format. Every failure counted was from those lines.
+- **Fix:** start each drill with a log name that has not been used, or remove the old file first. The archived log has the old lines removed.
+
+### A shell function is missing in a new shell
+
+- **Where:** milestone 2, drills 1 and 4.
+- **Symptom:** `bash: check_files: command not found`.
+- **Cause:** a function defined at the prompt exists only in that shell; each `script` recording starts a new one.
+- **Fix:** define it again in the new shell, or keep such helpers in a script file. The checks were re-run afterwards in their own recorded session.
+
 ## Diagnostic commands
 
 ```bash
 ceph -s                                   # overall state
+ceph -w                                   # the cluster log, live, with timestamps: what the monitors decided and when
 ceph health detail                        # the reason behind any HEALTH_WARN
 ceph time-sync-status                     # each monitor's clock offset from the leader
 ceph orch ps                              # every daemon, its host, state, memory use and limit
@@ -81,5 +104,9 @@ cephadm shell -- ceph -s                  # the cluster's own client, when the h
 cephadm ceph-volume lvm list              # on a host: OSDs ceph-volume has created there
 tail -40 /var/log/ceph/<fsid>/ceph-volume.log   # on a host: the last commands ceph-volume ran
 ps -eo pid,ppid,etime,stat,wchan:25,args  # what a stuck process is, how long it has run, what it waits on
+ceph --admin-daemon /var/run/ceph/<fsid>/ceph-mon.<host>.asok mon_status   # one monitor's own view, no quorum needed
+ceph pg dump_stuck inactive               # PGs not accepting I/O, and why
+rados list-inconsistent-pg <pool>         # after a scrub: PGs whose copies disagree
+dmesg -T | grep -E 'ceph|libceph'         # on the client: the kernel client's view of monitors, MDS and OSDs
 chronyc tracking                          # this machine's offset from its time source
 ```

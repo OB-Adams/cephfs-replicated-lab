@@ -1,0 +1,30 @@
+# Drill 4: the active MDS killed, cluster log
+# Captured 2026-11-04 with `ceph -w | tee` on gluster1: the cluster log as it happened, times UTC.
+# The status block at the top is what `ceph -w` prints when it starts. Private addresses masked. Otherwise unchanged.
+#
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_OK
+ 
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 10m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 3h), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 10m), 6 in (since 59m)
+ 
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 3.44k objects, 32 MiB
+    usage:   562 MiB used, 59 GiB / 60 GiB avail
+    pgs:     145 active+clean
+ 
+
+2026-11-04T17:33:05.698204+0000 mon.gluster1 [INF] daemon mds.cephfs.gluster1.wmvdvt restarted
+2026-11-04T17:33:05.698387+0000 mon.gluster1 [WRN] Health check failed: 1 filesystem is degraded (FS_DEGRADED)
+2026-11-04T17:33:05.698395+0000 mon.gluster1 [ERR] Health check failed: 1 filesystem is offline (MDS_ALL_DOWN)
+2026-11-04T17:33:05.721285+0000 mon.gluster1 [INF] Standby daemon mds.cephfs.gluster2.stwcqc assigned to filesystem cephfs as rank 0
+2026-11-04T17:33:05.721345+0000 mon.gluster1 [INF] Health check cleared: MDS_ALL_DOWN (was: 1 filesystem is offline)
+2026-11-04T17:33:07.803017+0000 mon.gluster1 [INF] daemon mds.cephfs.gluster2.stwcqc is now active in filesystem cephfs as rank 0
+2026-11-04T17:33:08.783917+0000 mon.gluster1 [INF] Health check cleared: FS_DEGRADED (was: 1 filesystem is degraded)
+2026-11-04T17:33:08.783993+0000 mon.gluster1 [INF] Cluster is now healthy

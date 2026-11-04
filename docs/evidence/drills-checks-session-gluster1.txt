@@ -1,0 +1,31 @@
+# After the drills: confirmation that every PG was deep-scrubbed, and the MDS roles, session log from gluster1
+# Captured 2026-11-04 with script(1), times UTC. Private addresses masked.
+# Cleaned for reading: terminal control codes removed, and commands that were pasted together and drawn twice by the
+# terminal written once each. Typing mistakes are left as typed. Output is unchanged.
+#
+Script started on 2026-11-04 19:16:32+00:00 [TERM="xterm-256color" TTY="/dev/pts/2" COLUMNS="162" LINES="48"]
+root@gluster1:~# ceph pg dump pgs -f json 2>/dev/null | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+pgs = d["pg_stats"] if isinstance(d, dict) else d
+for pool in ("2", "3"):
+    sel = [p for p in pgs if p["pgid"].split(".")[0] == pool]
+    done = [p for p in sel if p["last_deep_scrub_stamp"] >= "2026-11-04T17:37:56"]
+    print(f"pool {pool}: {len(done)} of {len(sel)} PGs deep-scrubbed since 17:37:56")'
+ceph fs status cephfs
+pool 2: 16 of 16 PGs deep-scrubbed since 17:37:56
+pool 3: 128 of 128 PGs deep-scrubbed since 17:37:56
+cephfs - 1 clients
+======
+RANK  STATE            MDS               ACTIVITY     DNS    INOS   DIRS   CAPS
+ 0    active  cephfs.gluster2.stwcqc  Reqs:    0 /s  3843   3846     18   3807
+       POOL           TYPE     USED  AVAIL
+cephfs.cephfs.meta  metadata  74.1M  18.6G
+cephfs.cephfs.data    data    74.6M  18.6G
+     STANDBY MDS
+cephfs.gluster1.wmvdvt
+MDS version: ceph version 20.2.5 (ed27c686770872022f4c1de04f6b0ac5d5384ded) tentacle (stable - RelWithDebInfo)
+root@gluster1:~# exit
+exit
+
+Script done on 2026-11-04 19:16:45+00:00 [COMMAND_EXIT_CODE="0"]

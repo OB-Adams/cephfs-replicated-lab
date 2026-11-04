@@ -9,7 +9,7 @@ This is phase 2 of a storage study. Phase 1, the GlusterFS build and its nine dr
 | Item | Status |
 |---|---|
 | Milestone 1: deploy Ceph and mount CephFS | Complete ([docs/deploy.md](docs/deploy.md)) |
-| Milestone 2: failure drills | Planned |
+| Milestone 2: failure drills | Complete ([docs/failure-drills.md](docs/failure-drills.md)) |
 | Milestone 3: OSD replacement and expansion | Planned |
 | Milestone 4: security and monitoring | Planned |
 | Milestone 5: `fio` benchmark against the Gluster baseline | Planned |
@@ -27,6 +27,11 @@ The full tracker is in [docs/milestones.md](docs/milestones.md). Anything not li
 | 1. Deploy | gluster2's OSDs stalled for over half an hour, every attempt stopping at `osd new`, until clock skew of up to 15 s between the monitors was corrected |
 | 1. Deploy | A Pacific client left on the VMs could not read the AES-256 admin key the Tentacle monitors created; Tentacle's own client needed EPEL |
 | 1. Deploy | After an unattended restart of every VM, the cluster and the client's mount came back healthy by themselves |
+| 2. Graceful host loss | Writes continued with two copies. After an hour away, 2036 degraded objects were recovered from PG logs in about 9 s. One write stalled 11.9 s while the monitors re-formed their quorum |
+| 2. Hard failure | A silent host stalled the client 25.8 s at the default `osd_heartbeat_grace` of 20 s (Gluster: 70.3 s), and 16.2 s at 10 s, where the monitor election became the limit |
+| 2. Majority lost | With two of three hosts down, a write waited 433 s and then completed by itself, with no error and no remount. The Gluster mount failed outright |
+| 2. MDS failover | Killing the active MDS stalled metadata for 13.4 s; the standby was active 2 s after taking over |
+| 2. Scrub | A deep scrub of both pools after the drills found no inconsistent PGs; all 3800 drill files intact |
 
 ## Objectives
 
@@ -144,6 +149,7 @@ Issues actually encountered, with causes and fixes, are in [docs/troubleshooting
 | `nothing provides libarrow.so.900` when installing `ceph-common` 20.2 | Milestone 1, every VM |
 | One host never gets its OSDs; `osd new` waits for ever | Milestone 1, gluster2 |
 | `MON_CLOCK_SKEW` after the Mac slept | Milestone 1 |
+| `ceph` commands hang with no monitor quorum | Milestone 2, drill 3 |
 
 ## Repository structure
 
@@ -161,21 +167,28 @@ cephfs-replicated-lab/
 │   └── osd-spec.yml           the OSD service spec applied in milestone 1
 ├── docs/
 │   ├── deploy.md              milestone 1: concepts, procedure, results and findings
+│   ├── failure-drills.md      milestone 2: four failure drills and a deep scrub
 │   ├── milestones.md
 │   ├── troubleshooting.md
 │   └── evidence/
-│       ├── deploy-session-gluster1.txt
-│       ├── deploy-session-gluster2.txt
-│       ├── deploy-session-gluster3.txt
-│       ├── deploy-session-gluster4.txt
-│       ├── verify-session-gluster1.txt
-│       ├── verify-session-gluster2.txt
-│       ├── verify-session-gluster3.txt
-│       └── verify-session-gluster4.txt
+│       ├── deploy-session-gluster{1,2,3,4}.txt
+│       ├── verify-session-gluster{1,2,3,4}.txt
+│       ├── drill1-cephw.txt, drill1-writes.log, drill1-session-gluster4.txt, drill1-gluster1-terminal.txt
+│       ├── drill2-cephw.txt, drill2a-writes.log, drill2b-writes.log, drill2-session-gluster{1,4}.txt
+│       ├── drill3-cephw.txt, drill3-writes.log, drill3-session-gluster{1,4}.txt
+│       ├── drill4-cephw.txt, drill4-writes.log, drill4-session-gluster{1,4}.txt
+│       ├── drills-scrub-session-gluster1.txt
+│       └── drills-checks-session-gluster{1,4}.txt
+├── scripts/
+│   └── drill-writer.sh        the client writer used in the drills: one file per write, with fsync, timed
 └── screenshots/
     ├── README.md
     ├── 01-ceph-cluster-health.png
-    └── 02-ceph-object-placement.png
+    ├── 02-ceph-object-placement.png
+    ├── 03-drill1-degraded-writes-continue.png
+    ├── 04-drill2-write-stall.png
+    ├── 05-drill3-no-quorum.png
+    └── 06-drill4-mds-failover.png
 ```
 
 ## Screenshots and evidence
@@ -187,6 +200,22 @@ cephfs-replicated-lab/
 ### A file's objects and their OSDs
 
 ![rados ls, ceph osd map and ceph df: three objects of a 10 MiB file, each on three OSDs on three hosts](screenshots/02-ceph-object-placement.png)
+
+### Drill 1: a host out, writes continuing
+
+![ceph -s with gluster3 down and out: 4 of 6 OSDs in, every PG undersized, a third of the objects degraded, nothing backfilling](screenshots/03-drill1-degraded-writes-continue.png)
+
+### Drill 2: the write stall at two heartbeat graces
+
+![The slowest writes of drill 2: 25.8 s at the default grace, 16.2 s at a grace of 10 s](screenshots/04-drill2-write-stall.png)
+
+### Drill 3: one monitor left, no quorum
+
+![ceph -s timing out and gluster1's monitor reporting state probing with an empty quorum](screenshots/05-drill3-no-quorum.png)
+
+### Drill 4: the standby MDS active
+
+![ceph fs status with gluster2's MDS active and gluster1's as standby, and the cluster log lines of the takeover](screenshots/06-drill4-mds-failover.png)
 
 What each screenshot shows and the commands behind it are in [screenshots/README.md](screenshots/README.md). The session recordings are in [docs/evidence](docs/evidence).
 

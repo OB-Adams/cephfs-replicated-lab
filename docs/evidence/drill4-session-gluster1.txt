@@ -1,0 +1,77 @@
+# Drill 4: the active MDS killed, session log from gluster1
+# Captured 2026-11-04 with script(1), times UTC. Private addresses masked.
+# Cleaned for reading: terminal control codes removed, and commands that were pasted together and drawn twice by the
+# terminal written once each. Typing mistakes are left as typed. Output is unchanged.
+#
+Script started on 2026-11-04 17:28:31+00:00 [TERM="xterm-256color" TTY="/dev/pts/2" COLUMNS="162" LINES="48"]
+root@gluster1:~# ceph fs status cephfs
+cephfs - 1 clients
+======
+RANK  STATE            MDS               ACTIVITY     DNS    INOS   DIRS   CAPS
+ 0    active  cephfs.gluster1.wmvdvt  Reqs:    0 /s  3442   3445     17    603
+       POOL           TYPE     USED  AVAIL
+cephfs.cephfs.meta  metadata  66.2M  18.7G
+cephfs.cephfs.data    data    69.9M  18.7G
+     STANDBY MDS
+cephfs.gluster2.stwcqc
+MDS version: ceph version 20.2.5 (ed27c686770872022f4c1de04f6b0ac5d5384ded) tentacle (stable - RelWithDebInfo)
+root@gluster1:~# podman ps --format '{{.Names}}' | grep mds
+ceph-01ada8b6-d718-11f1-9fbe-d6454780e5d3-mds-cephfs-gluster1-wmvdvt
+root@gluster1:~# podman kill --signal KILL ceph-01ada8b6-d718-11f1-9fbe-d6454780e5d3-mds-cephfs-gluster1-wmvdvt
+ceph-01ada8b6-d718-11f1-9fbe-d6454780e5d3-mds-cephfs-gluster1-wmvdvt
+root@gluster1:~# ceph fs status cephfs
+cephfs - 1 clients
+======
+RANK  STATE            MDS               ACTIVITY     DNS    INOS   DIRS   CAPS
+ 0    active  cephfs.gluster1.wmvdvt  Reqs:    1 /s  3536   3539     18    696
+       POOL           TYPE     USED  AVAIL
+cephfs.cephfs.meta  metadata  67.5M  18.7G
+cephfs.cephfs.data    data    71.0M  18.7G
+     STANDBY MDS
+cephfs.gluster2.stwcqc
+MDS version: ceph version 20.2.5 (ed27c686770872022f4c1de04f6b0ac5d5384ded) tentacle (stable - RelWithDebInfo)
+root@gluster1:~# ceph fs status cephfs
+cephfs - 1 clients
+======
+RANK  STATE            MDS               ACTIVITY     DNS    INOS   DIRS   CAPS
+ 0    active  cephfs.gluster2.stwcqc  Reqs:    1 /s  3555   3558     18     14
+       POOL           TYPE     USED  AVAIL
+cephfs.cephfs.meta  metadata  68.3M  18.7G
+cephfs.cephfs.data    data    71.2M  18.7G
+     STANDBY MDS
+cephfs.gluster1.wmvdvt
+MDS version: ceph version 20.2.5 (ed27c686770872022f4c1de04f6b0ac5d5384ded) tentacle (stable - RelWithDebInfo)
+root@gluster1:~# ceph fs status cephfs
+cephfs - 1 clients
+======
+RANK  STATE            MDS               ACTIVITY     DNS    INOS   DIRS   CAPS
+ 0    active  cephfs.gluster2.stwcqc  Reqs:    1 /s  3601   3604     18     60
+       POOL           TYPE     USED  AVAIL
+cephfs.cephfs.meta  metadata  68.9M  18.7G
+cephfs.cephfs.data    data    71.7M  18.7G
+     STANDBY MDS
+cephfs.gluster1.wmvdvt
+MDS version: ceph version 20.2.5 (ed27c686770872022f4c1de04f6b0ac5d5384ded) tentacle (stable - RelWithDebInfo)
+root@gluster1:~# clear
+root@gluster1:~# ceph fs status cephfs
+cephfs - 1 clients
+======
+RANK  STATE            MDS               ACTIVITY     DNS    INOS   DIRS   CAPS
+ 0    active  cephfs.gluster2.stwcqc  Reqs:    2 /s  3639   3642     18     98
+       POOL           TYPE     USED  AVAIL
+cephfs.cephfs.meta  metadata  69.5M  18.7G
+cephfs.cephfs.data    data    72.2M  18.7G
+     STANDBY MDS
+cephfs.gluster1.wmvdvt
+MDS version: ceph version 20.2.5 (ed27c686770872022f4c1de04f6b0ac5d5384ded) tentacle (stable - RelWithDebInfo)
+root@gluster1:~# grep -iE 'mds|fsmap' ~/drill4-cephw.txt | tail -12
+    mds: 1/1 daemons up, 1 standby
+2026-11-04T17:33:05.698204+0000 mon.gluster1 [INF] daemon mds.cephfs.gluster1.wmvdvt restarted
+2026-11-04T17:33:05.698395+0000 mon.gluster1 [ERR] Health check failed: 1 filesystem is offline (MDS_ALL_DOWN)
+2026-11-04T17:33:05.721285+0000 mon.gluster1 [INF] Standby daemon mds.cephfs.gluster2.stwcqc assigned to filesystem cephfs as rank 0
+2026-11-04T17:33:05.721345+0000 mon.gluster1 [INF] Health check cleared: MDS_ALL_DOWN (was: 1 filesystem is offline)
+2026-11-04T17:33:07.803017+0000 mon.gluster1 [INF] daemon mds.cephfs.gluster2.stwcqc is now active in filesystem cephfs as rank 0
+root@gluster1:~# exit
+exit
+
+Script done on 2026-11-04 17:37:30+00:00 [COMMAND_EXIT_CODE="0"]

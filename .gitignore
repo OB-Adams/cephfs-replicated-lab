@@ -14,6 +14,7 @@ id_rsa*
 
 # Local and temporary files
 *.log
+!docs/evidence/*.log
 *.bak
 *.swp
 *.tmp

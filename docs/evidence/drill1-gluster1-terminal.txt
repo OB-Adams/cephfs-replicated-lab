@@ -1,0 +1,122 @@
+# Drill 1: graceful loss of gluster3, output from gluster1's main terminal
+# Copied from the terminal on 2026-11-04 (this terminal was not recorded with script(1)); it covers the last part of
+# the outage and gluster3's return. The cluster log for the whole drill, with timestamps, is drill1-cephw.txt.
+# Private addresses masked. Otherwise unchanged.
+#
+ ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            1 hosts fail cephadm check
+            1/3 mons down, quorum gluster1,gluster2
+            Degraded data redundancy: 2036/6108 objects degraded (33.333%), 142 pgs degraded, 145 pgs undersized
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2 (age 57m) [leader: gluster1], out of quorum: gluster3
+    mgr: gluster1.bxuyky(active, since 2h), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 4 up (since 57m), 4 in (since 47m)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 2.04k objects, 23 MiB
+    usage:   370 MiB used, 40 GiB / 40 GiB avail
+    pgs:     2036/6108 objects degraded (33.333%)
+             142 active+undersized+degraded
+             3   active+undersized
+
+root@gluster1:~# ceph pg stat
+145 pgs: 3 active+undersized, 142 active+undersized+degraded; 23 MiB data, 370 MiB used, 40 GiB / 40 GiB avail; 2036/6108 objects degraded (33.333%)
+root@gluster1:~# ceph osd df tree
+ID  CLASS  WEIGHT   REWEIGHT  SIZE    RAW USE  DATA    OMAP     META     AVAIL    %USE  VAR   PGS  STATUS  TYPE NAME
+-1         0.05878         -  40 GiB  370 MiB  67 MiB  733 KiB  302 MiB   40 GiB  0.90  1.00    -          root default
+-3         0.01959         -  20 GiB  194 MiB  33 MiB  367 KiB  160 MiB   20 GiB  0.95  1.05    -              host gluster1
+ 1    hdd  0.00980   1.00000  10 GiB   73 MiB  11 MiB  347 KiB   62 MiB  9.9 GiB  0.72  0.79   68      up          osd.1
+ 2    hdd  0.00980   1.00000  10 GiB  120 MiB  23 MiB   20 KiB   98 MiB  9.9 GiB  1.17  1.30   77      up          osd.2
+-7         0.01959         -  20 GiB  176 MiB  33 MiB  366 KiB  142 MiB   20 GiB  0.86  0.95    -              host gluster2
+ 4    hdd  0.00980   1.00000  10 GiB   74 MiB  12 MiB  346 KiB   62 MiB  9.9 GiB  0.72  0.80   67      up          osd.4
+ 5    hdd  0.00980   1.00000  10 GiB  102 MiB  22 MiB   20 KiB   80 MiB  9.9 GiB  1.00  1.10   78      up          osd.5
+-5         0.01959         -     0 B      0 B     0 B      0 B      0 B      0 B     0     0    -              host gluster3
+ 0    hdd  0.00980         0     0 B      0 B     0 B      0 B      0 B      0 B     0     0    0    down          osd.0
+ 3    hdd  0.00980         0     0 B      0 B     0 B      0 B      0 B      0 B     0     0    0    down          osd.3
+                       TOTAL  40 GiB  370 MiB  67 MiB  736 KiB  302 MiB   40 GiB  0.90
+MIN/MAX VAR: 0.79/1.30  STDDEV: 0.19
+root@gluster1:~# ceph -s
+ceph pg stat
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            1 hosts fail cephadm check
+            1/3 mons down, quorum gluster1,gluster2
+            Degraded data redundancy: 2036/6108 objects degraded (33.333%), 142 pgs degraded, 145 pgs undersized
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2 (age 60m) [leader: gluster1], out of quorum: gluster3
+    mgr: gluster1.bxuyky(active, since 2h), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 4 up (since 60m), 4 in (since 50m)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 2.04k objects, 23 MiB
+    usage:   370 MiB used, 40 GiB / 40 GiB avail
+    pgs:     2036/6108 objects degraded (33.333%)
+             142 active+undersized+degraded
+             3   active+undersized
+
+145 pgs: 3 active+undersized, 142 active+undersized+degraded; 23 MiB data, 370 MiB used, 40 GiB / 40 GiB avail; 2036/6108 objects degraded (33.333%)
+root@gluster1:~# ceph pg stat
+145 pgs: 3 active+undersized, 142 active+undersized+degraded; 23 MiB data, 370 MiB used, 40 GiB / 40 GiB avail; 2036/6108 objects degraded (33.333%)
+root@gluster1:~# ceph -s
+ceph pg stat
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            1 hosts fail cephadm check
+            clock skew detected on mon.gluster3
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 17s) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 2h), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 10s), 6 in (since 10s)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 2.04k objects, 23 MiB
+    usage:   512 MiB used, 59 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+  io:
+    recovery: 1.6 MiB/s, 0 keys/s, 247 objects/s
+
+145 pgs: 145 active+clean; 23 MiB data, 512 MiB used, 59 GiB / 60 GiB avail; 1.6 MiB/s, 0 keys/s, 247 objects/s recovering
+root@gluster1:~# ceph pg stat
+145 pgs: 3 peering, 142 active+clean; 23 MiB data, 512 MiB used, 59 GiB / 60 GiB avail
+root@gluster1:~# ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            1 hosts fail cephadm check
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 76s) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 2h), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 68s), 6 in (since 68s)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 2.04k objects, 23 MiB
+    usage:   512 MiB used, 59 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+  io:
+    recovery: 30 B/s, 6 objects/s
+
+root@gluster1:~# ceph pg stat
+145 pgs: 145 active+clean; 23 MiB data, 512 MiB used, 59 GiB / 60 GiB avail; 22 B/s, 4 objects/s recovering
