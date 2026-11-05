@@ -1,0 +1,370 @@
+# Drill 7: the three new OSDs drained and removed, session log from gluster1
+# Captured 2026-11-05 with script(1), times UTC. Private addresses masked.
+# Cleaned for reading: terminal control codes removed, and commands that were pasted together and drawn twice by the
+# terminal written once each. Typing mistakes are left as typed. Output is unchanged.
+#
+Script started on 2026-11-05 22:12:23+00:00 [TERM="xterm-256color" TTY="/dev/pts/2" COLUMNS="162" LINES="48"]
+root@gluster1:~# cat > /root/osd-spec.yml <<'EOF'
+service_type: osd
+service_id: data-disks
+placement:
+  host_pattern: 'gluster[1-3]'
+spec:
+  data_devices:
+    paths:
+      - /dev/vdb
+      - /dev/vdc
+EOF
+ceph orch apply -i /root/osd-spec.yml
+ceph orch ls osd --export
+ceph osd tree
+Scheduled osd.data-disks update...
+service_type: osd
+service_name: osd
+unmanaged: true
+spec:
+  filter_logic: AND
+  objectstore: bluestore
+---
+service_type: osd
+service_id: data-disks
+service_name: osd.data-disks
+placement:
+  host_pattern: gluster[1-3]
+spec:
+  data_devices:
+    paths:
+    - /dev/vdb
+    - /dev/vdc
+  filter_logic: AND
+  objectstore: bluestore
+ID  CLASS  WEIGHT   TYPE NAME          STATUS  REWEIGHT  PRI-AFF
+-1         0.08817  root default
+-3         0.02939      host gluster1
+ 1    hdd  0.00980          osd.1          up   1.00000  1.00000
+ 2    hdd  0.00980          osd.2          up   1.00000  1.00000
+ 7    hdd  0.00980          osd.7          up   1.00000  1.00000
+-7         0.02939      host gluster2
+ 4    hdd  0.00980          osd.4          up   1.00000  1.00000
+ 5    hdd  0.00980          osd.5          up   1.00000  1.00000
+ 8    hdd  0.00980          osd.8          up   1.00000  1.00000
+-5         0.02939      host gluster3
+ 0    hdd  0.00980          osd.0          up   1.00000  1.00000
+ 3    hdd  0.00980          osd.3          up   1.00000  1.00000
+ 6    hdd  0.00980          osd.6          up   1.00000  1.00000
+root@gluster1:~# ceph osd tree
+ID  CLASS  WEIGHT   TYPE NAME          STATUS  REWEIGHT  PRI-AFF
+-1         0.08817  root default
+-3         0.02939      host gluster1
+ 1    hdd  0.00980          osd.1          up   1.00000  1.00000
+ 2    hdd  0.00980          osd.2          up   1.00000  1.00000
+ 7    hdd  0.00980          osd.7          up   1.00000  1.00000
+-7         0.02939      host gluster2
+ 4    hdd  0.00980          osd.4          up   1.00000  1.00000
+ 5    hdd  0.00980          osd.5          up   1.00000  1.00000
+ 8    hdd  0.00980          osd.8          up   1.00000  1.00000
+-5         0.02939      host gluster3
+ 0    hdd  0.00980          osd.0          up   1.00000  1.00000
+ 3    hdd  0.00980          osd.3          up   1.00000  1.00000
+ 6    hdd  0.00980          osd.6          up   1.00000  1.00000
+root@gluster1:~# ceph orch ls osd --export
+service_type: osd
+service_name: osd
+unmanaged: true
+spec:
+  filter_logic: AND
+  objectstore: bluestore
+---
+service_type: osd
+service_id: data-disks
+service_name: osd.data-disks
+placement:
+  host_pattern: gluster[1-3]
+spec:
+  data_devices:
+    paths:
+    - /dev/vdb
+    - /dev/vdc
+  filter_logic: AND
+  objectstore: bluestore
+root@gluster1:~# for i in 6 7 8; do ceph osd metadata $i | grep -E '"(hostname|devices)"'; done
+    "devices": "vdd",
+    "hostname": "gluster3",
+    "devices": "vdd",
+    "hostname": "gluster1",
+    "devices": "vdd",
+    "hostname": "gluster2",
+root@gluster1:~# ceph orch osd rm 6 7 8 --zap
+Scheduled OSD(s) for removal.
+root@gluster1:~# ceph orch osd rm status
+OSD  HOST      STATE     PGS  REPLACE  FORCE  ZAP   DRAIN STARTED AT
+6    gluster3  started    50  False    False  True
+7    gluster1  draining   22  False    False  True  2026-11-05T22:14:29.641852Z
+8    gluster2  started    46  False    False  True
+root@gluster1:~# ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            Degraded data redundancy: 6217/33405 objects degraded (18.611%), 65 pgs degraded
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 62m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 62m), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 8 osds: 8 up (since 12s), 8 in (since 13m); 26 remapped pgs
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 11.13k objects, 2.0 GiB
+    usage:   7.1 GiB used, 73 GiB / 80 GiB avail
+    pgs:     6217/33405 objects degraded (18.611%)
+             151/33405 objects misplaced (0.452%)
+             79 active+clean
+             41 active+recovery_wait+degraded
+             24 active+recovery_wait+undersized+degraded+remapped
+             1  active+recovering
+
+  io:
+    client:   11 KiB/s wr, 0 op/s rd, 4 op/s wr
+    recovery: 7.4 MiB/s, 45 objects/s
+
+root@gluster1:~# ceph orch osd rm status
+OSD  HOST      STATE                    PGS  REPLACE  FORCE  ZAP   DRAIN STARTED AT
+6    gluster3  done, waiting for purge    0  False    False  True  2026-11-05T22:15:42.524416Z
+8    gluster2  draining                   2  False    False  True  2026-11-05T22:15:52.297968Z
+root@gluster1:~# clear
+root@gluster1:~# ceph orch osd rm status
+OSD  HOST      STATE                    PGS  REPLACE  FORCE  ZAP   DRAIN STARTED AT
+6    gluster3  done, waiting for purge    0  False    False  True  2026-11-05T22:15:42.524416Z
+8    gluster2  draining                   1  False    False  True  2026-11-05T22:15:52.297968Z
+root@gluster1:~# ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            Degraded data redundancy: 7042/33561 objects degraded (20.983%), 61 pgs degraded
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 63m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 63m), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 8 osds: 8 up (since 40s), 8 in (since 14m); 23 remapped pgs
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 11.19k objects, 2.0 GiB
+    usage:   7.3 GiB used, 73 GiB / 80 GiB avail
+    pgs:     7042/33561 objects degraded (20.983%)
+             291/33561 objects misplaced (0.867%)
+             82 active+clean
+             39 active+recovery_wait+degraded
+             22 active+recovery_wait+undersized+degraded+remapped
+             1  active+recovering
+             1  active+remapped+backfill_wait
+
+  io:
+    client:   15 KiB/s wr, 0 op/s rd, 5 op/s wr
+    recovery: 4.9 MiB/s, 29 objects/s
+
+root@gluster1:~# ceph orch osd rm status
+OSD  HOST      STATE                    PGS  REPLACE  FORCE  ZAP   DRAIN STARTED AT
+6    gluster3  done, waiting for purge    0  False    False  True  2026-11-05T22:15:42.524416Z
+8    gluster2  draining                   1  False    False  True  2026-11-05T22:15:52.297968Z
+root@gluster1:~# ceph orch osd rm status
+OSD  HOST      STATE                    PGS  REPLACE  FORCE  ZAP   DRAIN STARTED AT
+6    gluster3  done, waiting for purge    0  False    False  True  2026-11-05T22:15:42.524416Z
+8    gluster2  draining                   1  False    False  True  2026-11-05T22:15:52.297968Z
+root@gluster1:~# ceph orch set-unmanaged osd.data-disks
+ceph orch ls osd
+Set unmanaged to True for service osd.data-disks
+NAME            PORTS  RUNNING  REFRESHED  AGE  PLACEMENT
+osd                          1  2m ago     -    <unmanaged>
+osd.data-disks               5  4m ago     0s   <unmanaged>
+root@gluster1:~# ceph orch ls osd --export
+ceph osd tree
+ceph health detail | head -20
+ceph log last 60 debug cephadm | grep -vE 'osd claims' | tail -30
+grep -E 'osd\.[678]|boot|marked|purge|destroy' ~/ceph-drill7-cephw.txt | tail -30
+service_type: osd
+service_name: osd
+unmanaged: true
+spec:
+  filter_logic: AND
+  objectstore: bluestore
+---
+service_type: osd
+service_id: data-disks
+service_name: osd.data-disks
+placement:
+  host_pattern: gluster[1-3]
+unmanaged: true
+spec:
+  data_devices:
+    paths:
+    - /dev/vdb
+    - /dev/vdc
+  filter_logic: AND
+  objectstore: bluestore
+ID  CLASS  WEIGHT   TYPE NAME          STATUS  REWEIGHT  PRI-AFF
+-1         0.05878  root default
+-3         0.01959      host gluster1
+ 1    hdd  0.00980          osd.1          up   1.00000  1.00000
+ 2    hdd  0.00980          osd.2          up   1.00000  1.00000
+-7         0.01959      host gluster2
+ 4    hdd  0.00980          osd.4          up   1.00000  1.00000
+ 5    hdd  0.00980          osd.5          up   1.00000  1.00000
+-5         0.01959      host gluster3
+ 0    hdd  0.00980          osd.0          up   1.00000  1.00000
+ 3    hdd  0.00980          osd.3          up   1.00000  1.00000
+HEALTH_OK
+2026-11-05T22:14:26.427179+0000 mgr.gluster1.bxuyky (mgr.114175) 1890 : cephadm [INF] osd.7 crush weight is 0.009796142578125
+2026-11-05T22:14:26.428629+0000 mgr.gluster1.bxuyky (mgr.114175) 1891 : cephadm [INF] osd.8 crush weight is 0.009796142578125
+2026-11-05T22:14:26.430064+0000 mgr.gluster1.bxuyky (mgr.114175) 1892 : cephadm [INF] osd.6 crush weight is 0.009796142578125
+2026-11-05T22:14:29.641838+0000 mgr.gluster1.bxuyky (mgr.114175) 1901 : cephadm [INF] osd.7 weight is now 0.0
+2026-11-05T22:15:42.524407+0000 mgr.gluster1.bxuyky (mgr.114175) 1960 : cephadm [INF] osd.6 weight is now 0.0
+2026-11-05T22:15:43.557686+0000 mgr.gluster1.bxuyky (mgr.114175) 1965 : cephadm [INF] osd.7 now down
+2026-11-05T22:15:43.557912+0000 mgr.gluster1.bxuyky (mgr.114175) 1966 : cephadm [INF] Removing daemon osd.7 from gluster1 -- ports []
+2026-11-05T22:15:44.974359+0000 mgr.gluster1.bxuyky (mgr.114175) 1968 : cephadm [INF] Removing key for osd.7
+2026-11-05T22:15:44.995110+0000 mgr.gluster1.bxuyky (mgr.114175) 1969 : cephadm [INF] Successfully removed osd.7 on gluster1
+2026-11-05T22:15:45.020654+0000 mgr.gluster1.bxuyky (mgr.114175) 1970 : cephadm [INF] Successfully purged osd.7 on gluster1
+2026-11-05T22:15:45.020672+0000 mgr.gluster1.bxuyky (mgr.114175) 1971 : cephadm [INF] Zapping devices for osd.7 on gluster1
+2026-11-05T22:15:47.060936+0000 mgr.gluster1.bxuyky (mgr.114175) 1973 : cephadm [INF] Successfully zapped devices for osd.7 on gluster1
+2026-11-05T22:15:49.264605+0000 mgr.gluster1.bxuyky (mgr.114175) 1979 : cephadm [INF] Detected new or changed devices on gluster1
+2026-11-05T22:15:52.297911+0000 mgr.gluster1.bxuyky (mgr.114175) 1986 : cephadm [INF] osd.8 weight is now 0.0
+2026-11-05T22:17:41.009539+0000 mgr.gluster1.bxuyky (mgr.114175) 2083 : cephadm [INF] osd.8 now down
+2026-11-05T22:17:41.009907+0000 mgr.gluster1.bxuyky (mgr.114175) 2084 : cephadm [INF] Removing daemon osd.8 from gluster2 -- ports []
+2026-11-05T22:17:42.342557+0000 mgr.gluster1.bxuyky (mgr.114175) 2086 : cephadm [INF] Removing key for osd.8
+2026-11-05T22:17:42.360334+0000 mgr.gluster1.bxuyky (mgr.114175) 2087 : cephadm [INF] Successfully removed osd.8 on gluster2
+2026-11-05T22:17:42.393304+0000 mgr.gluster1.bxuyky (mgr.114175) 2088 : cephadm [INF] Successfully purged osd.8 on gluster2
+2026-11-05T22:17:42.393325+0000 mgr.gluster1.bxuyky (mgr.114175) 2089 : cephadm [INF] Zapping devices for osd.8 on gluster2
+2026-11-05T22:17:44.644251+0000 mgr.gluster1.bxuyky (mgr.114175) 2091 : cephadm [INF] Successfully zapped devices for osd.8 on gluster2
+2026-11-05T22:17:45.513923+0000 mgr.gluster1.bxuyky (mgr.114175) 2094 : cephadm [INF] osd.6 now down
+2026-11-05T22:17:45.514205+0000 mgr.gluster1.bxuyky (mgr.114175) 2095 : cephadm [INF] Removing daemon osd.6 from gluster3 -- ports []
+2026-11-05T22:17:46.953262+0000 mgr.gluster1.bxuyky (mgr.114175) 2097 : cephadm [INF] Removing key for osd.6
+2026-11-05T22:17:46.971984+0000 mgr.gluster1.bxuyky (mgr.114175) 2098 : cephadm [INF] Successfully removed osd.6 on gluster3
+2026-11-05T22:17:47.007447+0000 mgr.gluster1.bxuyky (mgr.114175) 2099 : cephadm [INF] Successfully purged osd.6 on gluster3
+2026-11-05T22:17:47.007463+0000 mgr.gluster1.bxuyky (mgr.114175) 2100 : cephadm [INF] Zapping devices for osd.6 on gluster3
+2026-11-05T22:17:49.437441+0000 mgr.gluster1.bxuyky (mgr.114175) 2102 : cephadm [INF] Successfully zapped devices for osd.6 on gluster3
+2026-11-05T22:17:52.030564+0000 mgr.gluster1.bxuyky (mgr.114175) 2105 : cephadm [INF] Detected new or changed devices on gluster3
+2026-11-05T22:17:52.110457+0000 mgr.gluster1.bxuyky (mgr.114175) 2106 : cephadm [INF] Detected new or changed devices on gluster2
+2026-11-05T22:15:43.560046+0000 mon.gluster1 [INF] osd.7 marked itself dead as of e302
+root@gluster1:~# ceph orch set-managed osd.data-disks
+ceph orch ls osd
+ceph osd df tree
+ceph orch device ls --refresh
+ceph -s
+Set unmanaged to False for service osd.data-disks
+NAME            PORTS  RUNNING  REFRESHED  AGE  PLACEMENT
+osd                          1  5m ago     -    <unmanaged>
+osd.data-disks               5  7m ago     0s   gluster[1-3]
+ID  CLASS  WEIGHT   REWEIGHT  SIZE    RAW USE  DATA      OMAP     META     AVAIL    %USE   VAR   PGS  STATUS  TYPE NAME
+-1         0.05878         -  60 GiB  7.1 GiB   6.3 GiB  2.6 MiB  865 MiB   53 GiB  11.86  1.00    -          root default
+-3         0.01959         -  20 GiB  2.4 GiB   2.1 GiB  857 KiB  307 MiB   18 GiB  11.94  1.01    -              host gluster1
+ 1    hdd  0.00980   1.00000  10 GiB  1.1 GiB   979 MiB  767 KiB  171 MiB  8.9 GiB  11.24  0.95   68      up          osd.1
+ 2    hdd  0.00980   1.00000  10 GiB  1.3 GiB   1.1 GiB   90 KiB  136 MiB  8.7 GiB  12.65  1.07   77      up          osd.2
+-7         0.01959         -  20 GiB  2.4 GiB   2.1 GiB  861 KiB  272 MiB   18 GiB  11.77  0.99    -              host gluster2
+ 4    hdd  0.00980   1.00000  10 GiB  1.1 GiB  1001 MiB  753 KiB  101 MiB  8.9 GiB  10.77  0.91   67      up          osd.4
+ 5    hdd  0.00980   1.00000  10 GiB  1.3 GiB   1.1 GiB  108 KiB  172 MiB  8.7 GiB  12.78  1.08   78      up          osd.5
+-5         0.01959         -  20 GiB  2.4 GiB   2.1 GiB  942 KiB  287 MiB   18 GiB  11.85  1.00    -              host gluster3
+ 0    hdd  0.00980   1.00000  10 GiB  1.3 GiB   1.1 GiB  119 KiB  152 MiB  8.7 GiB  12.57  1.06   75      up          osd.0
+ 3    hdd  0.00980   1.00000  10 GiB  1.1 GiB  1004 MiB  823 KiB  134 MiB  8.9 GiB  11.12  0.94   70      up          osd.3
+                       TOTAL  60 GiB  7.1 GiB   6.3 GiB  2.6 MiB  865 MiB   53 GiB  11.86
+MIN/MAX VAR: 0.91/1.08  STDDEV: 0.82
+HOST      PATH      TYPE  DEVICE ID                SIZE  AVAILABLE  REFRESHED  REJECT REASONS
+gluster1  /dev/sda  hdd   Apple_Virtual_Disk-0:0  12.8G  No         7m ago     Has a FileSystem, id_bus, read-only
+gluster1  /dev/vdb  hdd   F6766C50FDA84EEE829F    10.0G  No         7m ago     Has a FileSystem, Insufficient space (<10 extents) on vgs, LVM detected
+gluster1  /dev/vdc  hdd   AC66AF4D1E504BDFAA27    10.0G  No         7m ago     Has a FileSystem, Insufficient space (<10 extents) on vgs, LVM detected
+gluster1  /dev/vdd  hdd   73B5C9A68207430A9E98    10.0G  Yes        7m ago
+gluster2  /dev/sda  hdd   Apple_Virtual_Disk-0:0  12.8G  No         5m ago     Has a FileSystem, id_bus, read-only
+gluster2  /dev/vdb  hdd   F6766C50FDA84EEE829F    10.0G  No         5m ago     Has a FileSystem, Insufficient space (<10 extents) on vgs, LVM detected
+gluster2  /dev/vdc  hdd   AB47AFCFD0ED489187FE    10.0G  No         5m ago     Has a FileSystem, Insufficient space (<10 extents) on vgs, LVM detected
+gluster2  /dev/vdd  hdd   17B2E0D6CB9C4C869732    10.0G  Yes        5m ago
+gluster3  /dev/sda  hdd   Apple_Virtual_Disk-0:0  12.8G  No         5m ago     Has a FileSystem, id_bus, read-only
+gluster3  /dev/vdb  hdd   F6766C50FDA84EEE829F    10.0G  No         5m ago     Has a FileSystem, Insufficient space (<10 extents) on vgs, LVM detected
+gluster3  /dev/vdc  hdd   35801A4268444D45A4B0    10.0G  No         5m ago     Has a FileSystem, Insufficient space (<10 extents) on vgs, LVM detected
+gluster3  /dev/vdd  hdd   D0172FF7448B4763AEDC    10.0G  Yes        5m ago
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_OK
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 70m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 70m), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 5m), 6 in (since 21m)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 11.98k objects, 2.0 GiB
+    usage:   7.1 GiB used, 53 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+  io:
+    client:   20 KiB/s wr, 0 op/s rd, 7 op/s wr
+
+root@gluster1:~# ceph orch set-managed osd.data-disks
+ceph orch ls osd
+ceph osd df tree
+ceph orch device ls --refresh
+ceph -s
+Service osd.data-disks not marked unmanaged. No action taken.
+NAME            PORTS  RUNNING  REFRESHED  AGE  PLACEMENT
+osd                          1  3m ago     -    <unmanaged>
+osd.data-disks               5  3m ago     13m  gluster[1-3]
+ID  CLASS  WEIGHT   REWEIGHT  SIZE    RAW USE  DATA      OMAP     META     AVAIL    %USE   VAR   PGS  STATUS  TYPE NAME
+-1         0.05878         -  60 GiB  7.2 GiB   6.3 GiB  2.9 MiB  883 MiB   53 GiB  11.92  1.00    -          root default
+-3         0.01959         -  20 GiB  2.4 GiB   2.1 GiB  850 KiB  307 MiB   18 GiB  11.98  1.00    -              host gluster1
+ 1    hdd  0.00980   1.00000  10 GiB  1.1 GiB   984 MiB  760 KiB  171 MiB  8.9 GiB  11.29  0.95   68      up          osd.1
+ 2    hdd  0.00980   1.00000  10 GiB  1.3 GiB   1.1 GiB   90 KiB  136 MiB  8.7 GiB  12.68  1.06   77      up          osd.2
+-7         0.01959         -  20 GiB  2.4 GiB   2.1 GiB  995 KiB  272 MiB   18 GiB  11.81  0.99    -              host gluster2
+ 4    hdd  0.00980   1.00000  10 GiB  1.1 GiB  1004 MiB  887 KiB  100 MiB  8.9 GiB  10.80  0.91   67      up          osd.4
+ 5    hdd  0.00980   1.00000  10 GiB  1.3 GiB   1.1 GiB  108 KiB  172 MiB  8.7 GiB  12.83  1.08   78      up          osd.5
+-5         0.01959         -  20 GiB  2.4 GiB   2.1 GiB  1.1 MiB  304 MiB   18 GiB  11.97  1.00    -              host gluster3
+ 0    hdd  0.00980   1.00000  10 GiB  1.3 GiB   1.1 GiB  119 KiB  170 MiB  8.7 GiB  12.79  1.07   75      up          osd.0
+ 3    hdd  0.00980   1.00000  10 GiB  1.1 GiB  1007 MiB  958 KiB  134 MiB  8.9 GiB  11.15  0.94   70      up          osd.3
+                       TOTAL  60 GiB  7.2 GiB   6.3 GiB  2.9 MiB  883 MiB   53 GiB  11.92
+MIN/MAX VAR: 0.91/1.08  STDDEV: 0.86
+HOST      PATH      TYPE  DEVICE ID                SIZE  AVAILABLE  REFRESHED  REJECT REASONS
+gluster1  /dev/sda  hdd   Apple_Virtual_Disk-0:0  12.8G  No         13m ago    Has a FileSystem, id_bus, read-only
+gluster1  /dev/vdb  hdd   F6766C50FDA84EEE829F    10.0G  No         13m ago    Has a FileSystem, Insufficient space (<10 extents) on vgs, LVM detected
+gluster1  /dev/vdc  hdd   AC66AF4D1E504BDFAA27    10.0G  No         13m ago    Has a FileSystem, Insufficient space (<10 extents) on vgs, LVM detected
+gluster1  /dev/vdd  hdd   73B5C9A68207430A9E98    10.0G  Yes        13m ago
+gluster2  /dev/sda  hdd   Apple_Virtual_Disk-0:0  12.8G  No         13m ago    Has a FileSystem, id_bus, read-only
+gluster2  /dev/vdb  hdd   F6766C50FDA84EEE829F    10.0G  No         13m ago    Has a FileSystem, Insufficient space (<10 extents) on vgs, LVM detected
+gluster2  /dev/vdc  hdd   AB47AFCFD0ED489187FE    10.0G  No         13m ago    Has a FileSystem, Insufficient space (<10 extents) on vgs, LVM detected
+gluster2  /dev/vdd  hdd   17B2E0D6CB9C4C869732    10.0G  Yes        13m ago
+gluster3  /dev/sda  hdd   Apple_Virtual_Disk-0:0  12.8G  No         13m ago    Has a FileSystem, id_bus, read-only
+gluster3  /dev/vdb  hdd   F6766C50FDA84EEE829F    10.0G  No         13m ago    Has a FileSystem, Insufficient space (<10 extents) on vgs, LVM detected
+gluster3  /dev/vdc  hdd   35801A4268444D45A4B0    10.0G  No         13m ago    Has a FileSystem, Insufficient space (<10 extents) on vgs, LVM detected
+gluster3  /dev/vdd  hdd   D0172FF7448B4763AEDC    10.0G  Yes        13m ago
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_OK
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 84m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 84m), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 19m), 6 in (since 35m)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 12.75k objects, 2.0 GiB
+    usage:   7.2 GiB used, 53 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+root@gluster1:~# script -q -a ~/ceph-m3-scrub-session-$(hostname -s).txt
+clear
+SINCE=$(date -u +%Y-%m-%dT%H:%M:%S)
+ceph osd pool deep-scrub cephfs.cephfs.data
+ceph osd pool deep-scrub cephfs.cephfs.meta
+root@gluster1:~# cat ~/ceph-m3-scrub-session-$(hostname -s).txt
+root@gluster1:~# exit
+exit
+root@gluster1:~# exit
+exit
+
+Script done on 2026-11-05 22:37:50+00:00 [COMMAND_EXIT_CODE="0"]

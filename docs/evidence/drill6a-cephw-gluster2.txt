@@ -1,0 +1,105 @@
+# Drill 6a: disks added, cluster log seen from gluster2, from 21:12 (gluster1 down)
+# Captured 2026-11-05 with `ceph -w | tee`: the cluster log as it happened, times UTC.
+# The status block at the top is what `ceph -w` prints when it starts. Private addresses masked. Otherwise unchanged.
+#
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            1 stray daemon(s) not managed by cephadm
+            noout flag(s) set
+ 
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 79s) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 2h), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 75s), 6 in (since 6m)
+         flags noout
+ 
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 7.49k objects, 2.0 GiB
+    usage:   6.4 GiB used, 54 GiB / 60 GiB avail
+    pgs:     145 active+clean
+ 
+  io:
+    client:   14 KiB/s wr, 0 op/s rd, 6 op/s wr
+ 
+
+2026-11-05T21:12:35.407092+0000 mon.gluster2 [INF] mon.gluster2 calling monitor election
+2026-11-05T21:12:35.411702+0000 mon.gluster3 [INF] mon.gluster3 calling monitor election
+2026-11-05T21:12:40.425565+0000 mon.gluster2 [INF] mon.gluster2 is new leader, mons gluster2,gluster3 in quorum (ranks 1,2)
+2026-11-05T21:12:40.452633+0000 mon.gluster2 [WRN] Health check failed: 1/3 mons down, quorum gluster2,gluster3 (MON_DOWN)
+2026-11-05T21:12:40.456948+0000 mon.gluster2 [INF] osd.1 failed (root=default,host=gluster1) (connection refused reported by osd.4)
+2026-11-05T21:12:40.465917+0000 mon.gluster2 [WRN] Health detail: HEALTH_WARN 1 stray daemon(s) not managed by cephadm; 1 filesystem is degraded; insufficient standby MDS daemons available; 1/3 mons down, quorum gluster2,gluster3; noout flag(s) set; 1 osds down
+2026-11-05T21:12:40.465934+0000 mon.gluster2 [WRN] [WRN] CEPHADM_STRAY_DAEMON: 1 stray daemon(s) not managed by cephadm
+2026-11-05T21:12:40.465947+0000 mon.gluster2 [WRN]     stray daemon osd.3 on host gluster3 not managed by cephadm
+2026-11-05T21:12:40.465948+0000 mon.gluster2 [WRN] [WRN] FS_DEGRADED: 1 filesystem is degraded
+2026-11-05T21:12:40.465950+0000 mon.gluster2 [WRN]     fs cephfs is degraded
+2026-11-05T21:12:40.465952+0000 mon.gluster2 [WRN] [WRN] MDS_INSUFFICIENT_STANDBY: insufficient standby MDS daemons available
+2026-11-05T21:12:40.465953+0000 mon.gluster2 [WRN]     have 0; want 1 more
+2026-11-05T21:12:40.465955+0000 mon.gluster2 [WRN] [WRN] MON_DOWN: 1/3 mons down, quorum gluster2,gluster3
+2026-11-05T21:12:40.465956+0000 mon.gluster2 [WRN]     mon.gluster1 (rank 0) addr [v2:192.168.x.x:3300/0,v1:192.168.x.x:6789/0] is down (out of quorum)
+2026-11-05T21:12:40.465958+0000 mon.gluster2 [WRN] [WRN] OSDMAP_FLAGS: noout flag(s) set
+2026-11-05T21:12:40.465960+0000 mon.gluster2 [WRN] [WRN] OSD_DOWN: 1 osds down
+2026-11-05T21:12:40.465961+0000 mon.gluster2 [WRN]     osd.2 (root=default,host=gluster1) is down
+2026-11-05T21:12:41.451416+0000 mon.gluster2 [WRN] Health check update: 2 osds down (OSD_DOWN)
+2026-11-05T21:12:41.451445+0000 mon.gluster2 [WRN] Health check failed: 1 host (2 osds) down (OSD_HOST_DOWN)
+2026-11-05T21:12:44.613619+0000 mon.gluster2 [INF] daemon mds.cephfs.gluster2.stwcqc is now active in filesystem cephfs as rank 0
+2026-11-05T21:12:45.600921+0000 mon.gluster2 [INF] Health check cleared: FS_DEGRADED (was: 1 filesystem is degraded)
+2026-11-05T21:12:55.944245+0000 mon.gluster2 [INF] Health check cleared: MDS_INSUFFICIENT_STANDBY (was: insufficient standby MDS daemons available)
+2026-11-05T21:12:57.049994+0000 mon.gluster2 [INF] Active manager daemon gluster1.bxuyky restarted
+2026-11-05T21:12:57.050188+0000 mon.gluster2 [INF] Activating manager daemon gluster1.bxuyky
+2026-11-05T21:12:57.775796+0000 mon.gluster2 [INF] Active manager daemon gluster1.bxuyky restarted
+2026-11-05T21:12:57.775992+0000 mon.gluster2 [INF] Activating manager daemon gluster1.bxuyky
+2026-11-05T21:12:58.480763+0000 mon.gluster2 [INF] Active manager daemon gluster1.bxuyky restarted
+2026-11-05T21:12:58.480957+0000 mon.gluster2 [INF] Activating manager daemon gluster1.bxuyky
+2026-11-05T21:12:59.227985+0000 mon.gluster2 [INF] Active manager daemon gluster1.bxuyky restarted
+2026-11-05T21:12:59.228270+0000 mon.gluster2 [INF] Activating manager daemon gluster1.bxuyky
+2026-11-05T21:12:59.947135+0000 mon.gluster2 [INF] Active manager daemon gluster1.bxuyky restarted
+2026-11-05T21:12:59.947351+0000 mon.gluster2 [INF] Activating manager daemon gluster1.bxuyky
+2026-11-05T21:13:00.774172+0000 mon.gluster2 [INF] Active manager daemon gluster1.bxuyky restarted
+2026-11-05T21:13:00.774507+0000 mon.gluster2 [INF] Activating manager daemon gluster1.bxuyky
+2026-11-05T21:13:01.624921+0000 mon.gluster2 [INF] Active manager daemon gluster1.bxuyky restarted
+2026-11-05T21:13:01.625416+0000 mon.gluster2 [INF] Activating manager daemon gluster1.bxuyky
+2026-11-05T21:13:02.601250+0000 mon.gluster2 [INF] mon.gluster2 calling monitor election
+2026-11-05T21:13:02.606551+0000 mon.gluster3 [INF] mon.gluster3 calling monitor election
+2026-11-05T21:13:02.643759+0000 mon.gluster2 [WRN] message from mon.0 was stamped 0.060187s in the future, clocks not synchronized
+2026-11-05T21:13:02.648964+0000 mon.gluster3 [WRN] message from mon.0 was stamped 0.055005s in the future, clocks not synchronized
+2026-11-05T21:13:02.662241+0000 mon.gluster1 [INF] mon.gluster1 calling monitor election
+2026-11-05T21:13:02.673084+0000 mon.gluster1 [INF] mon.gluster1 calling monitor election
+2026-11-05T21:13:02.688400+0000 mon.gluster1 [INF] mon.gluster1 is new leader, mons gluster1,gluster2,gluster3 in quorum (ranks 0,1,2)
+2026-11-05T21:13:02.697935+0000 mon.gluster1 [WRN] 2 clock skew 0.0556817s > max 0.05s
+2026-11-05T21:13:02.697948+0000 mon.gluster1 [WRN] 1 clock skew 0.0609609s > max 0.05s
+2026-11-05T21:13:02.708721+0000 mon.gluster1 [WRN] Health check failed: clock skew detected on mon.gluster2, mon.gluster3 (MON_CLOCK_SKEW)
+2026-11-05T21:13:02.708729+0000 mon.gluster1 [INF] Health check cleared: MON_DOWN (was: 1/3 mons down, quorum gluster2,gluster3)
+2026-11-05T21:13:02.743340+0000 mon.gluster1 [WRN] Health detail: HEALTH_WARN 1 stray daemon(s) not managed by cephadm; clock skew detected on mon.gluster2, mon.gluster3; noout flag(s) set; 2 osds down; 1 host (2 osds) down
+2026-11-05T21:13:02.743351+0000 mon.gluster1 [WRN] [WRN] CEPHADM_STRAY_DAEMON: 1 stray daemon(s) not managed by cephadm
+2026-11-05T21:13:02.743353+0000 mon.gluster1 [WRN]     stray daemon osd.3 on host gluster3 not managed by cephadm
+2026-11-05T21:13:02.743354+0000 mon.gluster1 [WRN] [WRN] MON_CLOCK_SKEW: clock skew detected on mon.gluster2, mon.gluster3
+2026-11-05T21:13:02.743356+0000 mon.gluster1 [WRN]     mon.gluster2 clock skew 0.0609609s > max 0.05s (latency 0.00340213s)
+2026-11-05T21:13:02.743357+0000 mon.gluster1 [WRN]     mon.gluster3 clock skew 0.0556817s > max 0.05s (latency 0.00337459s)
+2026-11-05T21:13:02.743358+0000 mon.gluster1 [WRN] [WRN] OSDMAP_FLAGS: noout flag(s) set
+2026-11-05T21:13:02.743360+0000 mon.gluster1 [WRN] [WRN] OSD_DOWN: 2 osds down
+2026-11-05T21:13:02.743361+0000 mon.gluster1 [WRN]     osd.1 (root=default,host=gluster1) is down
+2026-11-05T21:13:02.743362+0000 mon.gluster1 [WRN]     osd.2 (root=default,host=gluster1) is down
+2026-11-05T21:13:02.743363+0000 mon.gluster1 [WRN] [WRN] OSD_HOST_DOWN: 1 host (2 osds) down
+2026-11-05T21:13:02.743364+0000 mon.gluster1 [WRN]     host gluster1 (root=default) (2 osds) is down
+2026-11-05T21:13:02.762712+0000 mon.gluster1 [INF] Health check cleared: OSD_DOWN (was: 2 osds down)
+2026-11-05T21:13:02.762727+0000 mon.gluster1 [INF] Health check cleared: OSD_HOST_DOWN (was: 1 host (2 osds) down)
+2026-11-05T21:13:02.816704+0000 mon.gluster1 [INF] osd.2 [v2:192.168.x.x:6810/1080359159,v1:192.168.x.x:6811/1080359159] boot
+2026-11-05T21:13:02.816737+0000 mon.gluster1 [INF] osd.1 [v2:192.168.x.x:6802/300148599,v1:192.168.x.x:6803/300148599] boot
+2026-11-05T21:13:03.259597+0000 mon.gluster1 [INF] Active manager daemon gluster1.bxuyky restarted
+2026-11-05T21:13:03.259776+0000 mon.gluster1 [INF] Activating manager daemon gluster1.bxuyky
+2026-11-05T21:13:03.599210+0000 mon.gluster1 [INF] Manager daemon gluster1.bxuyky is now available
+2026-11-05T21:13:02.647879+0000 osd.2 [WRN] OSD bench result of 13077.376185 IOPS is not within the threshold limit range of 50.000000 IOPS and 500.000000 IOPS for osd.2. IOPS capacity is unchanged at 315.000000 IOPS. The recommendation is to establish the osd's IOPS capacity using other benchmark tools (e.g. Fio) and then override osd_mclock_max_capacity_iops_[hdd|ssd].
+2026-11-05T21:13:02.650664+0000 osd.1 [WRN] OSD bench result of 13299.921684 IOPS is not within the threshold limit range of 50.000000 IOPS and 500.000000 IOPS for osd.1. IOPS capacity is unchanged at 315.000000 IOPS. The recommendation is to establish the osd's IOPS capacity using other benchmark tools (e.g. Fio) and then override osd_mclock_max_capacity_iops_[hdd|ssd].
+2026-11-05T21:13:05.293181+0000 mon.gluster1 [INF] Health check cleared: CEPHADM_STRAY_DAEMON (was: 1 stray daemon(s) not managed by cephadm)
+2026-11-05T21:13:36.388726+0000 mon.gluster1 [INF] Health check cleared: MON_CLOCK_SKEW (was: clock skew detected on mon.gluster2, mon.gluster3)
+2026-11-05T21:13:58.494377+0000 mon.gluster1 [INF] Health check cleared: OSDMAP_FLAGS (was: noout flag(s) set)
+2026-11-05T21:13:58.494412+0000 mon.gluster1 [INF] Cluster is now healthy
+2026-11-05T21:20:00.000958+0000 mon.gluster1 [INF] overall HEALTH_OK
+2026-11-05T21:30:00.000578+0000 mon.gluster1 [INF] overall HEALTH_OK
+2026-11-05T21:40:00.000935+0000 mon.gluster1 [INF] overall HEALTH_OK
+2026-11-05T21:50:00.000871+0000 mon.gluster1 [INF] overall HEALTH_OK
+2026-11-05T22:00:00.001169+0000 mon.gluster1 [INF] overall HEALTH_OK

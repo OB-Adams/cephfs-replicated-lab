@@ -10,7 +10,7 @@ This is phase 2 of a storage study. Phase 1, the GlusterFS build and its nine dr
 |---|---|
 | Milestone 1: deploy Ceph and mount CephFS | Complete ([docs/deploy.md](docs/deploy.md)) |
 | Milestone 2: failure drills | Complete ([docs/failure-drills.md](docs/failure-drills.md)) |
-| Milestone 3: OSD replacement and expansion | Planned |
+| Milestone 3: OSD replacement and expansion | Complete ([docs/replacement-expansion.md](docs/replacement-expansion.md)) |
 | Milestone 4: security and monitoring | Planned |
 | Milestone 5: `fio` benchmark against the Gluster baseline | Planned |
 | Milestone 6: Gluster and CephFS comparison | Planned |
@@ -32,6 +32,11 @@ The full tracker is in [docs/milestones.md](docs/milestones.md). Anything not li
 | 2. Majority lost | With two of three hosts down, a write waited 433 s and then completed by itself, with no error and no remount. The Gluster mount failed outright |
 | 2. MDS failover | Killing the active MDS stalled metadata for 13.4 s; the standby was active 2 s after taking over |
 | 2. Scrub | A deep scrub of both pools after the drills found no inconsistent PGs; all 3800 drill files intact |
+| 3. Disk lost | An OSD's disk wiped: its copies were rebuilt on the host's other OSD 14 s after it was marked out, and the client's slowest write was 0.08 s |
+| 3. Replacement | `ceph orch osd rm --replace` zapped the disk without `--zap`; with the spec managed, the orchestrator and the removal queue rebuilt and removed the new OSD in a loop until the queue was cleared |
+| 3. Expansion | Three new OSDs: data spread by itself in under 2 minutes, 45 to 54 PGs per OSD, no rebalance command |
+| 3. Drain | Three OSDs drained by CRUSH weight and purged in 3 min 20 s, none stopped before the cluster was healthy |
+| 3. Maintenance | Two of three servers down together for disks lost monitor quorum for 50 s and held a write 64 s, despite `noout` |
 
 ## Objectives
 
@@ -150,6 +155,9 @@ Issues actually encountered, with causes and fixes, are in [docs/troubleshooting
 | One host never gets its OSDs; `osd new` waits for ever | Milestone 1, gluster2 |
 | `MON_CLOCK_SKEW` after the Mac slept | Milestone 1 |
 | `ceph` commands hang with no monitor quorum | Milestone 2, drill 3 |
+| An OSD's disk cannot be zapped: `Device or resource busy` | Milestone 3, drill 5 |
+| A replacement OSD is rebuilt and removed over and over | Milestone 3, drill 5 |
+| An OSD is prepared on a disk but never started | Milestone 3, drill 5 |
 
 ## Repository structure
 
@@ -168,6 +176,7 @@ cephfs-replicated-lab/
 ├── docs/
 │   ├── deploy.md              milestone 1: concepts, procedure, results and findings
 │   ├── failure-drills.md      milestone 2: four failure drills and a deep scrub
+│   ├── replacement-expansion.md   milestone 3: an OSD rebuilt, the cluster expanded and shrunk
 │   ├── milestones.md
 │   ├── troubleshooting.md
 │   └── evidence/
@@ -178,9 +187,15 @@ cephfs-replicated-lab/
 │       ├── drill3-cephw.txt, drill3-writes.log, drill3-session-gluster{1,4}.txt
 │       ├── drill4-cephw.txt, drill4-writes.log, drill4-session-gluster{1,4}.txt
 │       ├── drills-scrub-session-gluster1.txt
-│       └── drills-checks-session-gluster{1,4}.txt
+│       ├── drills-checks-session-gluster{1,4}.txt
+│       ├── drill5-cephw.txt, drill5-writes.log, drill5-session-gluster{1,3,4}.txt
+│       ├── drill6a-cephw-gluster{1,2}.txt, drill6a-writes.log, drill6a-session-gluster1.txt
+│       ├── drill6b-cephw.txt, drill6b-writes.log, drill6b-session-gluster1.txt, drill6-session-gluster4.txt
+│       ├── drill7-cephw.txt, drill7-writes.log, drill7-session-gluster{1,4}.txt
+│       └── m3-scrub-session-gluster1.txt, m3-checks-session-gluster4.txt
 ├── scripts/
-│   └── drill-writer.sh        the client writer used in the drills: one file per write, with fsync, timed
+│   ├── drill-writer.sh        the client writer used in the drills: one file per write, with fsync, timed
+│   └── ceph-check.sh          checks the drill files, the 2 GB fill set and the reference file on the client
 └── screenshots/
     ├── README.md
     ├── 01-ceph-cluster-health.png
@@ -188,7 +203,10 @@ cephfs-replicated-lab/
     ├── 03-drill1-degraded-writes-continue.png
     ├── 04-drill2-write-stall.png
     ├── 05-drill3-no-quorum.png
-    └── 06-drill4-mds-failover.png
+    ├── 06-drill4-mds-failover.png
+    ├── 07-drill5-backfill.png
+    ├── 08-drill5-osd-destroyed.png
+    └── 09-drill6-nine-osds.png
 ```
 
 ## Screenshots and evidence
@@ -216,6 +234,18 @@ cephfs-replicated-lab/
 ### Drill 4: the standby MDS active
 
 ![ceph fs status with gluster2's MDS active and gluster1's as standby, and the cluster log lines of the takeover](screenshots/06-drill4-mds-failover.png)
+
+### Drill 5: a lost OSD's copies rebuilt
+
+![ceph -s after osd.3 was marked out: degraded objects falling, PGs recovery_wait, recovery at 87 MiB/s](screenshots/07-drill5-backfill.png)
+
+### Drill 5: osd.3 destroyed, keeping its place
+
+![ceph osd tree with osd.3 destroyed under host gluster3, its CRUSH weight kept](screenshots/08-drill5-osd-destroyed.png)
+
+### Drill 6: nine OSDs
+
+![ceph osd df tree after the expansion: nine OSDs, three per host, 45 to 54 PGs each](screenshots/09-drill6-nine-osds.png)
 
 What each screenshot shows and the commands behind it are in [screenshots/README.md](screenshots/README.md). The session recordings are in [docs/evidence](docs/evidence).
 

@@ -1,0 +1,184 @@
+# Drill 6a: disks added, cluster log seen from gluster1, 21:09 to 21:12 (gluster3 and gluster2 down together)
+# Captured 2026-11-05 with `ceph -w | tee`: the cluster log as it happened, times UTC.
+# The status block at the top is what `ceph -w` prints when it starts. Private addresses masked. Otherwise unchanged.
+#
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            1 stray daemon(s) not managed by cephadm
+ 
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 2h) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 2h), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 3m), 6 in (since 3m)
+ 
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 7.34k objects, 2.0 GiB
+    usage:   6.7 GiB used, 53 GiB / 60 GiB avail
+    pgs:     145 active+clean
+ 
+
+2026-11-05T21:09:20.526211+0000 mon.gluster1 [WRN] Health check failed: noout flag(s) set (OSDMAP_FLAGS)
+2026-11-05T21:09:53.276492+0000 mon.gluster1 [INF] osd.0 marked itself down and dead
+2026-11-05T21:10:00.001781+0000 mon.gluster1 [WRN] Health detail: HEALTH_WARN 1 stray daemon(s) not managed by cephadm; noout flag(s) set; 1 osds down
+2026-11-05T21:10:00.001807+0000 mon.gluster1 [WRN] [WRN] CEPHADM_STRAY_DAEMON: 1 stray daemon(s) not managed by cephadm
+2026-11-05T21:10:00.001813+0000 mon.gluster1 [WRN]     stray daemon osd.3 on host gluster3 not managed by cephadm
+2026-11-05T21:10:00.001816+0000 mon.gluster1 [WRN] [WRN] OSDMAP_FLAGS: noout flag(s) set
+2026-11-05T21:10:00.001819+0000 mon.gluster1 [WRN] [WRN] OSD_DOWN: 1 osds down
+2026-11-05T21:10:00.001821+0000 mon.gluster1 [WRN]     osd.0 (root=default,host=gluster3) is down
+2026-11-05T21:10:32.417768+0000 osd.1 [WRN] 1 slow requests (by type [ 'waiting for sub ops' : 1 ] most affected pool [ 'cephfs.cephfs.meta' : 1 ])
+2026-11-05T21:10:33.421592+0000 osd.1 [WRN] 1 slow requests (by type [ 'waiting for sub ops' : 1 ] most affected pool [ 'cephfs.cephfs.meta' : 1 ])
+2026-11-05T21:10:34.456009+0000 osd.1 [WRN] 1 slow requests (by type [ 'waiting for sub ops' : 1 ] most affected pool [ 'cephfs.cephfs.meta' : 1 ])
+2026-11-05T21:10:35.416258+0000 osd.1 [WRN] 1 slow requests (by type [ 'waiting for sub ops' : 1 ] most affected pool [ 'cephfs.cephfs.meta' : 1 ])
+2026-11-05T21:10:36.463082+0000 osd.1 [WRN] 1 slow requests (by type [ 'waiting for sub ops' : 1 ] most affected pool [ 'cephfs.cephfs.meta' : 1 ])
+2026-11-05T21:10:37.423268+0000 osd.1 [WRN] 1 slow requests (by type [ 'waiting for sub ops' : 1 ] most affected pool [ 'cephfs.cephfs.meta' : 1 ])
+2026-11-05T21:10:38.404665+0000 osd.1 [WRN] 1 slow requests (by type [ 'waiting for sub ops' : 1 ] most affected pool [ 'cephfs.cephfs.meta' : 1 ])
+2026-11-05T21:10:39.443268+0000 osd.1 [WRN] 1 slow requests (by type [ 'waiting for sub ops' : 1 ] most affected pool [ 'cephfs.cephfs.meta' : 1 ])
+2026-11-05T21:10:40.491596+0000 osd.1 [WRN] 1 slow requests (by type [ 'waiting for sub ops' : 1 ] most affected pool [ 'cephfs.cephfs.meta' : 1 ])
+2026-11-05T21:10:41.086508+0000 mon.gluster2 [INF] mon.gluster2 calling monitor election
+2026-11-05T21:10:41.494974+0000 osd.1 [WRN] 1 slow requests (by type [ 'waiting for sub ops' : 1 ] most affected pool [ 'cephfs.cephfs.meta' : 1 ])
+2026-11-05T21:10:42.390549+0000 mon.gluster1 [INF] mon.gluster1 calling monitor election
+2026-11-05T21:10:42.518008+0000 osd.1 [WRN] 1 slow requests (by type [ 'waiting for sub ops' : 1 ] most affected pool [ 'cephfs.cephfs.meta' : 1 ])
+2026-11-05T21:10:43.513016+0000 osd.1 [WRN] 1 slow requests (by type [ 'waiting for sub ops' : 1 ] most affected pool [ 'cephfs.cephfs.meta' : 1 ])
+2026-11-05T21:10:44.495484+0000 osd.1 [WRN] 1 slow requests (by type [ 'waiting for sub ops' : 1 ] most affected pool [ 'cephfs.cephfs.meta' : 1 ])
+2026-11-05T21:10:45.506803+0000 osd.1 [WRN] 1 slow requests (by type [ 'waiting for sub ops' : 1 ] most affected pool [ 'cephfs.cephfs.meta' : 1 ])
+2026-11-05T21:10:46.514819+0000 osd.1 [WRN] 1 slow requests (by type [ 'waiting for sub ops' : 1 ] most affected pool [ 'cephfs.cephfs.meta' : 1 ])
+2026-11-05T21:10:47.397642+0000 mon.gluster2 [WRN] message from mon.0 was stamped 0.052395s in the future, clocks not synchronized
+2026-11-05T21:10:47.401039+0000 mon.gluster1 [INF] mon.gluster1 is new leader, mons gluster1,gluster2 in quorum (ranks 0,1)
+2026-11-05T21:10:47.425556+0000 mon.gluster1 [WRN] 1 clock skew 0.0512083s > max 0.05s
+2026-11-05T21:10:47.453397+0000 mon.gluster1 [WRN] Health check failed: clock skew detected on mon.gluster2 (MON_CLOCK_SKEW)
+2026-11-05T21:10:47.453432+0000 mon.gluster1 [WRN] Health check failed: 1/3 mons down, quorum gluster1,gluster2 (MON_DOWN)
+2026-11-05T21:10:47.479439+0000 mon.gluster1 [WRN] Health detail: HEALTH_WARN 1 stray daemon(s) not managed by cephadm; clock skew detected on mon.gluster2; 1/3 mons down, quorum gluster1,gluster2; noout flag(s) set; 2 osds down; 1 host (2 osds) down
+2026-11-05T21:10:47.479467+0000 mon.gluster1 [WRN] [WRN] CEPHADM_STRAY_DAEMON: 1 stray daemon(s) not managed by cephadm
+2026-11-05T21:10:47.479472+0000 mon.gluster1 [WRN]     stray daemon osd.3 on host gluster3 not managed by cephadm
+2026-11-05T21:10:47.479475+0000 mon.gluster1 [WRN] [WRN] MON_CLOCK_SKEW: clock skew detected on mon.gluster2
+2026-11-05T21:10:47.479479+0000 mon.gluster1 [WRN]     mon.gluster2 clock skew 0.0512083s > max 0.05s (latency 0.0162487s)
+2026-11-05T21:10:47.479483+0000 mon.gluster1 [WRN] [WRN] MON_DOWN: 1/3 mons down, quorum gluster1,gluster2
+2026-11-05T21:10:47.479486+0000 mon.gluster1 [WRN]     mon.gluster3 (rank 2) addr [v2:192.168.x.x:3300/0,v1:192.168.x.x:6789/0] is down (out of quorum)
+2026-11-05T21:10:47.479489+0000 mon.gluster1 [WRN] [WRN] OSDMAP_FLAGS: noout flag(s) set
+2026-11-05T21:10:47.479492+0000 mon.gluster1 [WRN] [WRN] OSD_DOWN: 2 osds down
+2026-11-05T21:10:47.479494+0000 mon.gluster1 [WRN]     osd.0 (root=default,host=gluster3) is down
+2026-11-05T21:10:47.479498+0000 mon.gluster1 [WRN]     osd.3 (root=default,host=gluster3) is down
+2026-11-05T21:10:47.479512+0000 mon.gluster1 [WRN] [WRN] OSD_HOST_DOWN: 1 host (2 osds) down
+2026-11-05T21:10:47.479515+0000 mon.gluster1 [WRN]     host gluster3 (root=default) (2 osds) is down
+2026-11-05T21:10:47.523009+0000 osd.1 [WRN] 1 slow requests (by type [ 'delayed' : 1 ] most affected pool [ 'cephfs.cephfs.meta' : 1 ])
+2026-11-05T21:10:47.663542+0000 mon.gluster1 [INF] daemon mds.cephfs.gluster2.stwcqc restarted
+2026-11-05T21:10:48.438702+0000 mon.gluster1 [WRN] Health check failed: Reduced data availability: 1 pg inactive, 58 pgs peering (PG_AVAILABILITY)
+2026-11-05T21:10:48.438735+0000 mon.gluster1 [WRN] Health check failed: Degraded data redundancy: 1012/22086 objects degraded (4.582%), 18 pgs degraded (PG_DEGRADED)
+2026-11-05T21:10:48.438740+0000 mon.gluster1 [WRN] Health check failed: 88 slow ops, oldest one blocked for 48 sec, daemons [osd.1,mon.gluster1] have slow ops. (SLOW_OPS)
+2026-11-05T21:10:48.525479+0000 osd.1 [WRN] 1 slow requests (by type [ 'delayed' : 1 ] most affected pool [ 'cephfs.cephfs.meta' : 1 ])
+2026-11-05T21:10:42.695990+0000 mon.gluster3 [INF] mon.gluster3 calling monitor election
+2026-11-05T21:10:49.387036+0000 mon.gluster3 [WRN] message from mon.0 was stamped 0.225936s in the future, clocks not synchronized
+2026-11-05T21:10:49.500223+0000 mon.gluster2 [INF] mon.gluster2 calling monitor election
+2026-11-05T21:10:49.502057+0000 mon.gluster1 [INF] mon.gluster1 calling monitor election
+2026-11-05T21:10:49.505907+0000 osd.1 [WRN] 1 slow requests (by type [ 'delayed' : 1 ] most affected pool [ 'cephfs.cephfs.meta' : 1 ])
+2026-11-05T21:10:49.528145+0000 mon.gluster1 [INF] mon.gluster1 is new leader, mons gluster1,gluster2,gluster3 in quorum (ranks 0,1,2)
+2026-11-05T21:10:49.557884+0000 mon.gluster1 [WRN] 2 clock skew 0.226211s > max 0.05s
+2026-11-05T21:10:49.613627+0000 mon.gluster1 [WRN] Health check update: clock skew detected on mon.gluster3 (MON_CLOCK_SKEW)
+2026-11-05T21:10:49.613634+0000 mon.gluster1 [INF] Health check cleared: MON_DOWN (was: 1/3 mons down, quorum gluster1,gluster2)
+2026-11-05T21:10:49.637732+0000 mon.gluster1 [WRN] Health detail: HEALTH_WARN 1 stray daemon(s) not managed by cephadm; clock skew detected on mon.gluster3; noout flag(s) set; 2 osds down; 1 host (2 osds) down; Reduced data availability: 1 pg inactive, 58 pgs peering; Degraded data redundancy: 1012/22086 objects degraded (4.582%), 18 pgs degraded; 88 slow ops, oldest one blocked for 48 sec, daemons [osd.1,mon.gluster1] have slow ops.
+2026-11-05T21:10:49.637743+0000 mon.gluster1 [WRN] [WRN] CEPHADM_STRAY_DAEMON: 1 stray daemon(s) not managed by cephadm
+2026-11-05T21:10:49.637745+0000 mon.gluster1 [WRN]     stray daemon osd.3 on host gluster3 not managed by cephadm
+2026-11-05T21:10:49.637746+0000 mon.gluster1 [WRN] [WRN] MON_CLOCK_SKEW: clock skew detected on mon.gluster3
+2026-11-05T21:10:49.637747+0000 mon.gluster1 [WRN]     mon.gluster3 clock skew 0.226211s > max 0.05s (latency 0.0170163s)
+2026-11-05T21:10:49.637749+0000 mon.gluster1 [WRN] [WRN] OSDMAP_FLAGS: noout flag(s) set
+2026-11-05T21:10:49.637750+0000 mon.gluster1 [WRN] [WRN] OSD_DOWN: 2 osds down
+2026-11-05T21:10:49.637751+0000 mon.gluster1 [WRN]     osd.0 (root=default,host=gluster3) is down
+2026-11-05T21:10:49.637753+0000 mon.gluster1 [WRN]     osd.3 (root=default,host=gluster3) is down
+2026-11-05T21:10:49.637754+0000 mon.gluster1 [WRN] [WRN] OSD_HOST_DOWN: 1 host (2 osds) down
+2026-11-05T21:10:49.637755+0000 mon.gluster1 [WRN]     host gluster3 (root=default) (2 osds) is down
+2026-11-05T21:10:49.637756+0000 mon.gluster1 [WRN] [WRN] PG_AVAILABILITY: Reduced data availability: 1 pg inactive, 58 pgs peering
+2026-11-05T21:10:49.637758+0000 mon.gluster1 [WRN]     pg 2.2 is stuck peering for 5m, current state peering, last acting [1,5]
+2026-11-05T21:10:49.637759+0000 mon.gluster1 [WRN]     pg 2.8 is stuck peering for 21h, current state peering, last acting [5,1]
+2026-11-05T21:10:49.637760+0000 mon.gluster1 [WRN]     pg 2.c is stuck peering for 87s, current state peering, last acting [5,1]
+2026-11-05T21:10:49.637762+0000 mon.gluster1 [WRN]     pg 2.d is stuck peering for 87s, current state peering, last acting [5,2]
+2026-11-05T21:10:49.637763+0000 mon.gluster1 [WRN]     pg 2.f is stuck peering for 81s, current state peering, last acting [4,2]
+2026-11-05T21:10:49.637765+0000 mon.gluster1 [WRN]     pg 3.8 is stuck peering for 87s, current state peering, last acting [4,1]
+2026-11-05T21:10:49.637766+0000 mon.gluster1 [WRN]     pg 3.a is stuck peering for 21m, current state peering, last acting [1,5]
+2026-11-05T21:10:49.637796+0000 mon.gluster1 [WRN]     pg 3.c is stuck peering for 103m, current state peering, last acting [2,5]
+2026-11-05T21:10:49.637799+0000 mon.gluster1 [WRN]     pg 3.f is stuck peering for 103m, current state peering, last acting [4,1]
+2026-11-05T21:10:49.637801+0000 mon.gluster1 [WRN]     pg 3.11 is stuck peering for 87s, current state peering, last acting [4,2]
+2026-11-05T21:10:49.637823+0000 mon.gluster1 [WRN]     pg 3.16 is stuck peering for 5m, current state peering, last acting [1,5]
+2026-11-05T21:10:49.637825+0000 mon.gluster1 [WRN]     pg 3.1a is stuck peering for 71s, current state peering, last acting [4,1]
+2026-11-05T21:10:49.637827+0000 mon.gluster1 [WRN]     pg 3.1b is stuck peering for 71s, current state peering, last acting [4,1]
+2026-11-05T21:10:49.637830+0000 mon.gluster1 [WRN]     pg 3.1d is stuck peering for 71s, current state peering, last acting [5,1]
+2026-11-05T21:10:49.637832+0000 mon.gluster1 [WRN]     pg 3.20 is stuck peering for 87s, current state peering, last acting [4,2]
+2026-11-05T21:10:49.637834+0000 mon.gluster1 [WRN]     pg 3.23 is stuck peering for 87s, current state peering, last acting [2,5]
+2026-11-05T21:10:49.637836+0000 mon.gluster1 [WRN]     pg 3.24 is stuck peering for 87s, current state peering, last acting [2,4]
+2026-11-05T21:10:49.637838+0000 mon.gluster1 [WRN]     pg 3.26 is stuck peering for 87s, current state peering, last acting [4,1]
+2026-11-05T21:10:49.637840+0000 mon.gluster1 [WRN]     pg 3.28 is stuck peering for 87s, current state peering, last acting [5,2]
+2026-11-05T21:10:49.637842+0000 mon.gluster1 [WRN]     pg 3.2c is stuck peering for 87s, current state peering, last acting [5,1]
+2026-11-05T21:10:49.637844+0000 mon.gluster1 [WRN]     pg 3.2e is stuck peering for 87s, current state peering, last acting [2,4]
+2026-11-05T21:10:49.637852+0000 mon.gluster1 [WRN]     pg 3.2f is stuck peering for 87s, current state peering, last acting [5,2]
+2026-11-05T21:10:49.637854+0000 mon.gluster1 [WRN]     pg 3.32 is stuck peering for 60s, current state peering, last acting [2,5]
+2026-11-05T21:10:49.637855+0000 mon.gluster1 [WRN]     pg 3.33 is stuck peering for 87s, current state peering, last acting [2,5]
+2026-11-05T21:10:49.637857+0000 mon.gluster1 [WRN]     pg 3.34 is stuck peering for 101m, current state peering, last acting [5,2]
+2026-11-05T21:10:49.637858+0000 mon.gluster1 [WRN]     pg 3.35 is stuck peering for 102m, current state peering, last acting [5,2]
+2026-11-05T21:10:49.637860+0000 mon.gluster1 [WRN]     pg 3.36 is stuck peering for 102m, current state peering, last acting [5,1]
+2026-11-05T21:10:49.637866+0000 mon.gluster1 [WRN]     pg 3.37 is stuck peering for 62s, current state peering, last acting [5,2]
+2026-11-05T21:10:49.637867+0000 mon.gluster1 [WRN]     pg 3.39 is stuck peering for 103m, current state peering, last acting [2,4]
+2026-11-05T21:10:49.637869+0000 mon.gluster1 [WRN]     pg 3.3a is stuck peering for 102m, current state peering, last acting [2,4]
+2026-11-05T21:10:49.637870+0000 mon.gluster1 [WRN]     pg 3.3b is stuck peering for 71s, current state peering, last acting [4,2]
+2026-11-05T21:10:49.637872+0000 mon.gluster1 [WRN]     pg 3.44 is stuck peering for 103m, current state peering, last acting [2,4]
+2026-11-05T21:10:49.637873+0000 mon.gluster1 [WRN]     pg 3.45 is stuck peering for 87s, current state peering, last acting [2,5]
+2026-11-05T21:10:49.637879+0000 mon.gluster1 [WRN]     pg 3.4a is stuck peering for 87s, current state peering, last acting [4,1]
+2026-11-05T21:10:49.637881+0000 mon.gluster1 [WRN]     pg 3.4c is stuck peering for 87s, current state peering, last acting [4,2]
+2026-11-05T21:10:49.637888+0000 mon.gluster1 [WRN]     pg 3.4d is stuck peering for 87s, current state peering, last acting [5,1]
+2026-11-05T21:10:49.637891+0000 mon.gluster1 [WRN]     pg 3.4f is stuck peering for 101m, current state peering, last acting [2,5]
+2026-11-05T21:10:49.637892+0000 mon.gluster1 [WRN]     pg 3.51 is stuck peering for 87s, current state peering, last acting [5,1]
+2026-11-05T21:10:49.637898+0000 mon.gluster1 [WRN]     pg 3.52 is stuck peering for 101m, current state peering, last acting [5,2]
+2026-11-05T21:10:49.637906+0000 mon.gluster1 [WRN]     pg 3.53 is stuck peering for 103m, current state peering, last acting [5,1]
+2026-11-05T21:10:49.637915+0000 mon.gluster1 [WRN]     pg 3.56 is stuck peering for 5m, current state peering, last acting [1,5]
+2026-11-05T21:10:49.637917+0000 mon.gluster1 [WRN]     pg 3.57 is stuck peering for 71s, current state peering, last acting [4,1]
+2026-11-05T21:10:49.637918+0000 mon.gluster1 [WRN]     pg 3.5b is stuck peering for 103m, current state peering, last acting [5,2]
+2026-11-05T21:10:49.637920+0000 mon.gluster1 [WRN]     pg 3.5d is stuck peering for 101m, current state peering, last acting [4,1]
+2026-11-05T21:10:49.637921+0000 mon.gluster1 [WRN]     pg 3.6e is stuck peering for 102m, current state peering, last acting [5,1]
+2026-11-05T21:10:49.637922+0000 mon.gluster1 [WRN]     pg 3.76 is stuck peering for 71s, current state peering, last acting [4,2]
+2026-11-05T21:10:49.637924+0000 mon.gluster1 [WRN]     pg 3.77 is stuck peering for 71s, current state peering, last acting [4,2]
+2026-11-05T21:10:49.637926+0000 mon.gluster1 [WRN]     pg 3.78 is stuck peering for 87s, current state peering, last acting [5,2]
+2026-11-05T21:10:49.637932+0000 mon.gluster1 [WRN]     pg 3.7b is stuck peering for 101m, current state peering, last acting [5,1]
+2026-11-05T21:10:49.637934+0000 mon.gluster1 [WRN]     pg 3.7e is stuck peering for 87s, current state peering, last acting [4,1]
+2026-11-05T21:10:49.637941+0000 mon.gluster1 [WRN]     pg 3.7f is stuck peering for 87s, current state peering, last acting [2,4]
+2026-11-05T21:10:49.637943+0000 mon.gluster1 [WRN] [WRN] PG_DEGRADED: Degraded data redundancy: 1012/22086 objects degraded (4.582%), 18 pgs degraded
+2026-11-05T21:10:49.637944+0000 mon.gluster1 [WRN]     pg 3.3 is activating+undersized+degraded, acting [1,4]
+2026-11-05T21:10:49.637951+0000 mon.gluster1 [WRN]     pg 3.6 is activating+undersized+degraded, acting [1,4]
+2026-11-05T21:10:49.637952+0000 mon.gluster1 [WRN]     pg 3.b is activating+undersized+degraded, acting [1,4]
+2026-11-05T21:10:49.637954+0000 mon.gluster1 [WRN]     pg 3.19 is activating+undersized+degraded, acting [1,5]
+2026-11-05T21:10:49.637956+0000 mon.gluster1 [WRN]     pg 3.1c is activating+undersized+degraded, acting [1,4]
+2026-11-05T21:10:49.637957+0000 mon.gluster1 [WRN]     pg 3.31 is activating+undersized+degraded, acting [1,4]
+2026-11-05T21:10:49.637958+0000 mon.gluster1 [WRN]     pg 3.3d is activating+undersized+degraded, acting [1,4]
+2026-11-05T21:10:49.637959+0000 mon.gluster1 [WRN]     pg 3.3e is activating+undersized+degraded, acting [1,4]
+2026-11-05T21:10:49.637961+0000 mon.gluster1 [WRN]     pg 3.43 is activating+undersized+degraded, acting [1,5]
+2026-11-05T21:10:49.637962+0000 mon.gluster1 [WRN]     pg 3.46 is activating+undersized+degraded, acting [1,5]
+2026-11-05T21:10:49.637963+0000 mon.gluster1 [WRN]     pg 3.4b is activating+undersized+degraded, acting [1,5]
+2026-11-05T21:10:49.637964+0000 mon.gluster1 [WRN]     pg 3.5a is activating+undersized+degraded, acting [1,5]
+2026-11-05T21:10:49.637966+0000 mon.gluster1 [WRN]     pg 3.62 is activating+undersized+degraded, acting [1,5]
+2026-11-05T21:10:49.637967+0000 mon.gluster1 [WRN]     pg 3.65 is activating+undersized+degraded, acting [1,4]
+2026-11-05T21:10:49.637968+0000 mon.gluster1 [WRN]     pg 3.70 is activating+undersized+degraded, acting [1,4]
+2026-11-05T21:10:49.637970+0000 mon.gluster1 [WRN]     pg 3.74 is activating+undersized+degraded, acting [1,4]
+2026-11-05T21:10:49.637971+0000 mon.gluster1 [WRN]     pg 3.79 is activating+undersized+degraded, acting [1,5]
+2026-11-05T21:10:49.637973+0000 mon.gluster1 [WRN]     pg 3.7a is activating+undersized+degraded, acting [1,5]
+2026-11-05T21:10:49.637979+0000 mon.gluster1 [WRN] [WRN] SLOW_OPS: 88 slow ops, oldest one blocked for 48 sec, daemons [osd.1,mon.gluster1] have slow ops.
+2026-11-05T21:10:52.134754+0000 osd.3 [WRN] OSD bench result of 9516.388735 IOPS is not within the threshold limit range of 50.000000 IOPS and 500.000000 IOPS for osd.3. IOPS capacity is unchanged at 315.000000 IOPS. The recommendation is to establish the osd's IOPS capacity using other benchmark tools (e.g. Fio) and then override osd_mclock_max_capacity_iops_[hdd|ssd].
+2026-11-05T21:10:52.196249+0000 osd.4 [WRN] OSD bench result of 9963.898107 IOPS is not within the threshold limit range of 50.000000 IOPS and 500.000000 IOPS for osd.4. IOPS capacity is unchanged at 315.000000 IOPS. The recommendation is to establish the osd's IOPS capacity using other benchmark tools (e.g. Fio) and then override osd_mclock_max_capacity_iops_[hdd|ssd].
+2026-11-05T21:10:52.199337+0000 osd.5 [WRN] OSD bench result of 9632.641245 IOPS is not within the threshold limit range of 50.000000 IOPS and 500.000000 IOPS for osd.5. IOPS capacity is unchanged at 315.000000 IOPS. The recommendation is to establish the osd's IOPS capacity using other benchmark tools (e.g. Fio) and then override osd_mclock_max_capacity_iops_[hdd|ssd].
+2026-11-05T21:10:52.750725+0000 osd.0 [WRN] OSD bench result of 14580.887977 IOPS is not within the threshold limit range of 50.000000 IOPS and 500.000000 IOPS for osd.0. IOPS capacity is unchanged at 315.000000 IOPS. The recommendation is to establish the osd's IOPS capacity using other benchmark tools (e.g. Fio) and then override osd_mclock_max_capacity_iops_[hdd|ssd].
+2026-11-05T21:10:52.787381+0000 mon.gluster1 [WRN] Health check update: Reduced data availability: 5 pgs inactive, 13 pgs peering (PG_AVAILABILITY)
+2026-11-05T21:10:52.787407+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 1800/22086 objects degraded (8.150%), 32 pgs degraded (PG_DEGRADED)
+2026-11-05T21:10:52.787415+0000 mon.gluster1 [WRN] Health check update: 102 slow ops, oldest one blocked for 53 sec, daemons [osd.1,mon.gluster1] have slow ops. (SLOW_OPS)
+2026-11-05T21:10:52.807791+0000 mon.gluster1 [INF] osd.3 [v2:192.168.x.x:6800/2619581412,v1:192.168.x.x:6801/2619581412] boot
+2026-11-05T21:10:52.807955+0000 mon.gluster1 [INF] osd.0 [v2:192.168.x.x:6808/772050569,v1:192.168.x.x:6809/772050569] boot
+2026-11-05T21:10:53.804653+0000 mon.gluster1 [INF] Health check cleared: OSD_DOWN (was: 2 osds down)
+2026-11-05T21:10:53.804806+0000 mon.gluster1 [INF] Health check cleared: OSD_HOST_DOWN (was: 1 host (2 osds) down)
+2026-11-05T21:10:53.831618+0000 mon.gluster1 [INF] osd.4 [v2:192.168.x.x:6802/1483003440,v1:192.168.x.x:6803/1483003440] boot
+2026-11-05T21:10:53.831662+0000 mon.gluster1 [INF] osd.5 [v2:192.168.x.x:6810/1643028454,v1:192.168.x.x:6811/1643028454] boot
+2026-11-05T21:10:53.868473+0000 mon.gluster1 [WRN] Health check failed: 1 MDSs report slow metadata IOs (MDS_SLOW_METADATA_IO)
+2026-11-05T21:10:56.953807+0000 mon.gluster1 [INF] MDS health message cleared (mds.0): 1 slow metadata IOs are blocked > 30 secs, oldest blocked for 50 secs
+2026-11-05T21:10:57.207334+0000 mon.gluster1 [INF] Health check cleared: MDS_SLOW_METADATA_IO (was: 1 MDSs report slow metadata IOs)
+2026-11-05T21:10:58.269139+0000 mon.gluster1 [INF] Health check cleared: PG_AVAILABILITY (was: Reduced data availability: 48 pgs inactive, 37 pgs peering)
+2026-11-05T21:10:58.269183+0000 mon.gluster1 [INF] Health check cleared: PG_DEGRADED (was: Degraded data redundancy: 1150/22086 objects degraded (5.207%), 20 pgs degraded)
+2026-11-05T21:10:58.269194+0000 mon.gluster1 [INF] Health check cleared: SLOW_OPS (was: 0 slow ops, oldest one blocked for 51 sec, osd.1 has slow ops)
+2026-11-05T21:11:21.481474+0000 mon.gluster1 [INF] Health check cleared: MON_CLOCK_SKEW (was: clock skew detected on mon.gluster3)

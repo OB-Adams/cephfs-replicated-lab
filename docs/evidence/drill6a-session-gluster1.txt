@@ -1,0 +1,35 @@
+# Drill 6a: a disk added to every server, session log from gluster1 (spec paused, noout set)
+# Captured 2026-11-05 with script(1), times UTC. Private addresses masked.
+# Cleaned for reading: terminal control codes removed, and commands that were pasted together and drawn twice by the
+# terminal written once each. Typing mistakes are left as typed. Output is unchanged.
+#
+Script started on 2026-11-05 21:08:48+00:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="162" LINES="48"]
+root@gluster1:~# ceph orch set-unmanaged osd.data-disks
+ceph osd set noout
+ceph -s
+Set unmanaged to True for service osd.data-disks
+noout is set
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            1 stray daemon(s) not managed by cephadm
+            noout flag(s) set
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 2h) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 2h), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 4m), 6 in (since 4m)
+         flags noout
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 7.34k objects, 2.0 GiB
+    usage:   6.7 GiB used, 53 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+root@gluster1:~# exit
+exit
+
+Script done on 2026-11-05 21:11:42+00:00 [COMMAND_EXIT_CODE="0"]

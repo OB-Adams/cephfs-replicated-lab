@@ -90,6 +90,35 @@ Issues that were actually hit during this lab, followed by the diagnostic comman
 - **Cause:** a function defined at the prompt exists only in that shell; each `script` recording starts a new one.
 - **Fix:** define it again in the new shell, or keep such helpers in a script file. The checks were re-run afterwards in their own recorded session.
 
+### An OSD's disk cannot be zapped: `Device or resource busy`
+
+- **Where:** milestone 3, drill 5, on `gluster3`.
+- **Symptom:** `cephadm ceph-volume -- lvm zap --destroy --osd-id 3` fails with `error from zap: (16) Device or resource busy`; nothing is wiped.
+- **Cause:** the OSD was still running. `ceph orch daemon stop osd.3` had replied `Scheduled to stop osd.3`, but five minutes later the container was still up and `dmsetup info -c` showed the volume open 24 times. Why the scheduled stop did not happen was not established.
+- **Fix:** on the host, `systemctl stop ceph-<fsid>@osd.3.service`; check `systemctl is-active` says `inactive` and the volume's `Open` count is 0; then zap.
+
+### A replacement OSD is rebuilt and removed over and over
+
+- **Where:** milestone 3, drill 5.
+- **Symptom:** `ceph orch osd rm status` shows the OSD at `done, waiting for purge` with `REPLACE True` and `ZAP True` indefinitely; no new OSD appears on the free disk; the cephadm log (`ceph log last 100 debug cephadm`) repeats `Zapping devices for osd.3`, `osd.3 now down`, `Daemon osd.3 ... was already removed`, `Successfully destroyed old osd.3 ... ready for replacement` every few seconds. `CEPHADM_STRAY_DAEMON` names the OSD.
+- **Cause:** two things undoing each other. `ceph orch osd rm 3 --replace` queued the OSD with zapping on, although `--zap` was not given and the command itself said the volumes would not be zapped. A `--replace` entry ends at destroyed and is never purged, so it stays in the queue. With the OSD spec managed, the orchestrator kept preparing a new OSD on the freed disk with the destroyed ID, and the queue entry kept removing it and zapping the disk.
+- **Fix:** `ceph orch osd rm stop <id>` to empty the queue. That also resets the OSD: it is no longer destroyed and is marked in, so mark it out again at once (`ceph osd out <id>`), then destroy it with `ceph osd safe-to-destroy <id>` and `ceph osd destroy <id> --yes-i-really-mean-it`. Remove any leftover daemon on the host with `cephadm rm-daemon --name osd.<id> --fsid <fsid> --force`, and zap the disk by path.
+- **Prevention:** keep the OSD spec unmanaged until the queue is empty and the replacement is built, and check with `ceph orch ls osd` that it shows `<unmanaged>`.
+
+### An OSD is prepared on a disk but never started
+
+- **Where:** milestone 3, drill 5, after the loop above.
+- **Symptom:** `ceph osd dump` shows the OSD `exists,new` with a new UUID, `lsblk` shows a fresh `ceph-…` volume on the disk and `cephadm ceph-volume -- lvm list` lists it, but no daemon for it runs on the host and `ceph orch ps` shows an old record in `error`.
+- **Cause:** creating an OSD under cephadm is two steps: `ceph-volume lvm batch` prepares it, then cephadm deploys a container for it. The second step did not happen; the likely reason is the orchestrator's stale record of the earlier OSD with the same ID. Not established.
+- **Fix:** `ceph cephadm osd activate <host>`, which deploys a daemon for every OSD prepared on that host and not running. It replied `Created osd(s) 3 on host 'gluster3'`, and the OSD booted within a minute.
+
+### A recording copied with a wildcard misses a file
+
+- **Where:** milestone 3, drill 6a.
+- **Symptom:** `ceph-drill6a-cephw-gluster1.txt` was not among the files copied with `scp 'root@gluster1:/root/ceph-drill*-cephw.txt'`.
+- **Cause:** the file's name ends `-cephw-gluster1.txt`, which the pattern `*-cephw.txt` does not match.
+- **Fix:** copy it by name, and check the copied set against the list of files the runbook made.
+
 ## Diagnostic commands
 
 ```bash
@@ -107,6 +136,11 @@ ps -eo pid,ppid,etime,stat,wchan:25,args  # what a stuck process is, how long it
 ceph --admin-daemon /var/run/ceph/<fsid>/ceph-mon.<host>.asok mon_status   # one monitor's own view, no quorum needed
 ceph pg dump_stuck inactive               # PGs not accepting I/O, and why
 rados list-inconsistent-pg <pool>         # after a scrub: PGs whose copies disagree
+ceph orch osd rm status                   # OSDs being drained, replaced or removed, and their state
+ceph osd safe-to-destroy <id>             # whether an OSD's loss would leave any PG short of copies
+ceph osd df tree                          # data and PGs per OSD and per host
+cephadm ceph-volume -- lvm list           # on a host: the OSDs prepared on its disks, with IDs and UUIDs
+dmsetup info -c                           # on a host: device-mapper volumes and how many processes hold each open
 dmesg -T | grep -E 'ceph|libceph'         # on the client: the kernel client's view of monitors, MDS and OSDs
 chronyc tracking                          # this machine's offset from its time source
 ```

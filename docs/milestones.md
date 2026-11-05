@@ -6,7 +6,7 @@ Status values: Planned, In progress, Blocked, Complete. A milestone is marked Co
 |---|---|---|
 | 1 | Deploy Ceph and mount CephFS | Complete |
 | 2 | Failure drills | Complete |
-| 3 | OSD replacement and expansion | Planned |
+| 3 | OSD replacement and expansion | Complete |
 | 4 | Security and monitoring | Planned |
 | 5 | Benchmark against the Gluster baseline | Planned |
 | 6 | Gluster and CephFS comparison | Planned |
@@ -54,7 +54,23 @@ Status values: Planned, In progress, Blocked, Complete. A milestone is marked Co
 
 ## Milestone 3: OSD replacement and expansion
 
-**Goal.** The Ceph equivalents of phase 1's milestone 2: a failed OSD destroyed and recreated, an OSD moved to a new disk, and the cluster expanded, with recovery and backfill observed.
+**Goal.** The Ceph equivalents of phase 1's milestone 2: a failed OSD's disk lost and the OSD rebuilt with the same ID, the cluster expanded with a disk per server, and disks taken out of service, with the data movements observed and the client's writes measured.
+
+**Changes.** 2 GB of test data with recorded checksums and a check script ([../scripts/ceph-check.sh](../scripts/ceph-check.sh)); `gluster2` labelled `_admin` with `ceph-common` installed, as a second admin host; a 10 GB `vdd` disk added to every server; three OSDs created on them and removed again. The cluster ends as it started: six OSDs on `vdb` and `vdc`, the spec unchanged, the `vdd` disks empty and unused.
+
+**Concepts covered.** Degraded against misplaced; one OSD out against a whole host; CRUSH weight, reweight, in and out; destroyed against purged; draining; `noout` for planned maintenance; managed and unmanaged specs and the orchestrator's removal queue; the balancer and the PG autoscaler.
+
+**Acceptance criteria and result.**
+
+| Criterion | Result |
+|---|---|
+| A lost OSD's copies rebuilt, and a replacement OSD built with the same ID | Met: copies rebuilt on the host's other OSD 14 s after the out; a new `osd.3` refilled in 86 s, after clearing a removal-queue loop |
+| The cluster expanded by one disk per server, with data spread onto the new OSDs | Met: healthy under 2 minutes after the three new OSDs booted; 45 to 54 PGs per OSD |
+| OSDs taken out of service without stopping one that a PG still needed | Met: three OSDs drained and purged in 3 min 20 s, each stopped only after the cluster was healthy |
+| No data lost or damaged | Met: all 8400 drill files correct, the 2 GB fill set and the reference file matching, deep scrub found no inconsistent PGs |
+| Recordings, cluster logs and writer logs archived | Met, in `docs/evidence/` |
+
+**Result (2026-11-05).** Met. Losing a disk cost the client nothing: its slowest write during drill 5 took 0.08 s. Every data movement, including the expansion and the drain, was reported as degraded rather than misplaced. Marking the OSD destroyed with `ceph orch osd rm --replace` zapped the disk although `--zap` was not given, and with the OSD spec managed the orchestrator and the removal queue rebuilt and removed the replacement in a loop until the queue entry was stopped. In drill 6a two servers were shut down together for their disks, which lost monitor quorum for about 50 seconds and held one client write for 64 s, despite `noout`; one server alone cost about 20 s. Full write-up in [replacement-expansion.md](replacement-expansion.md).
 
 ## Milestone 4: security and monitoring
 

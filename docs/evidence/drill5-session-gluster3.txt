@@ -1,0 +1,115 @@
+# Drill 5: osd.3's disk lost and rebuilt, session log from gluster3
+# Captured 2026-11-05 with script(1), times UTC. Private addresses masked.
+# Cleaned for reading: terminal control codes removed, and commands that were pasted together and drawn twice by the
+# terminal written once each. Typing mistakes are left as typed. Output is unchanged.
+# The first zap failed with 'Device or resource busy' because osd.3 was still running; it was stopped with systemctl
+# and the zap repeated. The later clean-up on gluster3 (cephadm rm-daemon and a zap of /dev/vdc, about 20:58) was run
+# outside this recording.
+#
+Script started on 2026-11-05 19:04:55+00:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="162" LINES="48"]
+root@gluster3:~# lsblk /dev/vdb /dev/vdc
+NAME                                                                                                  MAJ:MIN RM SIZE RO TYPE MOUNTPOINTS
+vdb                                                                                                   252:16   0  10G  0 disk
+└─ceph--748947cb--8082--4ecf--b8a7--a2ad130b54f5-osd--block--dd608afa--46ed--4d79--8c44--b0968e96c599 253:3    0  10G  0 lvm
+vdc                                                                                                   252:32   0  10G  0 disk
+└─ceph--6bf6a5b7--6d1c--4697--b1e0--44ca803252b3-osd--block--2103c3e3--d890--4c30--a0e8--9f792d1e941b 253:2    0  10G  0 lvm
+root@gluster3:~# cephadm ceph-volume -- lvm zap --destroy --osd-id 3
+Inferring fsid 01ada8b6-d718-11f1-9fbe-d6454780e5d3
+Non-zero exit code 1 from /usr/bin/podman run --rm --ipc=host --stop-signal=SIGTERM --net=host --entrypoint /usr/sbin/ceph-volume --privileged --group-add=disk --init -e CONTAINER_IMAGE=quay.io/ceph/ceph@sha256:4337ac8ac81d40df136e5eac92ca53bb52360a5e039f3d1f7935e729eb5ef42c -e NODE_NAME=gluster3 -e CEPH_VOLUME_SKIP_RESTORECON=yes -e CEPH_VOLUME_DEBUG=1 -v /var/run/ceph/01ada8b6-d718-11f1-9fbe-d6454780e5d3:/var/run/ceph:z -v /var/log/ceph/01ada8b6-d718-11f1-9fbe-d6454780e5d3:/var/log/ceph:z -v /var/lib/ceph/01ada8b6-d718-11f1-9fbe-d6454780e5d3/crash:/var/lib/ceph/crash:z -v /run/systemd/journal:/run/systemd/journal -v /dev:/dev -v /run/udev:/run/udev -v /sys:/sys -v /run/lvm:/run/lvm -v /run/lock/lvm:/run/lock/lvm -v /var/lib/ceph/01ada8b6-d718-11f1-9fbe-d6454780e5d3/selinux:/sys/fs/selinux:ro -v /:/rootfs:rslave -v /etc/hosts:/etc/hosts:ro quay.io/ceph/ceph@sha256:4337ac8ac81d40df136e5eac92ca53bb52360a5e039f3d1f7935e729eb5ef42c lvm zap --destroy --osd-id 3
+/usr/bin/podman: stderr --> Zapping: /dev/ceph-6bf6a5b7-6d1c-4697-b1e0-44ca803252b3/osd-block-2103c3e3-d890-4c30-a0e8-9f792d1e941b
+/usr/bin/podman: stderr --> Removing all BlueStore signature on /dev/ceph-6bf6a5b7-6d1c-4697-b1e0-44ca803252b3/osd-block-2103c3e3-d890-4c30-a0e8-9f792d1e941b if any...
+/usr/bin/podman: stderr Running command: /usr/bin/ceph-bluestore-tool zap-device --dev /dev/ceph-6bf6a5b7-6d1c-4697-b1e0-44ca803252b3/osd-block-2103c3e3-d890-4c30-a0e8-9f792d1e941b --yes-i-really-really-mean-it
+/usr/bin/podman: stderr  stderr: error from zap: (16) Device or resource busy
+/usr/bin/podman: stderr 2026-11-05T19:05:24.381+0000 ffff7f447040 -1 bdev(0xaaaaffe8c000 /dev/ceph-6bf6a5b7-6d1c-4697-b1e0-44ca803252b3/osd-block-2103c3e3-d890-4c30-a0e8-9f792d1e941b) open open got: (16) Device or resource busy
+/usr/bin/podman: stderr Traceback (most recent call last):
+/usr/bin/podman: stderr   File "/usr/sbin/ceph-volume", line 33, in <module>
+/usr/bin/podman: stderr     sys.exit(load_entry_point('ceph-volume==1.0.0', 'console_scripts', 'ceph-volume')())
+/usr/bin/podman: stderr   File "/usr/lib/python3.9/site-packages/ceph_volume/main.py", line 62, in __init__
+/usr/bin/podman: stderr     self.main(self.argv)
+/usr/bin/podman: stderr   File "/usr/lib/python3.9/site-packages/ceph_volume/decorators.py", line 59, in newfunc
+/usr/bin/podman: stderr     return f(*a, **kw)
+/usr/bin/podman: stderr   File "/usr/lib/python3.9/site-packages/ceph_volume/main.py", line 174, in main
+/usr/bin/podman: stderr     terminal.dispatch(self.mapper, subcommand_args)
+/usr/bin/podman: stderr   File "/usr/lib/python3.9/site-packages/ceph_volume/terminal.py", line 194, in dispatch
+/usr/bin/podman: stderr     instance.main()
+/usr/bin/podman: stderr   File "/usr/lib/python3.9/site-packages/ceph_volume/devices/lvm/main.py", line 47, in main
+/usr/bin/podman: stderr     terminal.dispatch(self.mapper, self.argv)
+/usr/bin/podman: stderr   File "/usr/lib/python3.9/site-packages/ceph_volume/terminal.py", line 194, in dispatch
+/usr/bin/podman: stderr     instance.main()
+/usr/bin/podman: stderr   File "/usr/lib/python3.9/site-packages/ceph_volume/devices/lvm/zap.py", line 578, in main
+/usr/bin/podman: stderr     self.zap_osd()
+/usr/bin/podman: stderr   File "/usr/lib/python3.9/site-packages/ceph_volume/decorators.py", line 16, in is_root
+/usr/bin/podman: stderr     return func(*a, **kw)
+/usr/bin/podman: stderr   File "/usr/lib/python3.9/site-packages/ceph_volume/devices/lvm/zap.py", line 433, in zap_osd
+/usr/bin/podman: stderr     self.zap()
+/usr/bin/podman: stderr   File "/usr/lib/python3.9/site-packages/ceph_volume/decorators.py", line 16, in is_root
+/usr/bin/podman: stderr     return func(*a, **kw)
+/usr/bin/podman: stderr   File "/usr/lib/python3.9/site-packages/ceph_volume/devices/lvm/zap.py", line 408, in zap
+/usr/bin/podman: stderr     self.zap_lv(device)
+/usr/bin/podman: stderr   File "/usr/lib/python3.9/site-packages/ceph_volume/devices/lvm/zap.py", line 288, in zap_lv
+/usr/bin/podman: stderr     zap_device(device.path)
+/usr/bin/podman: stderr   File "/usr/lib/python3.9/site-packages/ceph_volume/devices/lvm/zap.py", line 27, in zap_device
+/usr/bin/podman: stderr     zap_bluestore(path)
+/usr/bin/podman: stderr   File "/usr/lib/python3.9/site-packages/ceph_volume/devices/lvm/zap.py", line 38, in zap_bluestore
+/usr/bin/podman: stderr     process.run([
+/usr/bin/podman: stderr   File "/usr/lib/python3.9/site-packages/ceph_volume/process.py", line 147, in run
+/usr/bin/podman: stderr     raise RuntimeError(msg)
+/usr/bin/podman: stderr RuntimeError: command returned non-zero exit status: 1
+Traceback (most recent call last):
+  File "/usr/lib64/python3.9/runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/usr/lib64/python3.9/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/tmp/tmpldfwwadk.cephadm.build/app/__main__.py", line 5322, in <module>
+  File "/tmp/tmpldfwwadk.cephadm.build/app/__main__.py", line 5310, in main
+  File "/tmp/tmpldfwwadk.cephadm.build/app/__main__.py", line 398, in _infer_config
+  File "/tmp/tmpldfwwadk.cephadm.build/app/__main__.py", line 342, in _infer_fsid
+  File "/tmp/tmpldfwwadk.cephadm.build/app/__main__.py", line 426, in _infer_image
+  File "/tmp/tmpldfwwadk.cephadm.build/app/__main__.py", line 300, in _validate_fsid
+  File "/tmp/tmpldfwwadk.cephadm.build/app/__main__.py", line 3252, in command_ceph_volume
+  File "/tmp/tmpldfwwadk.cephadm.build/app/cephadmlib/call_wrappers.py", line 310, in call_throws
+RuntimeError: Failed command: /usr/bin/podman run --rm --ipc=host --stop-signal=SIGTERM --net=host --entrypoint /usr/sbin/ceph-volume --privileged --group-add=disk --init -e CONTAINER_IMAGE=quay.io/ceph/ceph@sha256:4337ac8ac81d40df136e5eac92ca53bb52360a5e039f3d1f7935e729eb5ef42c -e NODE_NAME=gluster3 -e CEPH_VOLUME_SKIP_RESTORECON=yes -e CEPH_VOLUME_DEBUG=1 -v /var/run/ceph/01ada8b6-d718-11f1-9fbe-d6454780e5d3:/var/run/ceph:z -v /var/log/ceph/01ada8b6-d718-11f1-9fbe-d6454780e5d3:/var/log/ceph:z -v /var/lib/ceph/01ada8b6-d718-11f1-9fbe-d6454780e5d3/crash:/var/lib/ceph/crash:z -v /run/systemd/journal:/run/systemd/journal -v /dev:/dev -v /run/udev:/run/udev -v /sys:/sys -v /run/lvm:/run/lvm -v /run/lock/lvm:/run/lock/lvm -v /var/lib/ceph/01ada8b6-d718-11f1-9fbe-d6454780e5d3/selinux:/sys/fs/selinux:ro -v /:/rootfs:rslave -v /etc/hosts:/etc/hosts:ro quay.io/ceph/ceph@sha256:4337ac8ac81d40df136e5eac92ca53bb52360a5e039f3d1f7935e729eb5ef42c lvm zap --destroy --osd-id 3
+root@gluster3:~# lsblk /dev/vdb /dev/vdc
+NAME                                                                                                  MAJ:MIN RM SIZE RO TYPE MOUNTPOINTS
+vdb                                                                                                   252:16   0  10G  0 disk
+└─ceph--748947cb--8082--4ecf--b8a7--a2ad130b54f5-osd--block--dd608afa--46ed--4d79--8c44--b0968e96c599 253:3    0  10G  0 lvm
+vdc                                                                                                   252:32   0  10G  0 disk
+└─ceph--6bf6a5b7--6d1c--4697--b1e0--44ca803252b3-osd--block--2103c3e3--d890--4c30--a0e8--9f792d1e941b 253:2    0  10G  0 lvm
+root@gluster3:~# lsblk /dev/vdb /dev/vdc
+NAME                                                                                                  MAJ:MIN RM SIZE RO TYPE MOUNTPOINTS
+vdb                                                                                                   252:16   0  10G  0 disk
+└─ceph--748947cb--8082--4ecf--b8a7--a2ad130b54f5-osd--block--dd608afa--46ed--4d79--8c44--b0968e96c599 253:3    0  10G  0 lvm
+vdc                                                                                                   252:32   0  10G  0 disk
+└─ceph--6bf6a5b7--6d1c--4697--b1e0--44ca803252b3-osd--block--2103c3e3--d890--4c30--a0e8--9f792d1e941b 253:2    0  10G  0 lvm
+root@gluster3:~# podman ps --format '{{.Names}}  {{.Status}}' | grep osd
+ceph-01ada8b6-d718-11f1-9fbe-d6454780e5d3-osd-3  Up 43 minutes
+ceph-01ada8b6-d718-11f1-9fbe-d6454780e5d3-osd-0  Up 43 minutes
+root@gluster3:~# systemctl is-active ceph-01ada8b6-d718-11f1-9fbe-d6454780e5d3@osd.3.service
+dmsetup info -c | grep -E 'Name|6bf6a5b7'
+active
+Name                                                                                                Maj Min Stat Open Targ Event  UUID
+ceph--6bf6a5b7--6d1c--4697--b1e0--44ca803252b3-osd--block--2103c3e3--d890--4c30--a0e8--9f792d1e941b 253   2 L--w   24    1      0 LVM-ibFAv0ZHSL2nwGYovDRzKT35eH9K3kMTbdOaH0qg5JOHQhaMzMBuopAgyzP1ktER
+root@gluster3:~# systemctl stop ceph-01ada8b6-d718-11f1-9fbe-d6454780e5d3@osd.3.service
+systemctl is-active ceph-01ada8b6-d718-11f1-9fbe-d6454780e5d3@osd.3.service
+dmsetup info -c | grep -E 'Name|6bf6a5b7'
+inactive
+Name                                                                                                Maj Min Stat Open Targ Event  UUID
+ceph--6bf6a5b7--6d1c--4697--b1e0--44ca803252b3-osd--block--2103c3e3--d890--4c30--a0e8--9f792d1e941b 253   2 L--w    0    1      0 LVM-ibFAv0ZHSL2nwGYovDRzKT35eH9K3kMTbdOaH0qg5JOHQhaMzMBuopAgyzP1ktER
+root@gluster3:~# lsblk /dev/vdb /dev/vdc
+NAME                                                                                                  MAJ:MIN RM SIZE RO TYPE MOUNTPOINTS
+vdb                                                                                                   252:16   0  10G  0 disk
+└─ceph--748947cb--8082--4ecf--b8a7--a2ad130b54f5-osd--block--dd608afa--46ed--4d79--8c44--b0968e96c599 253:3    0  10G  0 lvm
+vdc                                                                                                   252:32   0  10G  0 disk
+└─ceph--6bf6a5b7--6d1c--4697--b1e0--44ca803252b3-osd--block--2103c3e3--d890--4c30--a0e8--9f792d1e941b 253:2    0  10G  0 lvm
+root@gluster3:~# cephadm ceph-volume -- lvm zap --destroy --osd-id 3
+Inferring fsid 01ada8b6-d718-11f1-9fbe-d6454780e5d3
+
+root@gluster3:~# lsblk /dev/vdb /dev/vdc
+NAME                                                                                                  MAJ:MIN RM SIZE RO TYPE MOUNTPOINTS
+vdb                                                                                                   252:16   0  10G  0 disk
+└─ceph--748947cb--8082--4ecf--b8a7--a2ad130b54f5-osd--block--dd608afa--46ed--4d79--8c44--b0968e96c599 253:3    0  10G  0 lvm
+vdc                                                                                                   252:32   0  10G  0 disk
+root@gluster3:~# exit
+exit
+
+Script done on 2026-11-05 19:09:52+00:00 [COMMAND_EXIT_CODE="0"]

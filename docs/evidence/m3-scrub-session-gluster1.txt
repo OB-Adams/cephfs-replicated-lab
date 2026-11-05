@@ -1,0 +1,75 @@
+# After milestone 3: deep scrub of both CephFS pools, session log from gluster1
+# Captured 2026-11-05 with script(1), times UTC. Private addresses masked.
+# Cleaned for reading: terminal control codes removed, and commands that were pasted together and drawn twice by the
+# terminal written once each. Typing mistakes are left as typed. Output is unchanged.
+# The first, short recording only displayed the file itself and was ended; the second is the scrub.
+#
+Script started on 2026-11-05 22:37:27+00:00 [TERM="xterm-256color" TTY="/dev/pts/4" COLUMNS="162" LINES="48"]
+root@gluster1:~# cat ~/ceph-m3-scrub-session-$(hostname -s).txt
+root@gluster1:~# exit
+exit
+
+Script done on 2026-11-05 22:37:46+00:00 [COMMAND_EXIT_CODE="0"]
+Script started on 2026-11-05 22:38:00+00:00 [TERM="xterm-256color" TTY="/dev/pts/2" COLUMNS="162" LINES="48"]
+root@gluster1:~# SINCE=$(date -u +%Y-%m-%dT%H:%M:%S)
+ceph osd pool deep-scrub cephfs.cephfs.data
+ceph osd pool deep-scrub cephfs.cephfs.meta
+root@gluster1:~# ceph pg dump pgs -f json 2>/dev/null | python3 -c '
+import json, sys
+since = sys.argv[1]
+d = json.load(sys.stdin)
+pgs = d["pg_stats"] if isinstance(d, dict) else d
+for pool in ("2", "3"):
+    sel = [p for p in pgs if p["pgid"].split(".")[0] == pool]
+    done = [p for p in sel if p["last_deep_scrub_stamp"] >= since]
+    print(f"pool {pool}: {len(done)} of {len(sel)} PGs deep-scrubbed since {since}")' "$SINCE"
+pool 2: 16 of 16 PGs deep-scrubbed since 2026-11-05T22:38:14
+pool 3: 128 of 128 PGs deep-scrubbed since 2026-11-05T22:38:14
+root@gluster1:~# rados list-inconsistent-pg cephfs.cephfs.data
+rados list-inconsistent-pg cephfs.cephfs.meta
+ceph -s
+[]
+[]
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_OK
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 87m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 87m), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 22m), 6 in (since 38m)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 12.75k objects, 2.0 GiB
+    usage:   7.2 GiB used, 53 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+root@gluster1:~# rados list-inconsistent-pg cephfs.cephfs.data
+rados list-inconsistent-pg cephfs.cephfs.meta
+ceph -s
+[]
+[]
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_OK
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 87m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 87m), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 22m), 6 in (since 38m)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 12.75k objects, 2.0 GiB
+    usage:   7.2 GiB used, 53 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+root@gluster1:~# exit
+exit
+
+Script done on 2026-11-05 22:40:28+00:00 [COMMAND_EXIT_CODE="0"]

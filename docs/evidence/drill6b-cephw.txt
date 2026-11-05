@@ -1,0 +1,61 @@
+# Drill 6b: three new OSDs, cluster log
+# Captured 2026-11-05 with `ceph -w | tee`: the cluster log as it happened, times UTC.
+# The status block at the top is what `ceph -w` prints when it starts. Private addresses masked. Otherwise unchanged.
+#
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_OK
+ 
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 45m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 45m), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 45m), 6 in (since 53m)
+ 
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 9.75k objects, 2.0 GiB
+    usage:   6.7 GiB used, 53 GiB / 60 GiB avail
+    pgs:     145 active+clean
+ 
+
+2026-11-05T22:00:00.001169+0000 mon.gluster1 [INF] overall HEALTH_OK
+2026-11-05T22:02:14.674342+0000 osd.7 [WRN] OSD bench result of 5473.618327 IOPS is not within the threshold limit range of 50.000000 IOPS and 500.000000 IOPS for osd.7. IOPS capacity is unchanged at 315.000000 IOPS. The recommendation is to establish the osd's IOPS capacity using other benchmark tools (e.g. Fio) and then override osd_mclock_max_capacity_iops_[hdd|ssd].
+2026-11-05T22:02:14.754704+0000 osd.6 [WRN] OSD bench result of 5803.236653 IOPS is not within the threshold limit range of 50.000000 IOPS and 500.000000 IOPS for osd.6. IOPS capacity is unchanged at 315.000000 IOPS. The recommendation is to establish the osd's IOPS capacity using other benchmark tools (e.g. Fio) and then override osd_mclock_max_capacity_iops_[hdd|ssd].
+2026-11-05T22:02:14.756863+0000 osd.8 [WRN] OSD bench result of 5399.365588 IOPS is not within the threshold limit range of 50.000000 IOPS and 500.000000 IOPS for osd.8. IOPS capacity is unchanged at 315.000000 IOPS. The recommendation is to establish the osd's IOPS capacity using other benchmark tools (e.g. Fio) and then override osd_mclock_max_capacity_iops_[hdd|ssd].
+2026-11-05T22:02:15.360888+0000 mon.gluster1 [INF] osd.7 [v2:192.168.x.x:6820/4059423201,v1:192.168.x.x:6821/4059423201] boot
+2026-11-05T22:02:15.360917+0000 mon.gluster1 [INF] osd.6 [v2:192.168.x.x:6816/428593936,v1:192.168.x.x:6817/428593936] boot
+2026-11-05T22:02:15.360921+0000 mon.gluster1 [INF] osd.8 [v2:192.168.x.x:6818/4149184312,v1:192.168.x.x:6819/4149184312] boot
+2026-11-05T22:02:17.823888+0000 mon.gluster1 [WRN] Health check failed: Reduced data availability: 1 pg peering (PG_AVAILABILITY)
+2026-11-05T22:02:20.890178+0000 mon.gluster1 [WRN] Health check failed: Degraded data redundancy: 4883/30168 objects degraded (16.186%), 48 pgs degraded (PG_DEGRADED)
+2026-11-05T22:02:23.322651+0000 mon.gluster1 [INF] Health check cleared: PG_AVAILABILITY (was: Reduced data availability: 1 pg peering)
+2026-11-05T22:02:27.342483+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 8392/30192 objects degraded (27.795%), 80 pgs degraded (PG_DEGRADED)
+2026-11-05T22:02:33.623282+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 7193/30219 objects degraded (23.803%), 69 pgs degraded (PG_DEGRADED)
+2026-11-05T22:02:38.775563+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 6649/30252 objects degraded (21.979%), 63 pgs degraded (PG_DEGRADED)
+2026-11-05T22:02:43.776561+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 6097/30273 objects degraded (20.140%), 57 pgs degraded (PG_DEGRADED)
+2026-11-05T22:02:48.777416+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 5127/30306 objects degraded (16.917%), 47 pgs degraded (PG_DEGRADED)
+2026-11-05T22:02:53.778569+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 4595/30333 objects degraded (15.149%), 40 pgs degraded (PG_DEGRADED)
+2026-11-05T22:02:58.780306+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 4106/30360 objects degraded (13.524%), 36 pgs degraded (PG_DEGRADED)
+2026-11-05T22:03:03.781487+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 3565/30390 objects degraded (11.731%), 30 pgs degraded (PG_DEGRADED)
+2026-11-05T22:03:08.783343+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 3023/30420 objects degraded (9.938%), 27 pgs degraded (PG_DEGRADED)
+2026-11-05T22:03:13.786112+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 3023/30444 objects degraded (9.930%), 26 pgs degraded (PG_DEGRADED)
+2026-11-05T22:03:18.787807+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 2748/30474 objects degraded (9.018%), 23 pgs degraded (PG_DEGRADED)
+2026-11-05T22:03:23.789065+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 2586/30501 objects degraded (8.478%), 21 pgs degraded, 1 pg undersized (PG_DEGRADED)
+2026-11-05T22:03:28.790349+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 2112/30525 objects degraded (6.919%), 16 pgs degraded, 1 pg undersized (PG_DEGRADED)
+2026-11-05T22:03:33.791823+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 1585/30561 objects degraded (5.186%), 12 pgs degraded, 1 pg undersized (PG_DEGRADED)
+2026-11-05T22:03:38.793213+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 1275/30588 objects degraded (4.168%), 9 pgs degraded (PG_DEGRADED)
+2026-11-05T22:03:43.797784+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 1275/30615 objects degraded (4.165%), 9 pgs degraded (PG_DEGRADED)
+2026-11-05T22:03:48.799484+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 1131/30642 objects degraded (3.691%), 8 pgs degraded (PG_DEGRADED)
+2026-11-05T22:03:53.802135+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 930/30672 objects degraded (3.032%), 6 pgs degraded (PG_DEGRADED)
+2026-11-05T22:03:58.804574+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 610/30699 objects degraded (1.987%), 4 pgs degraded (PG_DEGRADED)
+2026-11-05T22:04:03.808296+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 472/30729 objects degraded (1.536%), 3 pgs degraded (PG_DEGRADED)
+2026-11-05T22:04:08.810615+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 164/30753 objects degraded (0.533%), 1 pg degraded (PG_DEGRADED)
+2026-11-05T22:04:13.467427+0000 mon.gluster1 [INF] Health check cleared: PG_DEGRADED (was: Degraded data redundancy: 164/30771 objects degraded (0.533%), 1 pg degraded)
+2026-11-05T22:04:13.467506+0000 mon.gluster1 [INF] Cluster is now healthy
+2026-11-05T22:05:05.947288+0000 mon.gluster1 [WRN] Health check failed: Reduced data availability: 2 pgs peering (PG_AVAILABILITY)
+2026-11-05T22:05:07.016645+0000 mon.gluster1 [WRN] Health check failed: Degraded data redundancy: 81/31089 objects degraded (0.261%), 1 pg degraded (PG_DEGRADED)
+2026-11-05T22:05:11.201834+0000 mon.gluster1 [INF] Health check cleared: PG_AVAILABILITY (was: Reduced data availability: 2 pgs peering)
+2026-11-05T22:05:13.309622+0000 mon.gluster1 [INF] Health check cleared: PG_DEGRADED (was: Degraded data redundancy: 81/31113 objects degraded (0.260%), 1 pg degraded)
+2026-11-05T22:05:13.309705+0000 mon.gluster1 [INF] Cluster is now healthy
+2026-11-05T22:10:00.000648+0000 mon.gluster1 [INF] overall HEALTH_OK
