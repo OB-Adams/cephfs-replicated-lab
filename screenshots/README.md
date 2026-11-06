@@ -14,7 +14,9 @@ This folder holds screenshots of real terminal output from the lab. Each one is 
 - Screenshot 03 was taken after the drill 1 writer had finished, so `ceph -s` has no `client:` I/O line. The writer's log shows every write during the outage.
 - In screenshot 05, the `grep` for `name`, `rank` and `quorum` also matches fields further down the monitor status: the key types (`aes256k`) and the monitor map's three entries. The lines that matter are the first four.
 - Screenshot 07 shows the PGs in `recovery_wait`, not `backfilling` as the runbook expected; see [../docs/replacement-expansion.md](../docs/replacement-expansion.md#what-degraded-meant-here).
-- The runbook planned a tenth screenshot, of drill 7's drain; it was not taken. The drain's `ceph orch osd rm status` and `ceph -s` output is in `../docs/evidence/drill7-session-gluster1.txt`.
+- Milestone 3's runbook planned a screenshot of drill 7's drain; it was not taken. The drain's `ceph orch osd rm status` and `ceph -s` output is in `../docs/evidence/drill7-session-gluster1.txt`. Numbering continues from 10 with milestone 4.
+- Screenshots 11 and 13 show the client's commands as pasted, so each block of commands appears before its output.
+- Screenshot 13 shows the monitors' private addresses in the mount options, unmasked. The same output is in `../docs/evidence/drill8-session-gluster4.txt` with the addresses masked.
 
 ## The set
 
@@ -29,3 +31,7 @@ This folder holds screenshots of real terminal output from the lab. Each one is 
 | `07-drill5-backfill.png` | gluster1 | `ceph -s`, drill 5, 8 s after `osd.3` was marked out | `5 up, 5 in`; `985/15687 objects degraded (6.279%)`, 25 PGs `recovery_wait+degraded`; recovery at 87 MiB/s with client writes continuing |
 | `08-drill5-osd-destroyed.png` | gluster1 | `ceph osd tree`, after `ceph orch osd rm 3 --replace` | `osd.3` `destroyed`, still under `host gluster3` with CRUSH weight 0.0098 and reweight 0 |
 | `09-drill6-nine-osds.png` | gluster1 | `ceph osd df tree`, after drill 6b's data had moved | Nine OSDs, three per host, 90 GiB; 720 to 907 MiB and 45 to 54 PGs per OSD |
+| `10-drill8-plaintext-on-wire.png` | gluster4 | `tcpdump -nn -A -r /root/ceph-drill8-crc.pcap \| grep -o "$MARK line [0-9]" \| sort \| uniq -c`, drill 8, client in `ms_mode=prefer-crc` | All three marker lines of three test files read from the captured client traffic |
+| `11-drill8-caps-refused.png` | gluster4 | Mounts with a forged key, an unknown name, the read-only key and the path-limited key; `rados ls` on both CephFS pools | Logins refused with `no mds is up`; the read-only write `Permission denied`; the scoped root mount error 13 and `/scoped` mounted; the data pool listed and the metadata pool `Operation not permitted` |
+| `12-drill8-secure-on-wire.png` | gluster4 | `findmnt`, then the same capture search after remounting with `ms_mode=secure` | `ms_mode=secure`; 410 packets, 0 marker lines; the file reading back correctly |
+| `13-drill8-crc-client-refused.png` | gluster4 | Mounts with `ms_mode=crc`, `prefer-crc` and `legacy` after the cluster was set to `secure`, then `findmnt -t ceph` | `crc` refused; `prefer-crc` and `legacy` mounted, the `legacy` mount on the monitors' msgr1 port 6789 |

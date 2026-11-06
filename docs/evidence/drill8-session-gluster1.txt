@@ -1,0 +1,199 @@
+# Drill 8: cephx keys and msgr2 secure mode, session log from gluster1 (admin)
+# Captured 2026-11-06 with script(1), times UTC. Private addresses masked.
+# Cleaned for reading: terminal control codes removed, and commands that were pasted together and drawn twice by the
+# terminal written once each. Typing mistakes are left as typed. Output is unchanged except where a [trimmed] note says so.
+#
+Script started on 2026-11-06 21:50:18+00:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="162" LINES="48"]
+root@gluster1:~# clear
+root@gluster1:~# ceph fs authorize cephfs client.reader / r > /root/ceph.client.reader.keyring
+ceph fs authorize cephfs client.scoped /scoped rw > /root/ceph.client.scoped.keyring
+ceph auth get client.reader | grep caps
+ceph auth get client.scoped | grep caps
+        caps mds = "allow r fsname=cephfs"
+        caps mon = "allow r fsname=cephfs"
+        caps osd = "allow r tag cephfs data=cephfs"
+        caps mds = "allow rw fsname=cephfs path=/scoped"
+        caps mon = "allow r fsname=cephfs"
+        caps osd = "allow rw tag cephfs data=cephfs"
+root@gluster1:~# ceph auth rm client.reader
+ceph auth get client.reader 2>&1 | head -1
+Error ENOENT: failed to find client.reader in keyring
+root@gluster1:~# ceph tell mds.cephfs:0 client ls 2>/dev/null | grep -E '"id"|entity_id|"inst"' | grep -B1 -A1 reader
+        "id": 134280,
+            "id": "reader"
+        "inst": "client.134280 192.168.x.x:0/1958173728",
+            "entity_id": "reader",
+        "id": 134123,
+--
+        "id": 134120,
+            "id": "reader"
+        "inst": "client.134120 192.168.x.x:0/3683054526",
+            "entity_id": "reader",
+        "id": 134217,
+root@gluster1:~# ceph tell mds.cephfs:0 client evict id=134280
+2026-11-06T22:17:36.512+0000 ffff3bfff120  0 client.134340 ms_handle_reset on v2:192.168.x.x:6800/3368964574
+2026-11-06T22:17:36.652+0000 ffff3bfff120  0 client.134346 ms_handle_reset on v2:192.168.x.x:6800/3368964574
+root@gluster1:~# ceph config set global ms_cluster_mode secure
+ceph config set global ms_service_mode secure
+ceph config set global ms_client_mode secure
+ceph config set global ms_mon_cluster_mode secure
+ceph config set global ms_mon_service_mode secure
+ceph config set global ms_mon_client_mode secure
+ceph config dump | grep -E 'ms_.*mode'
+global            basic     ms_client_mode                         secure                                                                                     *
+global            basic     ms_cluster_mode                        secure                                                                                     *
+global            basic     ms_mon_client_mode                     secure                                                                                     *
+global            basic     ms_mon_cluster_mode                    secure                                                                                     *
+global            basic     ms_mon_service_mode                    secure                                                                                     *
+global            basic     ms_service_mode                        secure                                                                                     *
+root@gluster1:~# ceph osd set noout
+noout is set
+root@gluster1:~roll() { echo "== $1  $(date -u +%T)"; ceph orch daemon restart "$1"; sleep 20; until ceph health | grep -qE '^HEALTH_OK$|^HEALTH_WARN noout flag\(s\) set$'; do sleep 5; done; echo "   back  $(date -u +%T)"; }
+ceph orch ps --format json | python3 -c 'import json,sys; print(" ".join(d["daemon_type"]+"."+d["daemon_id"] for d in json.load(sys.stdin) if d["daemon_type"] in("mon","mgr","mds","osd")))'
+mds.cephfs.gluster1.wmvdvt mds.cephfs.gluster2.stwcqc mgr.gluster1.bxuyky mgr.gluster2.qhtcrw mon.gluster1 mon.gluster2 mon.gluster3 osd.1 osd.2 osd.4 osd.5 osd.0 osd.3
+root@gluster1:~# for d in mon.gluster3 mon.gluster2 mon.gluster1; do roll $d; done
+for d in osd.0 osd.1 osd.2 osd.3 osd.4 osd.5; do roll $d; done
+ceph fs status cephfs | grep -E 'active|STANDBY' -A1
+== mon.gluster3  22:34:14
+Scheduled to restart mon.gluster3 on host 'gluster3'
+   back  22:34:34
+== mon.gluster2  22:34:34
+Scheduled to restart mon.gluster2 on host 'gluster2'
+   back  22:34:54
+== mon.gluster1  22:34:54
+Scheduled to restart mon.gluster1 on host 'gluster1'
+   back  22:35:15
+== osd.0  22:35:15
+Scheduled to restart osd.0 on host 'gluster3'
+   back  22:35:41
+== osd.1  22:35:41
+Scheduled to restart osd.1 on host 'gluster1'
+   back  22:36:06
+== osd.2  22:36:06
+Scheduled to restart osd.2 on host 'gluster1'
+   back  22:36:32
+== osd.3  22:36:32
+Scheduled to restart osd.3 on host 'gluster3'
+   back  22:36:52
+== osd.4  22:36:52
+Scheduled to restart osd.4 on host 'gluster2'
+   back  22:37:18
+== osd.5  22:37:18
+Scheduled to restart osd.5 on host 'gluster2'
+   back  22:37:39
+ 0    active  cephfs.gluster1.wmvdvt  Reqs:    1 /s  12.8k  12.8k    25    507
+       POOL           TYPE     USED  AVAIL
+--
+     STANDBY MDS
+cephfs.gluster2.stwcqc
+root@gluster1:~# ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            noout flag(s) set
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 8m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 63m), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 6m), 6 in (since 24h)
+         flags noout
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 13.95k objects, 2.0 GiB
+    usage:   6.7 GiB used, 53 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+  io:
+    client:   14 KiB/s wr, 0 op/s rd, 5 op/s wr
+
+root@gluster1:~# roll mds.cephfs.gluster2.stwcqc
+roll mds.cephfs.gluster1.wmvdvt
+roll mgr.gluster2.qhtcrw
+roll mgr.gluster1.bxuyky
+ceph osd unset noout
+ceph -s
+== mds.cephfs.gluster2.stwcqc  22:45:44
+Scheduled to restart mds.cephfs.gluster2.stwcqc on host 'gluster2'
+   back  22:46:05
+== mds.cephfs.gluster1.wmvdvt  22:46:05
+Scheduled to restart mds.cephfs.gluster1.wmvdvt on host 'gluster1'
+   back  22:47:02
+== mgr.gluster2.qhtcrw  22:47:02
+Scheduled to restart mgr.gluster2.qhtcrw on host 'gluster2'
+   back  22:47:22
+== mgr.gluster1.bxuyky  22:47:22
+Error EINVAL: Unable to restart daemon mgr.gluster1.bxuyky: ALERT: Cannot stop active Mgr daemon, Please switch active Mgrs with 'ceph mgr fail gluster1.bxuyky'
+Note: Warnings can be bypassed with the --force flag
+   back  22:47:43
+noout is unset
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_OK
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 12m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 67m), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 10m), 6 in (since 24h)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 14.26k objects, 2.1 GiB
+    usage:   6.7 GiB used, 53 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+  io:
+    client:   255 B/s wr, 0 op/s rd, 0 op/s wr
+
+root@gluster1:~# roll mgr.gluster1.bxuyky --force
+== mgr.gluster1.bxuyky  22:49:32
+Error EINVAL: Unable to restart daemon mgr.gluster1.bxuyky: ALERT: Cannot stop active Mgr daemon, Please switch active Mgrs with 'ceph mgr fail gluster1.bxuyky'
+Note: Warnings can be bypassed with the --force flag
+   back  22:49:53
+root@gluster1:~# ceph auth rm client.scoped
+ceph auth ls 2>/dev/null | grep '^client\.'
+rm -f /root/ceph.client.reader.keyring /root/ceph.client.scoped.keyring
+ceph config dump | grep -E 'ms_.*mode'
+ceph -s
+client.admin
+client.bootstrap-mds
+client.bootstrap-mgr
+client.bootstrap-osd
+client.bootstrap-rbd
+client.bootstrap-rbd-mirror
+client.bootstrap-rgw
+client.crash.gluster1
+client.crash.gluster2
+client.crash.gluster3
+client.gluster4
+global            basic     ms_client_mode                         secure                                                                                     *
+global            basic     ms_cluster_mode                        secure                                                                                     *
+global            basic     ms_mon_client_mode                     secure                                                                                     *
+global            basic     ms_mon_cluster_mode                    secure                                                                                     *
+global            basic     ms_mon_service_mode                    secure                                                                                     *
+global            basic     ms_service_mode                        secure                                                                                     *
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_OK
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 25m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 80m), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 23m), 6 in (since 24h)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 14.27k objects, 2.1 GiB
+    usage:   6.7 GiB used, 53 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+root@gluster1:~# exit
+exit
+
+Script done on 2026-11-06 23:01:34+00:00 [COMMAND_EXIT_CODE="0"]

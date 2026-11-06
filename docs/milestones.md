@@ -7,7 +7,8 @@ Status values: Planned, In progress, Blocked, Complete. A milestone is marked Co
 | 1 | Deploy Ceph and mount CephFS | Complete |
 | 2 | Failure drills | Complete |
 | 3 | OSD replacement and expansion | Complete |
-| 4 | Security and monitoring | Planned |
+| 4a | cephx capabilities and encryption on the wire | Complete |
+| 4b | Monitoring and alerts | Planned |
 | 5 | Benchmark against the Gluster baseline | Planned |
 | 6 | Gluster and CephFS comparison | Planned |
 
@@ -74,7 +75,34 @@ Status values: Planned, In progress, Blocked, Complete. A milestone is marked Co
 
 ## Milestone 4: security and monitoring
 
-**Goal.** cephx capabilities tested by refusal, encryption on the wire with msgr2 secure mode, and metrics and alerts from the manager's Prometheus module and the Ceph dashboard.
+Split in two, as in phase 1: 4a for access control and encryption, 4b for monitoring and alerts.
+
+### 4a: cephx capabilities and encryption on the wire
+
+**Goal.** Show what crosses the network with the default settings; test cephx keys and capabilities by refusal; encrypt every msgr2 connection without taking the cluster down, and check which clients are still accepted.
+
+**Changes.** All six msgr2 mode settings (`ms_cluster_mode`, `ms_service_mode`, `ms_client_mode` and their `ms_mon_` versions) set to `secure`, and every daemon but the active manager restarted one at a time; the client's `/etc/fstab` line now ends `ms_mode=secure`. Two test keys, `client.reader` and `client.scoped`, were made and deleted again.
+
+**Concepts covered.** cephx tickets and service keys; capabilities per daemon type, with path and read-only limits; why the metadata pool is out of a client's reach and the data pool is not; revocation, eviction and the blocklist; msgr1 and msgr2, the `crc` and `secure` modes and how they are negotiated; the MDS reconnect state.
+
+**Acceptance criteria and result.**
+
+| Criterion | Result |
+|---|---|
+| File contents shown readable on the wire in the default mode | Met: every marker line found in the client's and in gluster2's captures, screenshot 10 |
+| Forged, unknown, read-only and path-limited keys refused, each by the daemon that owns the cap | Met: logins refused by the monitors, the write and the root mount by the MDS, the metadata pool by the OSDs, screenshot 11 |
+| A key revoked and its client cut off | Met, with a finding: deleting the key stopped new mounts only; the open mount worked until its session was evicted |
+| Client and cluster traffic encrypted, with no marker found in either capture | Met: 0 of 410 packets on the client, 0 of 4550 on gluster2, screenshot 12 |
+| Encryption turned on without stopping the file system | Met, with one 51 s stall at MDS failover caused by a stale client session |
+| A client asking for plaintext refused | Partly met: `ms_mode=crc` refused (screenshot 13); `ms_mode=legacy`, msgr1, still mounts |
+| No data lost or damaged | Met: all 1500 drill 8 files and 3000 drill 5 files correct, the fill set and the reference file matching |
+| Recordings, cluster log and writer log archived | Met, in `docs/evidence/`, addresses masked; packet captures kept on the VMs |
+
+**Result (2026-11-06).** Met, with msgr1 left open. In `crc` mode the contents of three test files were read straight from the client's traffic. A wrong key fails at the monitor, but the kernel reports it as `no mds is up`; the real reason is only in `dmesg`. Deleting a key with `ceph auth rm` did not cut off a mounted client: its session had to be evicted. The secure-mode change was rolled through every monitor and OSD with the client writing and no write over 1.2 s. Restarting the active MDS stalled the client for 51.1 s, because the new MDS waited 47 s for a revoked client's leftover session to reconnect before evicting it. Afterwards no marker was found in client or cluster traffic, and a `crc` client was refused, but a `legacy` (msgr1) client still mounted, because the mode settings govern msgr2 only. The active manager was not restarted: `ceph orch daemon restart` refuses it. Full write-up in [security.md](security.md).
+
+### 4b: monitoring and alerts
+
+**Goal.** Metrics and alerts from the manager's Prometheus module, cephadm's monitoring stack and the Ceph dashboard, with an alert seen to fire during a failure and clear afterwards.
 
 ## Milestone 5: benchmark against the Gluster baseline
 

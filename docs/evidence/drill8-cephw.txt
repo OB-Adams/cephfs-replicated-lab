@@ -1,0 +1,120 @@
+# Drill 8: cephx keys and msgr2 secure mode, cluster log
+# Captured 2026-11-06 with `ceph -w | tee`: the cluster log as it happened, times UTC.
+# The status block at the top is what `ceph -w` prints when it starts. Private addresses masked. Otherwise unchanged.
+#
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_OK
+ 
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 10m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 10m), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 10m), 6 in (since 23h)
+ 
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 12.75k objects, 2.0 GiB
+    usage:   6.5 GiB used, 53 GiB / 60 GiB avail
+    pgs:     145 active+clean
+ 
+
+2026-11-06T22:00:00.004239+0000 mon.gluster1 [INF] overall HEALTH_OK
+2026-11-06T22:06:25.952927+0000 mds.cephfs.gluster1.wmvdvt [WRN] client session with non-allowable root '/' denied (client.134253 192.168.x.x:0/1594671297)
+2026-11-06T22:09:47.138158+0000 mds.cephfs.gluster1.wmvdvt [WRN] client session with non-allowable root '/' denied (client.134188 192.168.x.x:0/1026859911)
+2026-11-06T22:10:00.001648+0000 mon.gluster1 [INF] overall HEALTH_OK
+2026-11-06T22:17:36.532982+0000 mds.cephfs.gluster1.wmvdvt [INF] Evicting (and blocklisting) client session 134280 (192.168.x.x:0/1958173728)
+2026-11-06T22:20:00.001378+0000 mon.gluster1 [INF] overall HEALTH_OK
+2026-11-06T22:30:00.001659+0000 mon.gluster1 [INF] overall HEALTH_OK
+2026-11-06T22:33:29.230952+0000 mon.gluster1 [WRN] Health check failed: noout flag(s) set (OSDMAP_FLAGS)
+2026-11-06T22:34:20.391692+0000 mon.gluster3 [INF] mon.gluster3 calling monitor election
+2026-11-06T22:34:20.423871+0000 mon.gluster1 [INF] mon.gluster1 calling monitor election
+2026-11-06T22:34:20.443608+0000 mon.gluster1 [INF] mon.gluster1 is new leader, mons gluster1,gluster2,gluster3 in quorum (ranks 0,1,2)
+2026-11-06T22:34:20.480465+0000 mon.gluster1 [WRN] Health detail: HEALTH_WARN noout flag(s) set
+2026-11-06T22:34:20.480473+0000 mon.gluster1 [WRN] [WRN] OSDMAP_FLAGS: noout flag(s) set
+2026-11-06T22:34:40.407036+0000 mon.gluster2 [INF] mon.gluster2 calling monitor election
+2026-11-06T22:34:40.434829+0000 mon.gluster1 [INF] mon.gluster1 calling monitor election
+2026-11-06T22:34:40.452788+0000 mon.gluster1 [INF] mon.gluster1 is new leader, mons gluster1,gluster2,gluster3 in quorum (ranks 0,1,2)
+2026-11-06T22:34:40.487006+0000 mon.gluster1 [WRN] Health detail: HEALTH_WARN noout flag(s) set
+2026-11-06T22:34:40.487023+0000 mon.gluster1 [WRN] [WRN] OSDMAP_FLAGS: noout flag(s) set
+2026-11-06T22:35:02.793793+0000 mon.gluster1 [INF] mon.gluster1 calling monitor election
+2026-11-06T22:35:02.828087+0000 mon.gluster1 [INF] mon.gluster1 is new leader, mons gluster1,gluster2,gluster3 in quorum (ranks 0,1,2)
+2026-11-06T22:35:02.871349+0000 mon.gluster1 [WRN] Health detail: HEALTH_WARN noout flag(s) set
+2026-11-06T22:35:02.871361+0000 mon.gluster1 [WRN] [WRN] OSDMAP_FLAGS: noout flag(s) set
+2026-11-06T22:35:21.543825+0000 mon.gluster1 [INF] osd.0 marked itself down and dead
+2026-11-06T22:35:22.148384+0000 mon.gluster1 [WRN] Health check failed: 1 osds down (OSD_DOWN)
+2026-11-06T22:35:25.248167+0000 mon.gluster1 [WRN] Health check failed: Degraded data redundancy: 2000/39072 objects degraded (5.119%), 21 pgs degraded (PG_DEGRADED)
+2026-11-06T22:35:31.189242+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 6997/39096 objects degraded (17.897%), 74 pgs degraded (PG_DEGRADED)
+2026-11-06T22:35:31.675974+0000 osd.0 [WRN] OSD bench result of 10715.077865 IOPS is not within the threshold limit range of 50.000000 IOPS and 500.000000 IOPS for osd.0. IOPS capacity is unchanged at 315.000000 IOPS. The recommendation is to establish the osd's IOPS capacity using other benchmark tools (e.g. Fio) and then override osd_mclock_max_capacity_iops_[hdd|ssd].
+2026-11-06T22:35:32.292395+0000 mon.gluster1 [INF] Health check cleared: OSD_DOWN (was: 1 osds down)
+2026-11-06T22:35:32.319170+0000 mon.gluster1 [INF] osd.0 [v2:192.168.x.x:6808/2849732512,v1:192.168.x.x:6809/2849732512] boot
+2026-11-06T22:35:36.364946+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 5302/39120 objects degraded (13.553%), 56 pgs degraded (PG_DEGRADED)
+2026-11-06T22:35:38.296141+0000 mon.gluster1 [INF] Health check cleared: PG_DEGRADED (was: Degraded data redundancy: 1173/39135 objects degraded (2.997%), 12 pgs degraded)
+2026-11-06T22:35:46.662012+0000 mon.gluster1 [INF] osd.1 marked itself down and dead
+2026-11-06T22:35:47.270946+0000 mon.gluster1 [WRN] Health check failed: 1 osds down (OSD_DOWN)
+2026-11-06T22:35:50.302562+0000 mon.gluster1 [WRN] Health check failed: Degraded data redundancy: 1579/39201 objects degraded (4.028%), 17 pgs degraded (PG_DEGRADED)
+2026-11-06T22:35:55.375389+0000 osd.1 [WRN] OSD bench result of 14893.878657 IOPS is not within the threshold limit range of 50.000000 IOPS and 500.000000 IOPS for osd.1. IOPS capacity is unchanged at 315.000000 IOPS. The recommendation is to establish the osd's IOPS capacity using other benchmark tools (e.g. Fio) and then override osd_mclock_max_capacity_iops_[hdd|ssd].
+2026-11-06T22:35:56.372536+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 6153/39216 objects degraded (15.690%), 67 pgs degraded (PG_DEGRADED)
+2026-11-06T22:35:56.373560+0000 mon.gluster1 [INF] Health check cleared: OSD_DOWN (was: 1 osds down)
+2026-11-06T22:35:56.400590+0000 mon.gluster1 [INF] osd.1 [v2:192.168.x.x:6802/3979856333,v1:192.168.x.x:6803/3979856333] boot
+2026-11-06T22:36:01.374234+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 2805/39252 objects degraded (7.146%), 32 pgs degraded (PG_DEGRADED)
+2026-11-06T22:36:02.496369+0000 mon.gluster1 [INF] Health check cleared: PG_DEGRADED (was: Degraded data redundancy: 2805/39252 objects degraded (7.146%), 32 pgs degraded)
+2026-11-06T22:36:12.334375+0000 mon.gluster1 [INF] osd.2 marked itself down and dead
+2026-11-06T22:36:12.993817+0000 mon.gluster1 [WRN] Health check failed: 1 osds down (OSD_DOWN)
+2026-11-06T22:36:15.063747+0000 mon.gluster1 [WRN] Health check failed: Reduced data availability: 1 pg inactive, 3 pgs peering (PG_AVAILABILITY)
+2026-11-06T22:36:17.102921+0000 mon.gluster1 [WRN] Health check failed: Degraded data redundancy: 2944/39345 objects degraded (7.483%), 32 pgs degraded (PG_DEGRADED)
+2026-11-06T22:36:21.272067+0000 mon.gluster1 [INF] Health check cleared: PG_AVAILABILITY (was: Reduced data availability: 1 pg inactive, 3 pgs peering)
+2026-11-06T22:36:21.333339+0000 mon.gluster1 [INF] Health check cleared: OSD_DOWN (was: 1 osds down)
+2026-11-06T22:36:21.398015+0000 mon.gluster1 [INF] osd.2 [v2:192.168.x.x:6810/1121548565,v1:192.168.x.x:6811/1121548565] boot
+2026-11-06T22:36:21.281359+0000 osd.2 [WRN] OSD bench result of 15974.419629 IOPS is not within the threshold limit range of 50.000000 IOPS and 500.000000 IOPS for osd.2. IOPS capacity is unchanged at 315.000000 IOPS. The recommendation is to establish the osd's IOPS capacity using other benchmark tools (e.g. Fio) and then override osd_mclock_max_capacity_iops_[hdd|ssd].
+2026-11-06T22:36:22.390296+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 6950/39381 objects degraded (17.648%), 77 pgs degraded (PG_DEGRADED)
+2026-11-06T22:36:28.392940+0000 mon.gluster1 [INF] Health check cleared: PG_DEGRADED (was: Degraded data redundancy: 1498/39393 objects degraded (3.803%), 18 pgs degraded)
+2026-11-06T22:36:37.920213+0000 mon.gluster1 [INF] osd.3 marked itself down and dead
+2026-11-06T22:36:38.572170+0000 mon.gluster1 [WRN] Health check failed: 1 osds down (OSD_DOWN)
+2026-11-06T22:36:40.611655+0000 mon.gluster1 [WRN] Health check failed: Reduced data availability: 1 pg inactive, 8 pgs peering (PG_AVAILABILITY)
+2026-11-06T22:36:40.611692+0000 mon.gluster1 [WRN] Health check failed: Degraded data redundancy: 1465/39468 objects degraded (3.712%), 18 pgs degraded (PG_DEGRADED)
+2026-11-06T22:36:46.414670+0000 mon.gluster1 [WRN] Health check update: Reduced data availability: 3 pgs peering (PG_AVAILABILITY)
+2026-11-06T22:36:46.414691+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 4882/39483 objects degraded (12.365%), 54 pgs degraded (PG_DEGRADED)
+2026-11-06T22:36:46.930614+0000 osd.3 [WRN] OSD bench result of 13039.820308 IOPS is not within the threshold limit range of 50.000000 IOPS and 500.000000 IOPS for osd.3. IOPS capacity is unchanged at 315.000000 IOPS. The recommendation is to establish the osd's IOPS capacity using other benchmark tools (e.g. Fio) and then override osd_mclock_max_capacity_iops_[hdd|ssd].
+2026-11-06T22:36:47.150095+0000 mon.gluster1 [INF] Health check cleared: OSD_DOWN (was: 1 osds down)
+2026-11-06T22:36:47.168363+0000 mon.gluster1 [INF] Health check cleared: PG_AVAILABILITY (was: Reduced data availability: 3 pgs peering)
+2026-11-06T22:36:47.215415+0000 mon.gluster1 [INF] osd.3 [v2:192.168.x.x:6800/3970318238,v1:192.168.x.x:6801/3970318238] boot
+2026-11-06T22:36:51.416295+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 3597/39516 objects degraded (9.103%), 41 pgs degraded (PG_DEGRADED)
+2026-11-06T22:36:52.504545+0000 mon.gluster1 [INF] Health check cleared: PG_DEGRADED (was: Degraded data redundancy: 3597/39516 objects degraded (9.103%), 41 pgs degraded)
+2026-11-06T22:36:58.377364+0000 mon.gluster1 [INF] osd.4 marked itself down and dead
+2026-11-06T22:36:58.988319+0000 mon.gluster1 [WRN] Health check failed: 1 osds down (OSD_DOWN)
+2026-11-06T22:37:01.023348+0000 mon.gluster1 [WRN] Health check failed: Reduced data availability: 3 pgs peering (PG_AVAILABILITY)
+2026-11-06T22:37:01.023394+0000 mon.gluster1 [WRN] Health check failed: Degraded data redundancy: 1740/39582 objects degraded (4.396%), 18 pgs degraded (PG_DEGRADED)
+2026-11-06T22:37:06.422056+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 4767/39591 objects degraded (12.041%), 50 pgs degraded (PG_DEGRADED)
+2026-11-06T22:37:07.239232+0000 mon.gluster1 [INF] Health check cleared: PG_AVAILABILITY (was: Reduced data availability: 3 pgs peering)
+2026-11-06T22:37:07.198839+0000 osd.4 [WRN] OSD bench result of 17451.059406 IOPS is not within the threshold limit range of 50.000000 IOPS and 500.000000 IOPS for osd.4. IOPS capacity is unchanged at 315.000000 IOPS. The recommendation is to establish the osd's IOPS capacity using other benchmark tools (e.g. Fio) and then override osd_mclock_max_capacity_iops_[hdd|ssd].
+2026-11-06T22:37:08.329742+0000 mon.gluster1 [INF] Health check cleared: OSD_DOWN (was: 1 osds down)
+2026-11-06T22:37:08.360357+0000 mon.gluster1 [INF] osd.4 [v2:192.168.x.x:6802/2724340,v1:192.168.x.x:6803/2724340] boot
+2026-11-06T22:37:11.423699+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 4529/39624 objects degraded (11.430%), 49 pgs degraded (PG_DEGRADED)
+2026-11-06T22:37:16.369313+0000 mon.gluster1 [INF] Health check cleared: PG_DEGRADED (was: Degraded data redundancy: 2/39639 objects degraded (0.005%), 2 pgs degraded)
+2026-11-06T22:37:24.037778+0000 mon.gluster1 [INF] osd.5 marked itself down and dead
+2026-11-06T22:37:24.647039+0000 mon.gluster1 [WRN] Health check failed: 1 osds down (OSD_DOWN)
+2026-11-06T22:37:26.702742+0000 mon.gluster1 [WRN] Health check failed: Reduced data availability: 2 pgs peering (PG_AVAILABILITY)
+2026-11-06T22:37:26.702825+0000 mon.gluster1 [WRN] Health check failed: Degraded data redundancy: 1753/39723 objects degraded (4.413%), 22 pgs degraded (PG_DEGRADED)
+2026-11-06T22:37:33.052019+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 7028/39753 objects degraded (17.679%), 77 pgs degraded (PG_DEGRADED)
+2026-11-06T22:37:33.052044+0000 mon.gluster1 [INF] Health check cleared: PG_AVAILABILITY (was: Reduced data availability: 1 pg peering)
+2026-11-06T22:37:33.052859+0000 mon.gluster1 [INF] Health check cleared: OSD_DOWN (was: 1 osds down)
+2026-11-06T22:37:33.120251+0000 mon.gluster1 [INF] osd.5 [v2:192.168.x.x:6810/4175107135,v1:192.168.x.x:6811/4175107135] boot
+2026-11-06T22:37:32.878443+0000 osd.5 [WRN] OSD bench result of 14524.021315 IOPS is not within the threshold limit range of 50.000000 IOPS and 500.000000 IOPS for osd.5. IOPS capacity is unchanged at 315.000000 IOPS. The recommendation is to establish the osd's IOPS capacity using other benchmark tools (e.g. Fio) and then override osd_mclock_max_capacity_iops_[hdd|ssd].
+2026-11-06T22:37:38.393471+0000 mon.gluster1 [INF] Health check cleared: PG_DEGRADED (was: Degraded data redundancy: 1807/39774 objects degraded (4.543%), 21 pgs degraded)
+2026-11-06T22:40:00.000685+0000 mon.gluster1 [WRN] overall HEALTH_WARN noout flag(s) set
+2026-11-06T22:46:10.863837+0000 mon.gluster1 [WRN] Health check failed: 1 filesystem is degraded (FS_DEGRADED)
+2026-11-06T22:46:10.863874+0000 mon.gluster1 [ERR] Health check failed: 1 filesystem is offline (MDS_ALL_DOWN)
+2026-11-06T22:46:10.892365+0000 mon.gluster1 [INF] Standby daemon mds.cephfs.gluster2.stwcqc assigned to filesystem cephfs as rank 0
+2026-11-06T22:46:10.892407+0000 mon.gluster1 [WRN] Health check failed: insufficient standby MDS daemons available (MDS_INSUFFICIENT_STANDBY)
+2026-11-06T22:46:10.892415+0000 mon.gluster1 [INF] Health check cleared: MDS_ALL_DOWN (was: 1 filesystem is offline)
+2026-11-06T22:46:14.815783+0000 mon.gluster1 [INF] Health check cleared: MDS_INSUFFICIENT_STANDBY (was: insufficient standby MDS daemons available)
+2026-11-06T22:46:59.317977+0000 mds.cephfs.gluster2.stwcqc [WRN] evicting unresponsive client gluster4: (134120), after waiting 47.3695 seconds during MDS startup
+2026-11-06T22:46:59.318022+0000 mds.cephfs.gluster2.stwcqc [INF] Evicting (and blocklisting) client session 134120 (192.168.x.x:0/3683054526)
+2026-11-06T22:47:01.321491+0000 mon.gluster1 [INF] daemon mds.cephfs.gluster2.stwcqc is now active in filesystem cephfs as rank 0
+2026-11-06T22:47:02.291037+0000 mon.gluster1 [INF] Health check cleared: FS_DEGRADED (was: 1 filesystem is degraded)
+2026-11-06T22:47:44.090683+0000 mon.gluster1 [INF] Health check cleared: OSDMAP_FLAGS (was: noout flag(s) set)
+2026-11-06T22:47:44.090772+0000 mon.gluster1 [INF] Cluster is now healthy
+2026-11-06T22:50:00.000490+0000 mon.gluster1 [INF] overall HEALTH_OK
+2026-11-06T23:00:00.001458+0000 mon.gluster1 [INF] overall HEALTH_OK

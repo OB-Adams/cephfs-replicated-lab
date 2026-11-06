@@ -1,0 +1,48 @@
+# Drill 8: packet captures of the cluster's own traffic, session log from gluster2
+# Captured 2026-11-06 with script(1), times UTC. Private addresses masked.
+# Cleaned for reading: terminal control codes removed, and commands that were pasted together and drawn twice by the
+# terminal written once each. Typing mistakes are left as typed. Output is unchanged except where a [trimmed] note says so.
+#
+Script started on 2026-11-06 21:50:16+00:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="162" LINES="48"]
+root@gluster2:~# clear
+root@gluster2:~# timeout 60 tcpdump -i any -nn -s 0 -w /root/ceph-drill8-crc-gluster2.pcap 'tcp portrange 6800-7568' &
+[1] 10677
+root@gluster2:~# tcpdump: data link type LINUX_SLL2
+dropped privs to tcpdump
+tcpdump: listening on any, link-type LINUX_SLL2 (Linux cooked v2), snapshot length 262144 bytes
+4531 packets captured
+4828 packets received by filter
+0 packets dropped by kernel
+^C
+[1]+  Exit 124                timeout 60 tcpdump -i any -nn -s 0 -w /root/ceph-drill8-crc-gluster2.pcap 'tcp portrange 6800-7568'
+root@gluster2:~# background
+bash: background: command not found
+root@gluster2:~# jobs
+root@gluster2:~# MARK=CEPHFS-DRILL8-1794002185
+root@gluster2:~# tcpdump -nn -A -r /root/ceph-drill8-crc-gluster2.pcap 2>/dev/null | grep -o "$MARK line [0-9]" | sort | uniq -c
+      1 CEPHFS-DRILL8-1794002185 line 1
+      3 CEPHFS-DRILL8-1794002185 line 2
+      1 CEPHFS-DRILL8-1794002185 line 3
+root@gluster2:~# tcpdump -nn -A -r /root/ceph-drill8-crc-gluster2.pcap 2>/dev/null
+[trimmed: about 16,680 lines of the full packet dump printed by the tcpdump -A command above, run without a grep by mistake.
+ The capture file itself stayed on gluster2. The marker counts that matter are in the command before it.]
+root@gluster2:~# clear
+root@gluster2:~# timeout 60 tcpdump -i any -nn -s 0 -w /root/ceph-drill8-secure-gluster2.pcap 'tcp portrange 6800-7568' &
+[1] 37636
+root@gluster2:~# tcpdump: data link type LINUX_SLL2
+dropped privs to tcpdump
+tcpdump: listening on any, link-type LINUX_SLL2 (Linux cooked v2), snapshot length 262144 bytes
+4550 packets captured
+4919 packets received by filter
+0 packets dropped by kernel
+^C
+[1]+  Exit 124                timeout 60 tcpdump -i any -nn -s 0 -w /root/ceph-drill8-secure-gluster2.pcap 'tcp portrange 6800-7568'
+root@gluster2:~# MARK=CEPHFS-DRILL8-1794005851
+root@gluster2:~# tcpdump -nn -r /root/ceph-drill8-secure-gluster2.pcap 2>/dev/null | wc -l
+tcpdump -nn -A -r /root/ceph-drill8-secure-gluster2.pcap 2>/dev/null | grep -c "$MARK"
+4550
+0
+root@gluster2:~# exit
+exit
+
+Script done on 2026-11-06 23:01:32+00:00 [COMMAND_EXIT_CODE="1"]

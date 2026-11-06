@@ -119,6 +119,34 @@ Issues that were actually hit during this lab, followed by the diagnostic comman
 - **Cause:** the file's name ends `-cephw-gluster1.txt`, which the pattern `*-cephw.txt` does not match.
 - **Fix:** copy it by name, and check the copied set against the list of files the runbook made.
 
+### A mount fails with `no mds is up` while the cluster is healthy
+
+- **Where:** milestone 4a, drill 8, gluster4.
+- **Symptom:** `mount error: no mds (Metadata Server) is up. The cluster might be laggy, or you may not be authorized`, exit 32, with `ceph -s` showing `HEALTH_OK` and an active MDS.
+- **Cause:** the client could not log in or could not agree a connection mode, and the kernel reports any such failure this way. In drill 8 it came from a forged key, an unknown client name, a deleted key, and a client asking for `ms_mode=crc` after the cluster was set to accept only `secure`.
+- **Fix:** read the kernel log first: `dmesg -T | grep -iE 'ceph|libceph' | tail`. `auth protocol 'cephx' msgr authentication failed: -13` means a wrong, unknown or deleted key: check the name, the keyring and `ceph auth get client.<name>`. For a mode mismatch, compare the mount's `ms_mode` with `ceph config dump | grep ms_`.
+
+### A key is deleted but its mount keeps working
+
+- **Where:** milestone 4a, drill 8.
+- **Symptom:** after `ceph auth rm client.reader`, new mounts with the key fail, but `ls` on the existing mount still lists the directory.
+- **Cause:** deleting a key stops new logins. A mounted client keeps its ticket and its MDS session.
+- **Fix:** evict every session the key holds: `ceph tell mds.cephfs:0 client ls`, find each `id` whose `entity_id` is the key's name, and `ceph tell mds.cephfs:0 client evict id=<id>` for each. Eviction also blocklists the client, so the OSDs refuse it too. Then unmount it on the client with `umount -l`, repeated until `mountpoint` reports nothing, in case it was mounted more than once.
+
+### MDS failover stalls clients for about 45 seconds
+
+- **Where:** milestone 4a, drill 8, restarting the active MDS.
+- **Symptom:** a client write held for 51 s. The cluster log shows the standby assigned rank 0 at once, then `evicting unresponsive client ... after waiting 47.3695 seconds during MDS startup`, then the MDS active.
+- **Cause:** a new MDS waits in its reconnect state for every client that had a session with the old one. One session belonged to a client whose key had been deleted; it could not log in again, so the MDS waited for its reconnect timeout before evicting it. Every other client waited too.
+- **Fix:** evict a revoked key's sessions when the key is deleted (see above), and before restarting an MDS check `client ls` for sessions of names that `ceph auth ls` no longer lists.
+
+### The active manager cannot be restarted
+
+- **Where:** milestone 4a, drill 8.
+- **Symptom:** `ceph orch daemon restart mgr.gluster1.bxuyky` fails with `Error EINVAL: Unable to restart daemon mgr.gluster1.bxuyky: ALERT: Cannot stop active Mgr daemon, Please switch active Mgrs with 'ceph mgr fail gluster1.bxuyky'`.
+- **Cause:** the orchestrator runs inside the active manager, so restarting that daemon is treated as a warning that needs `--force`. The `--force` given in the drill was passed to the restart helper, which used only its first argument, so the command never saw it.
+- **Fix:** `ceph mgr fail gluster1.bxuyky`. The standby becomes active and the old active restarts as a standby.
+
 ## Diagnostic commands
 
 ```bash
@@ -138,6 +166,10 @@ ceph pg dump_stuck inactive               # PGs not accepting I/O, and why
 rados list-inconsistent-pg <pool>         # after a scrub: PGs whose copies disagree
 ceph orch osd rm status                   # OSDs being drained, replaced or removed, and their state
 ceph osd safe-to-destroy <id>             # whether an OSD's loss would leave any PG short of copies
+ceph auth get client.<name>               # a key's capabilities
+ceph tell mds.cephfs:0 client ls          # the MDS's client sessions: id, name, address, root
+ceph config dump | grep ms_               # the msgr2 mode settings in force
+dmesg -T | grep -iE 'ceph|libceph'        # on a client: why a mount or a session failed
 ceph osd df tree                          # data and PGs per OSD and per host
 cephadm ceph-volume -- lvm list           # on a host: the OSDs prepared on its disks, with IDs and UUIDs
 dmsetup info -c                           # on a host: device-mapper volumes and how many processes hold each open
