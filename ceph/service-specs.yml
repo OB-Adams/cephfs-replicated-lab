@@ -1,0 +1,82 @@
+# The service specs of the whole cluster after milestone 4b, exported with `ceph orch ls --export`.
+# Re-apply with `ceph orch apply -i service-specs.yml`. Monitoring hosts need the label `monitoring`:
+#   ceph orch host add gluster4 <address> --labels monitoring
+# The plain `osd` service is unmanaged: it holds osd.3, rebuilt by hand in milestone 3.
+service_type: alertmanager
+service_name: alertmanager
+placement:
+  label: monitoring
+---
+service_type: ceph-exporter
+service_name: ceph-exporter
+placement:
+  host_pattern: '*'
+spec:
+  prio_limit: 5
+  stats_period: 5
+---
+service_type: crash
+service_name: crash
+placement:
+  host_pattern: '*'
+---
+service_type: grafana
+service_name: grafana
+placement:
+  label: monitoring
+spec:
+  anonymous_access: true
+  protocol: https
+---
+service_type: mds
+service_id: cephfs
+service_name: mds.cephfs
+placement:
+  hosts:
+  - gluster1
+  - gluster2
+---
+service_type: mgr
+service_name: mgr
+placement:
+  hosts:
+  - gluster1
+  - gluster2
+---
+service_type: mon
+service_name: mon
+placement:
+  hosts:
+  - gluster1
+  - gluster2
+  - gluster3
+---
+service_type: node-exporter
+service_name: node-exporter
+placement:
+  host_pattern: '*'
+---
+service_type: osd
+service_name: osd
+unmanaged: true
+spec:
+  filter_logic: AND
+  objectstore: bluestore
+---
+service_type: osd
+service_id: data-disks
+service_name: osd.data-disks
+placement:
+  host_pattern: gluster[1-3]
+spec:
+  data_devices:
+    paths:
+    - /dev/vdb
+    - /dev/vdc
+  filter_logic: AND
+  objectstore: bluestore
+---
+service_type: prometheus
+service_name: prometheus
+placement:
+  label: monitoring

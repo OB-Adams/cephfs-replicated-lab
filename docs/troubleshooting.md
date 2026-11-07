@@ -147,6 +147,34 @@ Issues that were actually hit during this lab, followed by the diagnostic comman
 - **Cause:** the orchestrator runs inside the active manager, so restarting that daemon is treated as a warning that needs `--force`. The `--force` given in the drill was passed to the restart helper, which used only its first argument, so the command never saw it.
 - **Fix:** `ceph mgr fail gluster1.bxuyky`. The standby becomes active and the old active restarts as a standby.
 
+### The Dashboard has no links to Grafana, Alertmanager or Prometheus
+
+- **Where:** milestone 4b, drill 9, gluster1.
+- **Symptom:** `ceph dashboard get-grafana-api-url`, `get-alertmanager-api-host` and `get-prometheus-api-host` print nothing; the Dashboard has no Grafana panels and no alerts.
+- **Cause:** cephadm sets these when it deploys or reconfigures Grafana, Alertmanager and Prometheus. The dashboard module was enabled after those three had been deployed, so nothing set them.
+- **Fix:** `ceph orch reconfig grafana`, `ceph orch reconfig alertmanager`, `ceph orch reconfig prometheus`, then check the three `get-` commands again. For the browser, `ceph dashboard set-grafana-frontend-api-url https://<monitoring host address>:3000` if the client machine cannot resolve the host name. Enabling the dashboard module before deploying the monitoring stack avoids it.
+
+### The Dashboard cannot be reached on 8443
+
+- **Where:** milestone 4b, drill 9, the manager hosts.
+- **Symptom:** `ceph mgr services` lists the Dashboard, but the browser times out.
+- **Cause:** cephadm opens the firewall ports of the daemons it deploys (9100, 9283, 9926, 8765 and the monitoring stack's), but the Dashboard is a module inside the manager, not a daemon cephadm deploys.
+- **Fix:** on every manager host, `firewall-cmd --permanent --add-port=8443/tcp` and `firewall-cmd --reload`. Both hosts need it: the Dashboard follows the active manager.
+
+### `CephadmDaemonFailed` stays up after the daemon is running again
+
+- **Where:** milestone 4b, drill 9, after the Ceph target on gluster3 was started again.
+- **Symptom:** `HEALTH_WARN 1 failed cephadm daemon(s)`, `node-exporter.gluster3 ... is in error state`, and the alert firing, eight minutes after every daemon on the host was back. `ceph orch ps` shows the host's daemons `stopped`, `REFRESHED 15m ago`.
+- **Cause:** `ceph orch ps` and the health check read cephadm's cache of each host's daemons, which is refreshed every ten minutes or so. Stopping the host's Ceph target had also left node-exporter's unit failed, not stopped, which cephadm reports as `error`.
+- **Fix:** `ceph orch ps <host> --refresh`, wait half a minute, then `ceph orch ps <host>`. If a daemon really is in error, `ceph orch daemon restart <name>`.
+
+### False failures after the Mac sleeps
+
+- **Where:** milestone 4b, drill 9 (twice) and milestone 1.
+- **Symptom:** after the Mac sleeps, running OSDs are marked down `after no beacon for 2140 seconds`; the active MDS and manager are replaced; `slow ops` pile up on one monitor; `message from mon.1 was stamped 2406s in the future`; `MON_CLOCK_SKEW`; OSDs that were down are marked out at once.
+- **Cause:** UTM pauses the VMs while the Mac sleeps. When they resume, each guest's clock is behind until chrony steps it, and they are stepped at different moments. Each daemon then judges the others by a clock that has jumped half an hour, and the pause looks like silence.
+- **Fix:** keep the Mac awake for the whole session (`caffeinate -dims`, on mains power, lid open). After a pause, wait for `ceph -s` to settle: the daemons rejoin by themselves, and the cluster was `HEALTH_OK` again within a few minutes each time. Check `ceph time-sync-status` before starting a drill.
+
 ## Diagnostic commands
 
 ```bash
@@ -170,6 +198,9 @@ ceph auth get client.<name>               # a key's capabilities
 ceph tell mds.cephfs:0 client ls          # the MDS's client sessions: id, name, address, root
 ceph config dump | grep ms_               # the msgr2 mode settings in force
 dmesg -T | grep -iE 'ceph|libceph'        # on a client: why a mount or a session failed
+ceph mgr services                         # the URLs of the Dashboard and the manager's exporter
+ceph orch ps <host> --refresh             # refresh cephadm's view of a host's daemons
+curl -s <prometheus host>:9095/api/v1/alerts    # the alerts Prometheus has pending or firing
 ceph osd df tree                          # data and PGs per OSD and per host
 cephadm ceph-volume -- lvm list           # on a host: the OSDs prepared on its disks, with IDs and UUIDs
 dmsetup info -c                           # on a host: device-mapper volumes and how many processes hold each open

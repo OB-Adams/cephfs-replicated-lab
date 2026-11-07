@@ -8,7 +8,7 @@ Status values: Planned, In progress, Blocked, Complete. A milestone is marked Co
 | 2 | Failure drills | Complete |
 | 3 | OSD replacement and expansion | Complete |
 | 4a | cephx capabilities and encryption on the wire | Complete |
-| 4b | Monitoring and alerts | Planned |
+| 4b | Monitoring and alerts | Complete |
 | 5 | Benchmark against the Gluster baseline | Planned |
 | 6 | Gluster and CephFS comparison | Planned |
 
@@ -102,7 +102,23 @@ Split in two, as in phase 1: 4a for access control and encryption, 4b for monito
 
 ### 4b: monitoring and alerts
 
-**Goal.** Metrics and alerts from the manager's Prometheus module, cephadm's monitoring stack and the Ceph dashboard, with an alert seen to fire during a failure and clear afterwards.
+**Goal.** Metrics and alerts from the manager's Prometheus module, cephadm's monitoring stack and the Ceph Dashboard, with alerts seen to fire during a failure and clear afterwards.
+
+**Changes.** `gluster4` added to the cluster as a cephadm host labelled `monitoring`; Prometheus, Alertmanager and Grafana placed there; `node-exporter`, `ceph-exporter` and `crash` on every host; the manager's `prometheus` and `dashboard` modules enabled, with a Dashboard `admin` user; port 8443 opened on the manager hosts. The specs are in [../ceph/service-specs.yml](../ceph/service-specs.yml), and the alert-reading script in [../scripts/ceph-alerts.py](../scripts/ceph-alerts.py).
+
+**Concepts covered.** Health checks against metrics; Prometheus's pull model, targets and service discovery; the manager's exporter, `ceph-exporter` and `node-exporter`; alert rules, `for` durations and the pending, firing and resolved states; Alertmanager's grouping and receivers; the Dashboard; cephadm hosts, labels and placement; down against out in the health checks.
+
+**Acceptance criteria and result.**
+
+| Criterion | Result |
+|---|---|
+| Prometheus scraping the cluster, a dashboard showing it, the alert rules loaded | Met: 9 targets `UP`, 99 rules in 16 groups, the Dashboard and Grafana showing the cluster, screenshots 14 to 17 |
+| At least two alerts seen to fire during the incident and resolve afterwards, with the times | Met: `CephOSDDownHigh`, `CephMonDown`, `CephMonDownQuorumAtRisk` and `CephadmDaemonFailed` fired and resolved, timed in `drill9-alertlog.txt` |
+| Firing alerts reaching Alertmanager and the Ceph Dashboard | Met: all four under the `ceph-dashboard` receiver, screenshots 18 and 19 |
+| No data lost | Met for the writer: all 1500 writes `ok`. The full file check was not run |
+| Recordings, cluster log, writer log and alert state archived | Met, in `docs/evidence/`, addresses masked and the Dashboard password redacted; no recording from `gluster3` |
+
+**Result (2026-11-07).** Met. Ceph's stack went up with six `ceph orch apply` commands and shipped 99 alert rules, against the Gluster lab's hand-written exporter and five rules. Stopping every Ceph daemon on `gluster3` had alerts firing 37 s after the OSDs went down, through Alertmanager to the Dashboard. The Mac slept in the middle of the incident and paused the VMs for 31 minutes; on resume the monitors marked running OSDs down for missed beacons and marked `gluster3`'s OSDs out, with no data moved because there was no third host to move it to. Three weaknesses showed: alerts built on `OSD_DOWN` cleared once the OSDs were out though they were still down, one failed scrape of the manager's exporter reset every cluster alert to pending, and `CephadmDaemonFailed` stayed up eight minutes after recovery until cephadm's daemon cache was refreshed. The Dashboard's links to Grafana, Alertmanager and Prometheus stayed empty until the three services were reconfigured. Full write-up in [monitoring.md](monitoring.md).
 
 ## Milestone 5: benchmark against the Gluster baseline
 

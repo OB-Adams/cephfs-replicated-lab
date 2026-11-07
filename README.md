@@ -12,7 +12,7 @@ This is phase 2 of a storage study. Phase 1, the GlusterFS build and its nine dr
 | Milestone 2: failure drills | Complete ([docs/failure-drills.md](docs/failure-drills.md)) |
 | Milestone 3: OSD replacement and expansion | Complete ([docs/replacement-expansion.md](docs/replacement-expansion.md)) |
 | Milestone 4a: cephx capabilities and encryption on the wire | Complete ([docs/security.md](docs/security.md)) |
-| Milestone 4b: monitoring and alerts | Planned |
+| Milestone 4b: monitoring and alerts | Complete ([docs/monitoring.md](docs/monitoring.md)) |
 | Milestone 5: `fio` benchmark against the Gluster baseline | Planned |
 | Milestone 6: Gluster and CephFS comparison | Planned |
 | Raw evidence (session recordings) | Added in [docs/evidence](docs/evidence) |
@@ -43,6 +43,10 @@ The full tracker is in [docs/milestones.md](docs/milestones.md). Anything not li
 | 4a. Revocation | `ceph auth rm` stopped new mounts only; the open mount worked until its session was evicted |
 | 4a. Rolling restart | Every monitor and OSD restarted into secure mode with the client writing and no write over 1.2 s. The MDS failover held one write 51 s, waiting for a revoked client's leftover session |
 | 4a. Plaintext clients | An `ms_mode=crc` client refused; an msgr1 (`legacy`) client still mounts, because the mode settings govern msgr2 only |
+| 4b. Monitoring stack | Prometheus, Alertmanager, Grafana and the exporters deployed with six `ceph orch apply` commands; 99 alert rules shipped with Ceph, against 5 hand-written for Gluster |
+| 4b. Host down | With every Ceph daemon on gluster3 stopped, `CephOSDDownHigh` fired 37 s after the OSDs went down; four alerts reached Alertmanager and the Ceph Dashboard, and resolved after recovery |
+| 4b. Blind spots | Alerts built on `OSD_DOWN` cleared once the OSDs were marked out, though still down; one failed scrape of the manager reset every cluster alert; `CephadmDaemonFailed` lasted 8 minutes past recovery, until cephadm's cache refreshed |
+| 4b. Mac asleep | The VMs were paused 31 minutes mid-drill. On resume the monitors marked running OSDs down for missed beacons and marked gluster3's out; no data moved, with no third host to move it to |
 
 ## Objectives
 
@@ -56,11 +60,11 @@ The full tracker is in [docs/milestones.md](docs/milestones.md). Anything not li
 ```mermaid
 flowchart LR
     subgraph clientvm["Client VM"]
-        C["gluster4<br/>kernel CephFS client<br/>mounted at /mnt/cephfs"]
+        C["gluster4<br/>kernel CephFS client, mounted at /mnt/cephfs<br/>Prometheus, Alertmanager, Grafana"]
     end
     subgraph cluster["Ceph cluster: 3 monitors, 6 OSDs, pools size 3"]
-        N1["gluster1<br/>mon (leader), mgr (active), mds (standby)<br/>osd.1, osd.2"]
-        N2["gluster2<br/>mon, mgr (standby), mds (active)<br/>osd.4, osd.5"]
+        N1["gluster1<br/>mon (leader), mgr (active), mds (active)<br/>osd.1, osd.2"]
+        N2["gluster2<br/>mon, mgr (standby), mds (standby)<br/>osd.4, osd.5"]
         N3["gluster3<br/>mon<br/>osd.0, osd.3"]
     end
     C -->|"cluster maps (monitor), metadata (active MDS), file data (OSDs)"| N1
@@ -69,7 +73,10 @@ flowchart LR
     N1 <-->|"Paxos, heartbeats, replication"| N2
     N2 <-->|"Paxos, heartbeats, replication"| N3
     N1 <-->|"Paxos, heartbeats, replication"| N3
+    C -.->|"scrapes metrics: manager, ceph-exporter, node-exporter"| cluster
 ```
+
+Every host also runs `node-exporter`, `ceph-exporter` and `crash`. `gluster4` is a cephadm host labelled `monitoring`, so the monitoring daemons are placed there, but no monitor, manager, MDS or OSD.
 
 ### How it works
 
@@ -108,6 +115,8 @@ The VMs keep their names from phase 1. The behaviour recorded here applies to th
 | Client files | `/etc/ceph/ceph.conf` (minimal configuration) and `/etc/ceph/ceph.client.gluster4.keyring` (mode 600) |
 | Client mount | `gluster4@.cephfs=/  /mnt/cephfs  ceph  noatime,_netdev,ms_mode=secure  0 0` in `/etc/fstab` |
 | Messenger | `ms_cluster_mode`, `ms_service_mode`, `ms_client_mode` and the three `ms_mon_*_mode` settings all `secure` (milestone 4a); msgr1 still bound |
+| Monitoring | Prometheus (9095), Alertmanager (9093) and Grafana (3000) on `label:monitoring` (gluster4); `node-exporter`, `ceph-exporter` and `crash` on every host; the manager's `prometheus` module (9283). Specs in [ceph/service-specs.yml](ceph/service-specs.yml) |
+| Ceph Dashboard | Manager module on 8443 (HTTPS, self-signed), user `admin`; alerts arrive from Alertmanager's `ceph-dashboard` receiver |
 
 ## Installation and deployment
 
@@ -149,6 +158,7 @@ ceph osd map cephfs.cephfs.data $HEX.00000000
 - Every msgr2 connection, client and cluster, is encrypted (`secure` mode, AES-GCM keyed from cephx) since milestone 4a, and msgr2 clients asking for `crc` are refused. **msgr1 is still open:** a client mounting with `ms_mode=legacy` gets an unencrypted connection. See [docs/security.md](docs/security.md#part-5-which-clients-the-cluster-still-accepts).
 - Revoking a key takes `ceph auth rm` and evicting each of its sessions from the MDS; deleting the key alone leaves open mounts working.
 - Packet captures made during the drills stayed on the VMs.
+- The Dashboard is the cluster's admin console; its password is never stored in the repository and is redacted from the evidence. Grafana allows anonymous viewing, and Prometheus and Alertmanager answer over plain HTTP without authentication: acceptable on a lab network, not beyond it.
 - The lab runs as root over SSH for convenience. A real deployment should separate administrative access.
 
 ## Troubleshooting
@@ -169,6 +179,9 @@ Issues actually encountered, with causes and fixes, are in [docs/troubleshooting
 | An OSD is prepared on a disk but never started | Milestone 3, drill 5 |
 | A mount fails with `no mds is up` while the cluster is healthy | Milestone 4a, drill 8 |
 | MDS failover stalls clients for about 45 seconds | Milestone 4a, drill 8 |
+| The Dashboard has no links to Grafana, Alertmanager or Prometheus | Milestone 4b, drill 9 |
+| `CephadmDaemonFailed` stays up after the daemon is running again | Milestone 4b, drill 9 |
+| False failures after the Mac sleeps | Milestones 1 and 4b |
 
 ## Repository structure
 
@@ -183,12 +196,14 @@ cephfs-replicated-lab/
 │   ├── summarize.py
 │   └── fio/                   one job file per workload
 ├── ceph/
-│   └── osd-spec.yml           the OSD service spec applied in milestone 1
+│   ├── osd-spec.yml           the OSD service spec applied in milestone 1
+│   └── service-specs.yml      every service spec, exported after milestone 4b
 ├── docs/
 │   ├── deploy.md              milestone 1: concepts, procedure, results and findings
 │   ├── failure-drills.md      milestone 2: four failure drills and a deep scrub
 │   ├── replacement-expansion.md   milestone 3: an OSD rebuilt, the cluster expanded and shrunk
 │   ├── security.md            milestone 4a: cephx keys and caps, msgr2 secure mode
+│   ├── monitoring.md          milestone 4b: Prometheus, Alertmanager, Grafana and the Dashboard, and a host-down drill
 │   ├── milestones.md
 │   ├── troubleshooting.md
 │   └── evidence/
@@ -205,10 +220,12 @@ cephfs-replicated-lab/
 │       ├── drill6b-cephw.txt, drill6b-writes.log, drill6b-session-gluster1.txt, drill6-session-gluster4.txt
 │       ├── drill7-cephw.txt, drill7-writes.log, drill7-session-gluster{1,4}.txt
 │       ├── m3-scrub-session-gluster1.txt, m3-checks-session-gluster4.txt
-│       └── drill8-cephw.txt, drill8-writes.log, drill8-session-gluster{1,2,4}.txt
+│       ├── drill8-cephw.txt, drill8-writes.log, drill8-session-gluster{1,2,4}.txt
+│       └── drill9-cephw.txt, drill9-writes.log, drill9-alertlog.txt, drill9-alerts.txt, drill9-rules.txt, drill9-session-gluster{1,4}.txt
 ├── scripts/
 │   ├── drill-writer.sh        the client writer used in the drills: one file per write, with fsync, timed
-│   └── ceph-check.sh          checks the drill files, the 2 GB fill set and the reference file on the client
+│   ├── ceph-check.sh          checks the drill files, the 2 GB fill set and the reference file on the client
+│   └── ceph-alerts.py         reads Prometheus's alert rules and alerts; `follow` logs every change
 └── screenshots/
     ├── README.md
     ├── 01-ceph-cluster-health.png
@@ -223,7 +240,15 @@ cephfs-replicated-lab/
     ├── 10-drill8-plaintext-on-wire.png
     ├── 11-drill8-caps-refused.png
     ├── 12-drill8-secure-on-wire.png
-    └── 13-drill8-crc-client-refused.png
+    ├── 13-drill8-crc-client-refused.png
+    ├── 14-drill9-monitoring-daemons.png
+    ├── 15-drill9-prometheus-targets.png
+    ├── 16-drill9-alert-rules.png
+    ├── 17-drill9-dashboard-healthy.png
+    ├── 18-drill9-alertmanager-firing.png
+    ├── 19-drill9-dashboard-incident.png
+    ├── 20-drill9-alert-timeline.png
+    └── 21-drill9-grafana-incident.png
 ```
 
 ## Screenshots and evidence
@@ -279,6 +304,38 @@ cephfs-replicated-lab/
 ### Drill 8: a crc client refused, msgr1 still accepted
 
 ![An ms_mode=crc mount refused; prefer-crc and legacy mounts accepted, the legacy one on port 6789](screenshots/13-drill8-crc-client-refused.png)
+
+### Drill 9: the monitoring stack on gluster4
+
+![ceph orch ls and ceph orch ps gluster4: Prometheus, Alertmanager, Grafana and the exporters running](screenshots/14-drill9-monitoring-daemons.png)
+
+### Drill 9: Prometheus's targets
+
+![Nine targets up: the manager's exporter, four ceph-exporters and four node-exporters](screenshots/15-drill9-prometheus-targets.png)
+
+### Drill 9: the alert rules Ceph ships
+
+![99 alert rules in 16 groups, all inactive, with their for-durations](screenshots/16-drill9-alert-rules.png)
+
+### Drill 9: the Ceph Dashboard, healthy
+
+![The Ceph Dashboard: health OK, six OSDs up and in, three monitors in quorum](screenshots/17-drill9-dashboard-healthy.png)
+
+### Drill 9: Alertmanager during the incident
+
+![Alertmanager with four firing alerts grouped by name under the ceph-dashboard receiver](screenshots/18-drill9-alertmanager-firing.png)
+
+### Drill 9: the alerts in the Dashboard
+
+![The Ceph Dashboard's active alerts: CephMonDown, CephMonDownQuorumAtRisk, CephOSDDownHigh and CephadmDaemonFailed, with notifications](screenshots/19-drill9-dashboard-incident.png)
+
+### Drill 9: recovery in the cluster log
+
+![ceph -w: gluster3's OSDs booting, degraded objects falling to none and the cluster healthy again](screenshots/20-drill9-alert-timeline.png)
+
+### Drill 9: the incident in Grafana
+
+![Grafana's PG states panel: PGs undersized and degraded during the incident, a gap while the VMs were paused, then all active+clean](screenshots/21-drill9-grafana-incident.png)
 
 What each screenshot shows and the commands behind it are in [screenshots/README.md](screenshots/README.md). The session recordings are in [docs/evidence](docs/evidence).
 

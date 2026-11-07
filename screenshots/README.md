@@ -17,6 +17,9 @@ This folder holds screenshots of real terminal output from the lab. Each one is 
 - Milestone 3's runbook planned a screenshot of drill 7's drain; it was not taken. The drain's `ceph orch osd rm status` and `ceph -s` output is in `../docs/evidence/drill7-session-gluster1.txt`. Numbering continues from 10 with milestone 4.
 - Screenshots 11 and 13 show the client's commands as pasted, so each block of commands appears before its output.
 - Screenshot 13 shows the monitors' private addresses in the mount options, unmasked. The same output is in `../docs/evidence/drill8-session-gluster4.txt` with the addresses masked.
+- Screenshots 15 to 19 and 21 are of web pages: Prometheus, the Ceph Dashboard, Alertmanager and Grafana. The browser's address bar and tabs are cropped out of 17 and 21. Screenshot 15 shows the servers' private addresses in the target URLs, unmasked.
+- Screenshot 20 shows the end of the cluster log rather than the alert log the runbook planned. The alert log is in `../docs/evidence/drill9-alertlog.txt`.
+- Screenshot 21 has a gap from about 18:10 to 18:36: the Mac slept and the VMs were paused, so Prometheus has no samples; see [../docs/monitoring.md](../docs/monitoring.md#recovery).
 
 ## The set
 
@@ -35,3 +38,11 @@ This folder holds screenshots of real terminal output from the lab. Each one is 
 | `11-drill8-caps-refused.png` | gluster4 | Mounts with a forged key, an unknown name, the read-only key and the path-limited key; `rados ls` on both CephFS pools | Logins refused with `no mds is up`; the read-only write `Permission denied`; the scoped root mount error 13 and `/scoped` mounted; the data pool listed and the metadata pool `Operation not permitted` |
 | `12-drill8-secure-on-wire.png` | gluster4 | `findmnt`, then the same capture search after remounting with `ms_mode=secure` | `ms_mode=secure`; 410 packets, 0 marker lines; the file reading back correctly |
 | `13-drill8-crc-client-refused.png` | gluster4 | Mounts with `ms_mode=crc`, `prefer-crc` and `legacy` after the cluster was set to `secure`, then `findmnt -t ceph` | `crc` refused; `prefer-crc` and `legacy` mounted, the `legacy` mount on the monitors' msgr1 port 6789 |
+| `14-drill9-monitoring-daemons.png` | gluster1 | `ceph orch ls`, `ceph orch ps gluster4` | The monitoring services placed by `label:monitoring` and on every host; Alertmanager, Grafana, Prometheus, the exporters and `crash` running on gluster4 |
+| `15-drill9-prometheus-targets.png` | browser | Prometheus, Status, Target health | Nine targets `UP`: the active manager's exporter, four `ceph-exporter`, four `node-exporter` |
+| `16-drill9-alert-rules.png` | gluster4 | `/root/ceph-alerts.py rules \| head -40` | `99 alert rules in 16 groups: 99 inactive`, with their `for` durations |
+| `17-drill9-dashboard-healthy.png` | browser | Ceph Dashboard, Multi-cluster, Manage clusters | Before the incident: `OK`, 6 OSDs up and in, 3 monitors in quorum, 1 active and 1 standby manager |
+| `18-drill9-alertmanager-firing.png` | browser | Alertmanager, Alerts | Four groups under the `ceph-dashboard` receiver; `CephMonDown` expanded with its description and labels, `CephOSDDownHigh` with its labels |
+| `19-drill9-dashboard-incident.png` | browser | Ceph Dashboard, Observability, Alerts | The four active alerts, three critical and one warning, with notifications for `CephadmDaemonFailed` and `CephOSDDownHigh` |
+| `20-drill9-alert-timeline.png` | gluster1 | `ceph -w`, after recovery | gluster3's OSDs booting, degraded objects falling to none, `CEPHADM_FAILED_DAEMON` cleared and `Cluster is now healthy` |
+| `21-drill9-grafana-incident.png` | browser | Grafana, Ceph - Cluster, PG States | 145 PGs undersized and 143 degraded during the incident, the gap of the pause, then all `active+clean` from 18:45 |

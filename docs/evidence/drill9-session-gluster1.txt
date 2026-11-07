@@ -1,0 +1,857 @@
+# Drill 9: monitoring and alerts, session log from gluster1 (admin)
+# Captured 2026-11-07 with script(1), times UTC. Private addresses masked.
+# Cleaned for reading: terminal control codes removed, and commands that were pasted together and drawn twice by the
+# terminal written once each. Typing mistakes are left as typed. Output is unchanged except where a [trimmed] note says so.
+# The Dashboard password, printed twice by cat, and its bcrypt hash are replaced by <redacted>.
+# The recording was not closed with exit, so its last lines never reached the file: it stops part-way through a command.
+#
+Script started on 2026-11-07 15:31:33+00:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="162" LINES="48"]
+root@gluster1:~# ceph cephadm check-host gluster4 $(getent ahostsv4 gluster4 | awk 'NR==1 {print $1}')
+ceph orch host add gluster4 $(getent ahostsv4 gluster4 | awk 'NR==1 {print $1}') --labels monitoring
+ceph orch host ls
+gluster4 (192.168.x.x) ok
+podman (/usr/bin/podman) version 5.8.5 is present
+systemctl is present
+lvcreate is present
+Unit chronyd.service is enabled and running
+Hostname "gluster4" matches what is expected.
+Host looks OK
+Added host 'gluster4' with addr '192.168.x.x'
+HOST      ADDR           LABELS      STATUS
+gluster1  192.168.x.x  _admin
+gluster2  192.168.x.x  _admin
+gluster3  192.168.x.x
+gluster4  192.168.x.x  monitoring
+4 hosts in cluster
+root@gluster1:~# getent ahostsv4 gluster4
+192.168.x.x   STREAM gluster4
+192.168.x.x   DGRAM
+192.168.x.x   RAW
+root@gluster1:~# getent gluster4
+Unknown database: gluster4
+Try `getent --help' or `getent --usage' for more information.
+root@gluster1:~# getent hosts gluster4
+192.168.x.x   gluster4
+root@gluster1:~# awk -h
+Usage: awk [POSIX or GNU style options] -f progfile [--] file ...
+Usage: awk [POSIX or GNU style options] [--] 'program' file ...
+POSIX options:          GNU long options: (standard)
+        -f progfile             --file=progfile
+        -F fs                   --field-separator=fs
+        -v var=val              --assign=var=val
+Short options:          GNU long options: (extensions)
+        -b                      --characters-as-bytes
+        -c                      --traditional
+        -C                      --copyright
+        -d[file]                --dump-variables[=file]
+        -D[file]                --debug[=file]
+        -e 'program-text'       --source='program-text'
+        -E file                 --exec=file
+        -g                      --gen-pot
+        -h                      --help
+        -i includefile          --include=includefile
+        -l library              --load=library
+        -L[fatal|invalid|no-ext]        --lint[=fatal|invalid|no-ext]
+        -M                      --bignum
+        -N                      --use-lc-numeric
+        -n                      --non-decimal-data
+        -o[file]                --pretty-print[=file]
+        -O                      --optimize
+        -p[file]                --profile[=file]
+        -P                      --posix
+        -r                      --re-interval
+        -s                      --no-optimize
+        -S                      --sandbox
+        -t                      --lint-old
+        -V                      --version
+
+To report bugs, see node `Bugs' in `gawk.info'
+which is section `Reporting Problems and Bugs' in the
+printed version.  This same information may be found at
+https://www.gnu.org/software/gawk/manual/html_node/Bugs.html.
+PLEASE do NOT try to report bugs by posting in comp.lang.awk,
+or by using a web forum such as Stack Overflow.
+
+gawk is a pattern scanning and processing language.
+By default it reads standard input and writes standard output.
+
+Examples:
+        awk '{ sum += $1 }; END { print sum }' file
+        awk -F: '{ print $1 }' /etc/passwd
+root@gluster1:~# clear
+root@gluster1:~# ceph orch host ls
+HOST      ADDR           LABELS      STATUS
+gluster1  192.168.x.x  _admin
+gluster2  192.168.x.x  _admin
+gluster3  192.168.x.x
+gluster4  192.168.x.x  monitoring
+4 hosts in cluster
+root@gluster1:~# ceph orc ps gluster4
+no valid command found; 10 closest matches:
+pg stat
+pg getmap
+pg dump [<dumpcontents:all|summary|sum|delta|pools|osds|pgs|pgs_brief>...]
+pg dump_json [<dumpcontents:all|summary|sum|pools|osds|pgs>...]
+pg dump_pools_json
+pg ls-by-pool <poolstr> [<states>...]
+pg ls-by-primary <id|osd.id> [<pool:int>] [<states>...]
+pg ls-by-osd <id|osd.id> [<pool:int>] [<states>...]
+pg ls [<pool:int>] [<states>...]
+pg dump_stuck [<stuckops:inactive|unclean|stale|undersized|degraded>...] [<threshold:int>]
+Error EINVAL: invalid command
+root@gluster1:~# ceph orch ps gluster4
+NAME            HOST      PORTS  STATUS         REFRESHED  AGE  MEM USE  MEM LIM  VERSION  IMAGE ID      CONTAINER ID
+crash.gluster4  gluster4         running (72s)    67s ago  72s    15.1M        -  20.2.5   505b5c083868  ff81285e008a
+root@gluster1:~# ceph orch ls osd --export | grep -A2 host_pattern
+  host_pattern: gluster[1-3]
+spec:
+  data_devices:
+[trimmed: about 1,190 lines of find searches for spec files, and cat of Ceph's default alert rules file
+ (ceph_default_alerts.yml) from a container image. The 99 rules as Prometheus loaded them are in drill9-rules.txt.]
+root@gluster1:~# clear
+root@gluster1:~# ceph config get mgr mgr/cephadm/container_image_prometheus
+quay.io/prometheus/prometheus:v3.6.0
+root@gluster1:~# ceph config get mgr mgr/cephadm/container_image_grafana
+quay.io/ceph/grafana:12.3.1
+root@gluster1:~# ceph config get mgr mgr/cephadm/container_image_alertmanager
+quay.io/prometheus/alertmanager:v0.28.1
+root@gluster1:~# ceph config get mgr mgr/cephadm/container_image_node_exporter
+quay.io/prometheus/node-exporter:v1.9.1
+root@gluster1:~# for k in prometheus alertmanager grafana node_exporter; do echo "podman pull $(ceph config get mgr mgr/cephadm/container_image_$k)"; done
+podman pull quay.io/prometheus/prometheus:v3.6.0
+podman pull quay.io/prometheus/alertmanager:v0.28.1
+podman pull quay.io/ceph/grafana:12.3.1
+podman pull quay.io/prometheus/node-exporter:v1.9.1
+root@gluster1:~# ceph mgr module enable prometheus
+root@gluster1:~# ceph orch apply node-exporter --placement='*'
+ceph orch apply ceph-exporter --placement='*'
+ceph orch apply prometheus --placement="label:monitoring"
+ceph orch apply alertmanager --placement="label:monitoring"
+ceph orch apply grafana --placement="label:monitoring"
+Scheduled node-exporter update...
+Scheduled ceph-exporter update...
+Scheduled prometheus update...
+Scheduled alertmanager update...
+Scheduled grafana update...
+root@gluster1:~# ceph orch ls
+NAME            PORTS        RUNNING  REFRESHED  AGE  PLACEMENT
+alertmanager    ?:9093,9094      0/1  -          7s   label:monitoring
+ceph-exporter   ?:9926           0/4  -          8s   *
+crash                            4/4  14s ago    4d   *
+grafana         ?:3000           0/1  -          7s   label:monitoring
+mds.cephfs                       2/2  14s ago    4d   gluster1;gluster2
+mgr                              2/2  14s ago    4d   gluster1;gluster2
+mon                              3/3  14s ago    4d   gluster1;gluster2;gluster3
+node-exporter   ?:9100           0/4  -          8s   *
+osd                                1  14s ago    -    <unmanaged>
+osd.data-disks                     5  14s ago    41h  gluster[1-3]
+prometheus      ?:9095           0/1  -          7s   label:monitoring
+root@gluster1:~# ceph mgr services
+{
+    "prometheus": "http://192.168.x.x:9283/"
+}
+root@gluster1:~# ceph orch ps
+NAME                        HOST      PORTS        STATUS         REFRESHED  AGE  MEM USE  MEM LIM  VERSION  IMAGE ID      CONTAINER ID
+alertmanager.gluster4       gluster4  *:9093,9094  running (6s)      5s ago  19s    19.9M        -  0.28.1   d1950c730ae9  6370400705cc
+ceph-exporter.gluster1      gluster1  *:9926       running (33s)    15s ago  33s    9.80M        -  20.2.5   505b5c083868  5bb71fb3ca53
+ceph-exporter.gluster2      gluster2  *:9926       running (30s)    15s ago  30s    10.0M        -  20.2.5   505b5c083868  565ca7cd5688
+ceph-exporter.gluster3      gluster3  *:9926       running (29s)    15s ago  29s    9.83M        -  20.2.5   505b5c083868  5ce984f300b6
+ceph-exporter.gluster4      gluster4  *:9926       running (32s)     5s ago  32s    8066k        -  20.2.5   505b5c083868  5fbc0caba8d0
+crash.gluster1              gluster1               running (37m)    15s ago   4d    11.6M        -  20.2.5   505b5c083868  31ec2d7e7973
+crash.gluster2              gluster2               running (37m)    15s ago   4d    11.8M        -  20.2.5   505b5c083868  b993132ba8aa
+crash.gluster3              gluster3               running (37m)    15s ago   4d    15.5M        -  20.2.5   505b5c083868  13310aab5680
+crash.gluster4              gluster4               running (11m)     5s ago  11m    21.4M        -  20.2.5   505b5c083868  ff81285e008a
+grafana.gluster4            gluster4  *:3000       running (16s)     5s ago  16s     269M        -  12.3.1   83850d375221  fef9ed26fc18
+mds.cephfs.gluster1.wmvdvt  gluster1               running (37m)    15s ago   4d    32.3M        -  20.2.5   505b5c083868  04b8a0381e1e
+mds.cephfs.gluster2.stwcqc  gluster2               running (37m)    15s ago   4d    89.3M        -  20.2.5   505b5c083868  a61c0d476919
+mgr.gluster1.bxuyky         gluster1  *:9283,8765  running (37m)    15s ago   4d     250M        -  20.2.5   505b5c083868  655ca12f253c
+mgr.gluster2.qhtcrw         gluster2  *:8765       running (37m)    15s ago   4d     329M        -  20.2.5   505b5c083868  2d5de45e9578
+mon.gluster1                gluster1               running (37m)    15s ago   4d    86.6M    2048M  20.2.5   505b5c083868  8eee035377c7
+mon.gluster2                gluster2               running (37m)    15s ago   4d    87.3M    2048M  20.2.5   505b5c083868  151357b81a73
+mon.gluster3                gluster3               running (37m)    15s ago   4d     102M    2048M  20.2.5   505b5c083868  2d19314e0659
+node-exporter.gluster1      gluster1  *:9100       running (36s)    15s ago  36s    3858k        -  1.9.1    94b9e099be35  821da1e41eb1
+node-exporter.gluster2      gluster2  *:9100       running (42s)    15s ago  42s    5687k        -  1.9.1    94b9e099be35  ebe141952ffe
+node-exporter.gluster3      gluster3  *:9100       running (48s)    15s ago  48s    7646k        -  1.9.1    94b9e099be35  6b973c672741
+node-exporter.gluster4      gluster4  *:9100       running (35s)     5s ago  35s    8845k        -  1.9.1    94b9e099be35  85e8eae66501
+osd.0                       gluster3               running (37m)    15s ago   4d     189M    1536M  20.2.5   505b5c083868  fd70e8329939
+osd.1                       gluster1               running (37m)    15s ago   4d     209M    1536M  20.2.5   505b5c083868  bd62a4c203ba
+osd.2                       gluster1               running (37m)    15s ago   4d     169M    1536M  20.2.5   505b5c083868  d722889a0f7d
+osd.3                       gluster3               running (37m)    15s ago  42h     203M    1536M  20.2.5   505b5c083868  72e5417fd021
+osd.4                       gluster2               running (37m)    15s ago   4d     200M    1536M  20.2.5   505b5c083868  cd5fe235d294
+osd.5                       gluster2               running (37m)    15s ago   4d     182M    1536M  20.2.5   505b5c083868  4b5b665ca33b
+prometheus.gluster4         gluster4  *:9095       running (7s)      5s ago  21s    31.4M        -  3.6.0    0a633b0b4a4e  7bee571b8baa
+root@gluster1:~# ceph orch ps --daemon-type prometheus; ceph orch ps --daemon-type alertmanager; ceph orch ps --daemon-type grafana
+NAME                 HOST      PORTS   STATUS         REFRESHED  AGE  MEM USE  MEM LIM  VERSION  IMAGE ID      CONTAINER ID
+prometheus.gluster4  gluster4  *:9095  running (24s)    21s ago  37s    31.4M        -  3.6.0    0a633b0b4a4e  7bee571b8baa
+NAME                   HOST      PORTS        STATUS         REFRESHED  AGE  MEM USE  MEM LIM  VERSION  IMAGE ID      CONTAINER ID
+alertmanager.gluster4  gluster4  *:9093,9094  running (23s)    21s ago  36s    19.9M        -  0.28.1   d1950c730ae9  6370400705cc
+NAME              HOST      PORTS   STATUS         REFRESHED  AGE  MEM USE  MEM LIM  VERSION  IMAGE ID      CONTAINER ID
+grafana.gluster4  gluster4  *:3000  running (33s)    21s ago  33s     269M        -  12.3.1   83850d375221  fef9ed26fc18
+root@gluster1:~# clear
+root@gluster1:~# ceph orch ps
+NAME                        HOST      PORTS        STATUS         REFRESHED  AGE  MEM USE  MEM LIM  VERSION  IMAGE ID      CONTAINER ID
+alertmanager.gluster4       gluster4  *:9093,9094  running (35s)    34s ago  48s    19.9M        -  0.28.1   d1950c730ae9  6370400705cc
+ceph-exporter.gluster1      gluster1  *:9926       running (63s)    44s ago  62s    9.80M        -  20.2.5   505b5c083868  5bb71fb3ca53
+ceph-exporter.gluster2      gluster2  *:9926       running (59s)    44s ago  59s    10.0M        -  20.2.5   505b5c083868  565ca7cd5688
+ceph-exporter.gluster3      gluster3  *:9926       running (58s)    44s ago  58s    9.83M        -  20.2.5   505b5c083868  5ce984f300b6
+ceph-exporter.gluster4      gluster4  *:9926       running (61s)    34s ago  61s    8066k        -  20.2.5   505b5c083868  5fbc0caba8d0
+crash.gluster1              gluster1               running (38m)    44s ago   4d    11.6M        -  20.2.5   505b5c083868  31ec2d7e7973
+crash.gluster2              gluster2               running (38m)    44s ago   4d    11.8M        -  20.2.5   505b5c083868  b993132ba8aa
+crash.gluster3              gluster3               running (38m)    44s ago   4d    15.5M        -  20.2.5   505b5c083868  13310aab5680
+crash.gluster4              gluster4               running (11m)    34s ago  11m    21.4M        -  20.2.5   505b5c083868  ff81285e008a
+grafana.gluster4            gluster4  *:3000       running (46s)    34s ago  46s     269M        -  12.3.1   83850d375221  fef9ed26fc18
+mds.cephfs.gluster1.wmvdvt  gluster1               running (38m)    44s ago   4d    32.3M        -  20.2.5   505b5c083868  04b8a0381e1e
+mds.cephfs.gluster2.stwcqc  gluster2               running (38m)    44s ago   4d    89.3M        -  20.2.5   505b5c083868  a61c0d476919
+mgr.gluster1.bxuyky         gluster1  *:9283,8765  running (38m)    44s ago   4d     250M        -  20.2.5   505b5c083868  655ca12f253c
+mgr.gluster2.qhtcrw         gluster2  *:8765       running (38m)    44s ago   4d     329M        -  20.2.5   505b5c083868  2d5de45e9578
+mon.gluster1                gluster1               running (38m)    44s ago   4d    86.6M    2048M  20.2.5   505b5c083868  8eee035377c7
+mon.gluster2                gluster2               running (38m)    44s ago   4d    87.3M    2048M  20.2.5   505b5c083868  151357b81a73
+mon.gluster3                gluster3               running (38m)    44s ago   4d     102M    2048M  20.2.5   505b5c083868  2d19314e0659
+node-exporter.gluster1      gluster1  *:9100       running (65s)    44s ago  65s    3858k        -  1.9.1    94b9e099be35  821da1e41eb1
+node-exporter.gluster2      gluster2  *:9100       running (71s)    44s ago  71s    5687k        -  1.9.1    94b9e099be35  ebe141952ffe
+node-exporter.gluster3      gluster3  *:9100       running (77s)    44s ago  77s    7646k        -  1.9.1    94b9e099be35  6b973c672741
+node-exporter.gluster4      gluster4  *:9100       running (64s)    34s ago  64s    8845k        -  1.9.1    94b9e099be35  85e8eae66501
+osd.0                       gluster3               running (38m)    44s ago   4d     189M    1536M  20.2.5   505b5c083868  fd70e8329939
+osd.1                       gluster1               running (38m)    44s ago   4d     209M    1536M  20.2.5   505b5c083868  bd62a4c203ba
+osd.2                       gluster1               running (38m)    44s ago   4d     169M    1536M  20.2.5   505b5c083868  d722889a0f7d
+osd.3                       gluster3               running (38m)    44s ago  42h     203M    1536M  20.2.5   505b5c083868  72e5417fd021
+osd.4                       gluster2               running (38m)    44s ago   4d     200M    1536M  20.2.5   505b5c083868  cd5fe235d294
+osd.5                       gluster2               running (38m)    44s ago   4d     182M    1536M  20.2.5   505b5c083868  4b5b665ca33b
+prometheus.gluster4         gluster4  *:9095       running (37s)    34s ago  50s    31.4M        -  3.6.0    0a633b0b4a4e  7bee571b8baa
+root@gluster1:~# clear
+root@gluster1:~# ceph orch ls
+NAME            PORTS        RUNNING  REFRESHED  AGE  PLACEMENT
+alertmanager    ?:9093,9094      1/1  41s ago    94s  label:monitoring
+ceph-exporter   ?:9926           4/4  52s ago    95s  *
+crash                            4/4  52s ago    4d   *
+grafana         ?:3000           1/1  41s ago    94s  label:monitoring
+mds.cephfs                       2/2  52s ago    4d   gluster1;gluster2
+mgr                              2/2  52s ago    4d   gluster1;gluster2
+mon                              3/3  52s ago    4d   gluster1;gluster2;gluster3
+node-exporter   ?:9100           4/4  52s ago    95s  *
+osd                                1  52s ago    -    <unmanaged>
+osd.data-disks                     5  52s ago    41h  gluster[1-3]
+prometheus      ?:9095           1/1  41s ago    95s  label:monitoring
+root@gluster1:~# ceph orch ps gluster4
+NAME                    HOST      PORTS        STATUS         REFRESHED  AGE  MEM USE  MEM LIM  VERSION  IMAGE ID      CONTAINER ID
+alertmanager.gluster4   gluster4  *:9093,9094  running (68s)    67s ago  81s    19.9M        -  0.28.1   d1950c730ae9  6370400705cc
+ceph-exporter.gluster4  gluster4  *:9926       running (93s)    67s ago  93s    8066k        -  20.2.5   505b5c083868  5fbc0caba8d0
+crash.gluster4          gluster4               running (12m)    67s ago  12m    21.4M        -  20.2.5   505b5c083868  ff81285e008a
+grafana.gluster4        gluster4  *:3000       running (78s)    67s ago  78s     269M        -  12.3.1   83850d375221  fef9ed26fc18
+node-exporter.gluster4  gluster4  *:9100       running (97s)    67s ago  97s    8845k        -  1.9.1    94b9e099be35  85e8eae66501
+prometheus.gluster4     gluster4  *:9095       running (69s)    67s ago  82s    31.4M        -  3.6.0    0a633b0b4a4e  7bee571b8baa
+root@gluster1:~# firewall-cmd --list-ports; firewall-cmd --list-services
+8765/tcp 9100/tcp 9283/tcp 9926/tcp
+ceph ceph-mon cockpit dhcpv6-client mountd nfs rpc-bind ssh
+root@gluster1:~# ceph mgr module enable dashboard
+root@gluster1:~# ceph dashboard create-self-signed-cert
+Self-signed certificate created
+root@gluster1:~# read -rsp 'Dashboard admin password: ' DPW; echo
+Dashboard admin password:
+root@gluster1:~# umask 077; printf '%s' "$DPW" > /root/dash-pw; unset DPW
+root@gluster1:~# cat dash-pw
+<redacted>root@gluster1:~# clear
+root@gluster1:~# ceph dashboard ac-user-create admin -i /root/dash-pw administrator
+{"username": "admin", "password": "<redacted>", "roles": ["administrator"], "name": null, "email": null, "lastUpdate": 1794066719, "enabled": true, "pwdExpirationDate": null, "pwdUpdateRequired": false}
+root@gluster1:~# ceph mgr services
+{
+    "dashboard": "https://192.168.x.x:8443/",
+    "prometheus": "http://192.168.x.x:9283/"
+}
+root@gluster1:~# firewall-cmd --list-ports
+8765/tcp 9100/tcp 9283/tcp 9926/tcp
+root@gluster1:~# firewall-cmd --list-ports; firewall-cmd --list-services
+8765/tcp 9100/tcp 9283/tcp 9926/tcp
+ceph ceph-mon cockpit dhcpv6-client mountd nfs rpc-bind ssh
+root@gluster1:~# firewall-cmd --permanent --add-port=8443/tcp
+success
+root@gluster1:~# ceph orch ls
+NAME            PORTS        RUNNING  REFRESHED  AGE  PLACEMENT
+alertmanager    ?:9093,9094      1/1  2m ago     6m   label:monitoring
+ceph-exporter   ?:9926           4/4  2m ago     6m   *
+crash                            4/4  2m ago     4d   *
+grafana         ?:3000           1/1  2m ago     6m   label:monitoring
+mds.cephfs                       2/2  2m ago     4d   gluster1;gluster2
+mgr                              2/2  2m ago     4d   gluster1;gluster2
+mon                              3/3  2m ago     4d   gluster1;gluster2;gluster3
+node-exporter   ?:9100           4/4  2m ago     6m   *
+osd                                1  2m ago     -    <unmanaged>
+osd.data-disks                     5  2m ago     41h  gluster[1-3]
+prometheus      ?:9095           1/1  2m ago     6m   label:monitoring
+root@gluster1:~# ceph orch s
+Invalid command: s not in start|stop|restart|redeploy|reconfig
+orch <action:start|stop|restart|redeploy|reconfig> <service_name> :  Start, stop, restart, redeploy, or reconfig an entire service (i.e. all daemons)
+Error EINVAL: invalid command
+root@gluster1:~# ceph orch ps
+NAME                        HOST      PORTS        STATUS         REFRESHED  AGE  MEM USE  MEM LIM  VERSION  IMAGE ID      CONTAINER ID
+alertmanager.gluster4       gluster4  *:9093,9094  running (5m)      2m ago   6m    21.8M        -  0.28.1   d1950c730ae9  6370400705cc
+ceph-exporter.gluster1      gluster1  *:9926       running (6m)      3m ago   6m    10.3M        -  20.2.5   505b5c083868  5bb71fb3ca53
+ceph-exporter.gluster2      gluster2  *:9926       running (6m)      3m ago   6m    10.7M        -  20.2.5   505b5c083868  565ca7cd5688
+ceph-exporter.gluster3      gluster3  *:9926       running (6m)      3m ago   6m    10.2M        -  20.2.5   505b5c083868  5ce984f300b6
+ceph-exporter.gluster4      gluster4  *:9926       running (6m)      2m ago   6m    8066k        -  20.2.5   505b5c083868  5fbc0caba8d0
+crash.gluster1              gluster1               running (43m)     3m ago   4d    11.6M        -  20.2.5   505b5c083868  31ec2d7e7973
+crash.gluster2              gluster2               running (43m)     3m ago   4d    11.8M        -  20.2.5   505b5c083868  b993132ba8aa
+crash.gluster3              gluster3               running (43m)     3m ago   4d    15.5M        -  20.2.5   505b5c083868  13310aab5680
+crash.gluster4              gluster4               running (17m)     2m ago  17m    21.4M        -  20.2.5   505b5c083868  ff81285e008a
+grafana.gluster4            gluster4  *:3000       running (6m)      2m ago   6m     271M        -  12.3.1   83850d375221  fef9ed26fc18
+mds.cephfs.gluster1.wmvdvt  gluster1               running (43m)     3m ago   4d    33.3M        -  20.2.5   505b5c083868  04b8a0381e1e
+mds.cephfs.gluster2.stwcqc  gluster2               running (43m)     3m ago   4d    89.4M        -  20.2.5   505b5c083868  a61c0d476919
+mgr.gluster1.bxuyky         gluster1  *:9283,8765  running (43m)     3m ago   4d     249M        -  20.2.5   505b5c083868  655ca12f253c
+mgr.gluster2.qhtcrw         gluster2  *:8765       running (43m)     3m ago   4d     293M        -  20.2.5   505b5c083868  2d5de45e9578
+mon.gluster1                gluster1               running (43m)     3m ago   4d    89.2M    2048M  20.2.5   505b5c083868  8eee035377c7
+mon.gluster2                gluster2               running (43m)     3m ago   4d    91.7M    2048M  20.2.5   505b5c083868  151357b81a73
+mon.gluster3                gluster3               running (43m)     3m ago   4d     104M    2048M  20.2.5   505b5c083868  2d19314e0659
+node-exporter.gluster1      gluster1  *:9100       running (6m)      3m ago   6m    12.3M        -  1.9.1    94b9e099be35  821da1e41eb1
+node-exporter.gluster2      gluster2  *:9100       running (6m)      3m ago   6m    9.91M        -  1.9.1    94b9e099be35  ebe141952ffe
+node-exporter.gluster3      gluster3  *:9100       running (6m)      3m ago   6m    13.2M        -  1.9.1    94b9e099be35  6b973c672741
+node-exporter.gluster4      gluster4  *:9100       running (6m)      2m ago   6m    10.5M        -  1.9.1    94b9e099be35  85e8eae66501
+osd.0                       gluster3               running (43m)     3m ago   4d     189M    1536M  20.2.5   505b5c083868  fd70e8329939
+osd.1                       gluster1               running (43m)     3m ago   4d     209M    1536M  20.2.5   505b5c083868  bd62a4c203ba
+osd.2                       gluster1               running (43m)     3m ago   4d     169M    1536M  20.2.5   505b5c083868  d722889a0f7d
+osd.3                       gluster3               running (43m)     3m ago  42h     204M    1536M  20.2.5   505b5c083868  72e5417fd021
+osd.4                       gluster2               running (43m)     3m ago   4d     199M    1536M  20.2.5   505b5c083868  cd5fe235d294
+osd.5                       gluster2               running (43m)     3m ago   4d     182M    1536M  20.2.5   505b5c083868  4b5b665ca33b
+prometheus.gluster4         gluster4  *:9095       running (5m)      2m ago   6m    48.5M        -  3.6.0    0a633b0b4a4e  7bee571b8baa
+root@gluster1:~# ceph -s
+\  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_OK
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 43m) [leader: gluster1]
+    mgr: gluster2.qhtcrw(active, since 3m), standbys: gluster1.bxuyky
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 43m), 6 in (since 41h)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 14.27k objects, 2.1 GiB
+    usage:   6.5 GiB used, 53 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+root@gluster1:~# clear
+root@gluster1:~# ceph mgr services
+{
+    "dashboard": "https://192.168.x.x:8443/",
+    "prometheus": "http://192.168.x.x:9283/"
+}
+root@gluster1:~# G4=$(getent ahostsv4 gluster4 | awk 'NR==1 {print $1}')
+ceph dashboard set-grafana-frontend-api-url "https://$G4:3000"
+ceph dashboard get-grafana-api-url
+ceph dashboard get-alertmanager-api-host
+ceph dashboard get-prometheus-api-host
+Option GRAFANA_FRONTEND_API_URL updated
+root@gluster1:~# ceph dashboard get-grafana-api-url
+root@gluster1:~# ceph dashboard get-prometheus-api-host
+root@gluster1:~# ceph dashboard get-grafana-frontend-api-url
+https://192.168.x.x:3000
+root@gluster1:~# ceph orch reconfig grafana; ceph orch reconfig alertmanager; ceph orch reconfig prometheus
+sleep 60
+ceph dashboard get-grafana-api-url
+ceph dashboard get-alertmanager-api-host
+ceph dashboard get-prometheus-api-host
+Scheduled to reconfig grafana.gluster4 on host 'gluster4'
+Scheduled to reconfig alertmanager.gluster4 on host 'gluster4'
+Scheduled to reconfig prometheus.gluster4 on host 'gluster4'
+https://gluster4:3000
+http://gluster4:9093
+http://gluster4:9095
+root@gluster1:~# ceph orch ls
+NAME            PORTS        RUNNING  REFRESHED  AGE  PLACEMENT
+alertmanager    ?:9093,9094      1/1  6m ago     20m  label:monitoring
+ceph-exporter   ?:9926           4/4  16m ago    20m  *
+crash                            4/4  16m ago    4d   *
+grafana         ?:3000           1/1  6m ago     20m  label:monitoring
+mds.cephfs                       2/2  16m ago    4d   gluster1;gluster2
+mgr                              2/2  16m ago    4d   gluster1;gluster2
+mon                              3/3  16m ago    4d   gluster1;gluster2;gluster3
+node-exporter   ?:9100           4/4  16m ago    20m  *
+osd                                1  16m ago    -    <unmanaged>
+osd.data-disks                     5  16m ago    41h  gluster[1-3]
+prometheus      ?:9095           1/1  6m ago     20m  label:monitoring
+root@gluster1:~# firewall-cmd --list-ports
+8765/tcp 9100/tcp 9283/tcp 9926/tcp
+root@gluster1:~# firewall-cmd --permanent --add-port=9095/tcp
+success
+root@gluster1:~# firewall-cmd --relaod
+usage: 'firewall-cmd --help' for usage information or see firewall-cmd(1) man page
+firewall-cmd: error: unrecognized arguments: --relaod
+root@gluster1:~# firewall-cmd --reload
+success
+root@gluster1:~# firewall-cmd --permanent --remove-port=9095/tcp
+success
+root@gluster1:~# firewall-cmd --reload
+success
+root@gluster1:~# ceph mgr services
+{
+    "dashboard": "https://192.168.x.x:8443/",
+    "prometheus": "http://192.168.x.x:9283/"
+}
+root@gluster1:~# history | grep -iE "module"
+  469  ceph mgr module enable dashboard
+  471  ceph mgr module disable dashboard
+  472  ceph mgr module enable dashboard
+  481  ceph mgr module dashboard
+  493  ceph mgr module disable dashboard
+ 1002  ceph mgr module enable prometheus
+ 1018  ceph mgr module enable dashboard
+ 1056  history | grep -iE "module"
+root@gluster1:~# /etc/prometheus/alerting/ceph_alerts.yml
+bash: /etc/prometheus/alerting/ceph_alerts.yml: No such file or directory
+root@gluster1:~# ceph orch ps
+NAME                        HOST      PORTS        STATUS         REFRESHED  AGE  MEM USE  MEM LIM  VERSION  IMAGE ID      CONTAINER ID
+alertmanager.gluster4       gluster4  *:9093,9094  running (15m)     5m ago  27m    22.3M        -  0.28.1   d1950c730ae9  124279d68e39
+ceph-exporter.gluster1      gluster1  *:9926       running (28m)     5m ago  28m    11.4M        -  20.2.5   505b5c083868  5bb71fb3ca53
+ceph-exporter.gluster2      gluster2  *:9926       running (28m)     5m ago  28m    11.8M        -  20.2.5   505b5c083868  565ca7cd5688
+ceph-exporter.gluster3      gluster3  *:9926       running (28m)     5m ago  28m    11.1M        -  20.2.5   505b5c083868  5ce984f300b6
+ceph-exporter.gluster4      gluster4  *:9926       running (28m)     5m ago  28m    8066k        -  20.2.5   505b5c083868  5fbc0caba8d0
+crash.gluster1              gluster1               running (65m)     5m ago   4d    11.6M        -  20.2.5   505b5c083868  31ec2d7e7973
+crash.gluster2              gluster2               running (65m)     5m ago   4d    11.8M        -  20.2.5   505b5c083868  b993132ba8aa
+crash.gluster3              gluster3               running (65m)     5m ago   4d    15.5M        -  20.2.5   505b5c083868  13310aab5680
+crash.gluster4              gluster4               running (39m)     5m ago  39m    21.4M        -  20.2.5   505b5c083868  ff81285e008a
+grafana.gluster4            gluster4  *:3000       running (15m)     5m ago  27m     113M        -  12.3.1   83850d375221  d4fdefd2c72a
+mds.cephfs.gluster1.wmvdvt  gluster1               running (65m)     5m ago   4d    33.5M        -  20.2.5   505b5c083868  04b8a0381e1e
+mds.cephfs.gluster2.stwcqc  gluster2               running (65m)     5m ago   4d    89.9M        -  20.2.5   505b5c083868  a61c0d476919
+mgr.gluster1.bxuyky         gluster1  *:9283,8765  running (65m)     5m ago   4d     259M        -  20.2.5   505b5c083868  655ca12f253c
+mgr.gluster2.qhtcrw         gluster2  *:8765       running (65m)     5m ago   4d     351M        -  20.2.5   505b5c083868  2d5de45e9578
+mon.gluster1                gluster1               running (65m)     5m ago   4d     102M    2048M  20.2.5   505b5c083868  8eee035377c7
+mon.gluster2                gluster2               running (65m)     5m ago   4d     107M    2048M  20.2.5   505b5c083868  151357b81a73
+mon.gluster3                gluster3               running (65m)     5m ago   4d     118M    2048M  20.2.5   505b5c083868  2d19314e0659
+node-exporter.gluster1      gluster1  *:9100       running (28m)     5m ago  28m    12.7M        -  1.9.1    94b9e099be35  821da1e41eb1
+node-exporter.gluster2      gluster2  *:9100       running (28m)     5m ago  28m    12.4M        -  1.9.1    94b9e099be35  ebe141952ffe
+node-exporter.gluster3      gluster3  *:9100       running (28m)     5m ago  28m    13.3M        -  1.9.1    94b9e099be35  6b973c672741
+node-exporter.gluster4      gluster4  *:9100       running (28m)     5m ago  28m    12.9M        -  1.9.1    94b9e099be35  85e8eae66501
+osd.0                       gluster3               running (65m)     5m ago   4d     190M    1536M  20.2.5   505b5c083868  fd70e8329939
+osd.1                       gluster1               running (65m)     5m ago   4d     210M    1536M  20.2.5   505b5c083868  bd62a4c203ba
+osd.2                       gluster1               running (65m)     5m ago   4d     170M    1536M  20.2.5   505b5c083868  d722889a0f7d
+osd.3                       gluster3               running (65m)     5m ago  43h     204M    1536M  20.2.5   505b5c083868  72e5417fd021
+osd.4                       gluster2               running (65m)     5m ago   4d     200M    1536M  20.2.5   505b5c083868  cd5fe235d294
+osd.5                       gluster2               running (65m)     5m ago   4d     183M    1536M  20.2.5   505b5c083868  4b5b665ca33b
+prometheus.gluster4         gluster4  *:9095       running (15m)     5m ago  27m    74.4M        -  3.6.0    0a633b0b4a4e  49c624732bf9
+root@gluster1:~# ceph orch ls
+NAME            PORTS        RUNNING  REFRESHED  AGE  PLACEMENT
+alertmanager    ?:9093,9094      1/1  5m ago     28m  label:monitoring
+ceph-exporter   ?:9926           4/4  5m ago     28m  *
+crash                            4/4  5m ago     4d   *
+grafana         ?:3000           1/1  5m ago     28m  label:monitoring
+mds.cephfs                       2/2  5m ago     4d   gluster1;gluster2
+mgr                              2/2  5m ago     4d   gluster1;gluster2
+mon                              3/3  5m ago     4d   gluster1;gluster2;gluster3
+node-exporter   ?:9100           4/4  5m ago     28m  *
+osd                                1  5m ago     -    <unmanaged>
+osd.data-disks                     5  5m ago     41h  gluster[1-3]
+prometheus      ?:9095           1/1  5m ago     28m  label:monitoring
+root@gluster1:~# ss -tnlp
+State       Recv-Q      Send-Q             Local Address:Port              Peer Address:Port      Process
+LISTEN      0           4096                     0.0.0.0:44687                  0.0.0.0:*          users:(("rpc.statd",pid=972,fd=9))
+LISTEN      0           4096                     0.0.0.0:20048                  0.0.0.0:*          users:(("rpc.mountd",pid=1003,fd=5))
+LISTEN      0           4096                     0.0.0.0:2049                   0.0.0.0:*
+LISTEN      0           512                192.168.x.x:3300                   0.0.0.0:*          users:(("ceph-mon",pid=2195,fd=27))
+LISTEN      0           4096                     0.0.0.0:9926                   0.0.0.0:*          users:(("ceph-exporter",pid=20467,fd=31))
+LISTEN      0           64                       0.0.0.0:41935                  0.0.0.0:*
+LISTEN      0           512                192.168.x.x:6817                   0.0.0.0:*          users:(("ceph-osd",pid=3066,fd=25))
+LISTEN      0           512                192.168.x.x:6816                   0.0.0.0:*          users:(("ceph-osd",pid=3066,fd=24))
+LISTEN      0           512                192.168.x.x:6789                   0.0.0.0:*          users:(("ceph-mon",pid=2195,fd=28))
+LISTEN      0           512                192.168.x.x:6813                   0.0.0.0:*          users:(("ceph-osd",pid=3066,fd=21))
+LISTEN      0           512                192.168.x.x:6812                   0.0.0.0:*          users:(("ceph-osd",pid=3066,fd=20))
+LISTEN      0           512                192.168.x.x:6815                   0.0.0.0:*          users:(("ceph-osd",pid=3066,fd=23))
+LISTEN      0           512                192.168.x.x:6814                   0.0.0.0:*          users:(("ceph-osd",pid=3066,fd=22))
+LISTEN      0           512                192.168.x.x:6809                   0.0.0.0:*          users:(("ceph-osd",pid=3068,fd=25))
+LISTEN      0           512                192.168.x.x:6808                   0.0.0.0:*          users:(("ceph-osd",pid=3068,fd=24))
+LISTEN      0           512                192.168.x.x:6811                   0.0.0.0:*          users:(("ceph-osd",pid=3066,fd=19))
+LISTEN      0           512                192.168.x.x:6810                   0.0.0.0:*          users:(("ceph-osd",pid=3066,fd=18))
+LISTEN      0           512                192.168.x.x:6805                   0.0.0.0:*          users:(("ceph-osd",pid=3068,fd=21))
+LISTEN      0           512                192.168.x.x:6804                   0.0.0.0:*          users:(("ceph-osd",pid=3068,fd=20))
+LISTEN      0           512                192.168.x.x:6807                   0.0.0.0:*          users:(("ceph-osd",pid=3068,fd=23))
+LISTEN      0           512                192.168.x.x:6806                   0.0.0.0:*          users:(("ceph-osd",pid=3068,fd=22))
+LISTEN      0           512                192.168.x.x:6801                   0.0.0.0:*          users:(("ceph-mds",pid=2216,fd=19))
+LISTEN      0           512                192.168.x.x:6800                   0.0.0.0:*          users:(("ceph-mds",pid=2216,fd=18))
+LISTEN      0           512                192.168.x.x:6803                   0.0.0.0:*          users:(("ceph-osd",pid=3068,fd=19))
+LISTEN      0           512                192.168.x.x:6802                   0.0.0.0:*          users:(("ceph-osd",pid=3068,fd=18))
+LISTEN      0           4096                     0.0.0.0:111                    0.0.0.0:*          users:(("rpcbind",pid=786,fd=4),("systemd",pid=1,fd=131))
+LISTEN      0           128                      0.0.0.0:22                     0.0.0.0:*          users:(("sshd",pid=912,fd=7))
+LISTEN      0           4096                        [::]:20048                     [::]:*          users:(("rpc.mountd",pid=1003,fd=7))
+LISTEN      0           4096                        [::]:2049                      [::]:*
+LISTEN      0           5                              *:9283                         *:*          users:(("ceph-mgr",pid=2095,fd=27))
+LISTEN      0           64                          [::]:46093                     [::]:*
+LISTEN      0           4096                           *:9100                         *:*          users:(("node_exporter",pid=20167,fd=3))
+LISTEN      0           4096                        [::]:37483                     [::]:*          users:(("rpc.statd",pid=972,fd=11))
+LISTEN      0           5                              *:8443                         *:*          users:(("ceph-mgr",pid=2095,fd=32))
+LISTEN      0           4096                        [::]:111                       [::]:*          users:(("rpcbind",pid=786,fd=6),("systemd",pid=1,fd=133))
+LISTEN      0           128                         [::]:22                        [::]:*          users:(("sshd",pid=912,fd=8))
+root@gluster1:~# ls
+anaconda-ks.cfg                    ceph-drill7-session-gluster1.txt    drill3-session-gluster1.txt  drill8-session-gluster1.txt
+benchmarks                         ceph-drill8-cephw.txt               drill4-cephw.txt             drill9-cmd-history-gluster1.txt
+benchmark-session-gluster1.txt     ceph-drill8-session-gluster1.txt    drill4-session-gluster1.txt  drill9-session-gluster1.txt
+ceph-client.conf                   ceph-drill9-cephw.txt               drill5-gluster1.txt          drill9-shd-gluster1.txt
+ceph.client.gluster4.keyring       ceph-drill9-session-gluster1.txt    drill6-session-gluster1.txt  drill9-start
+ceph-deploy-session-gluster1.txt   ceph-m3-scrub-session-gluster1.txt  drill6-shd-gluster1.txt      drills-checks-session-gluster1.txt
+ceph-drill5-cephw.txt              ceph-verify-session-gluster1.txt    drill6-start                 drills-scrub-session-gluster1.txt
+ceph-drill5-session-gluster1.txt   dash-pw                             drill7-rebalance.log         lab-ca
+ceph-drill6a-cephw-gluster1.txt    drill1-cephw.txt                    drill7-session-gluster1.txt  osd-spec.yml
+ceph-drill6a-session-gluster1.txt  drill1-session-gluster1.txt         drill7-start                 scripts
+ceph-drill6b-cephw.txt             drill2-cephw.txt                    drill8-brick-log.txt         teardown-session-gluster1.txt
+ceph-drill6b-session-gluster1.txt  drill2-session-gluster1.txt         drill8-cmd-history.txt       victim.gluster1.bak
+ceph-drill7-cephw.txt              drill3-cephw.txt                    drill8-glusterd-log.txt
+root@gluster1:~# cat dash-pw
+<redacted>root@gluster1:~# clear
+root@gluster1:~# ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_OK
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 78m) [leader: gluster1]
+    mgr: gluster2.qhtcrw(active, since 38m), standbys: gluster1.bxuyky
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 78m), 6 in (since 42h)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 14.27k objects, 2.1 GiB
+    usage:   6.5 GiB used, 53 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+root@gluster1:~# ceph df
+--- RAW STORAGE ---
+CLASS    SIZE   AVAIL     USED  RAW USED  %RAW USED
+hdd    60 GiB  53 GiB  6.5 GiB   6.5 GiB      10.88
+TOTAL  60 GiB  53 GiB  6.5 GiB   6.5 GiB      10.88
+
+--- POOLS ---
+POOL                ID  PGS   STORED  OBJECTS     USED  %USED  MAX AVAIL
+.mgr                 1    1  449 KiB        2  1.3 MiB      0     17 GiB
+cephfs.cephfs.meta   2   16   89 MiB       44  268 MiB   0.52     17 GiB
+cephfs.cephfs.data   3  128  2.0 GiB   14.22k  6.0 GiB  10.80     17 GiB
+root@gluster1:~# ceph -s
+ceph health detail | head -20
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            1 failed cephadm daemon(s)
+            1/3 mons down, quorum gluster1,gluster2
+            2 osds down
+            1 host (2 osds) down
+            Degraded data redundancy: 14474/43422 objects degraded (33.333%), 143 pgs degraded
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2 (age 55s) [leader: gluster1], out of quorum: gluster3
+    mgr: gluster1.bxuyky(active, since 75m), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 4 up (since 54s), 6 in (since 44h)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 14.47k objects, 2.1 GiB
+    usage:   6.6 GiB used, 53 GiB / 60 GiB avail
+    pgs:     14474/43422 objects degraded (33.333%)
+             143 active+undersized+degraded
+             2   active+undersized
+
+  io:
+    client:   20 KiB/s wr, 0 op/s rd, 7 op/s wr
+
+HEALTH_WARN 1 failed cephadm daemon(s); 1/3 mons down, quorum gluster1,gluster2; 2 osds down; 1 host (2 osds) down; Degraded data redundancy: 14474/43422 objectsdegraded (33.333%), 143 pgs degraded
+[WRN] CEPHADM_FAILED_DAEMON: 1 failed cephadm daemon(s)
+    daemon node-exporter.gluster3 on gluster3 is in error state
+[WRN] MON_DOWN: 1/3 mons down, quorum gluster1,gluster2
+    mon.gluster3 (rank 2) addr [v2:192.168.x.x:3300/0,v1:192.168.x.x:6789/0] is down (out of quorum)
+[WRN] OSD_DOWN: 2 osds down
+    osd.0 (root=default,host=gluster3) is down
+    osd.3 (root=default,host=gluster3) is down
+[WRN] OSD_HOST_DOWN: 1 host (2 osds) down
+    host gluster3 (root=default) (2 osds) is down
+[WRN] PG_DEGRADED: Degraded data redundancy: 14474/43422 objects degraded (33.333%), 143 pgs degraded
+    pg 2.8 is active+undersized+degraded, acting [5,1]
+    pg 2.a is active+undersized+degraded, acting [5,1]
+    pg 2.b is active+undersized+degraded, acting [5,2]
+    pg 3.8 is active+undersized+degraded, acting [4,1]
+    pg 3.9 is active+undersized+degraded, acting [4,1]
+    pg 3.a is active+undersized+degraded, acting [1,5]
+    pg 3.b is active+undersized+degraded, acting [1,4]
+    pg 3.10 is active+undersized+degraded, acting [5,1]
+    pg 3.11 is active+undersized+degraded, acting [4,2]
+root@gluster1:~# ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            1 failed cephadm daemon(s)
+            Degraded data redundancy: 973/47259 objects degraded (2.059%), 53 pgs degraded
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 17s) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 118m), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 10s), 6 in (since 10s)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 15.75k objects, 2.1 GiB
+    usage:   6.8 GiB used, 53 GiB / 60 GiB avail
+    pgs:     973/47259 objects degraded (2.059%)
+             91 active+clean
+             49 active+recovery_wait+degraded
+             4  active+recovery_wait+undersized+degraded+remapped
+             1  active+recovery_wait
+
+  io:
+    client:   8.8 KiB/s wr, 0 op/s rd, 3 op/s wr
+    recovery: 1.8 MiB/s, 24 keys/s, 170 objects/s
+
+root@gluster1:~# ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            1 failed cephadm daemon(s)
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 74s) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 119m), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 67s), 6 in (since 67s)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 15.77k objects, 2.1 GiB
+    usage:   6.8 GiB used, 53 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+  io:
+    client:   5.2 KiB/s wr, 0 op/s rd, 0 op/s wr
+
+root@gluster1:~# ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            1 failed cephadm daemon(s)
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 6m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 2h), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 5m), 6 in (since 5m)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 15.77k objects, 2.1 GiB
+    usage:   6.8 GiB used, 53 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+root@gluster1:~# ceph orch ls
+NAME            PORTS        RUNNING  REFRESHED  AGE  PLACEMENT
+alertmanager    ?:9093,9094      1/1  14m ago    3h   label:monitoring
+ceph-exporter   ?:9926           3/4  14m ago    3h   *
+crash                            3/4  14m ago    4d   *
+grafana         ?:3000           1/1  14m ago    3h   label:monitoring
+mds.cephfs                       2/2  14m ago    4d   gluster1;gluster2
+mgr                              2/2  14m ago    4d   gluster1;gluster2
+mon                              2/3  14m ago    4d   gluster1;gluster2;gluster3
+node-exporter   ?:9100           3/4  14m ago    3h   *
+osd                                0  14m ago    -    <unmanaged>
+osd.data-disks                     4  14m ago    44h  gluster[1-3]
+prometheus      ?:9095           1/1  14m ago    3h   label:monitoring
+root@gluster1:~# ceph orch ps
+NAME                        HOST      PORTS        STATUS        REFRESHED  AGE  MEM USE  MEM LIM  VERSION    IMAGE ID      CONTAINER ID
+alertmanager.gluster4       gluster4  *:9093,9094  running (2h)    14m ago   3h    22.3M        -  0.28.1     d1950c730ae9  124279d68e39
+ceph-exporter.gluster1      gluster1  *:9926       running (3h)    14m ago   3h    15.7M        -  20.2.5     505b5c083868  5bb71fb3ca53
+ceph-exporter.gluster2      gluster2  *:9926       running (3h)    14m ago   3h    15.7M        -  20.2.5     505b5c083868  565ca7cd5688
+ceph-exporter.gluster3      gluster3  *:9926       stopped         14m ago   3h        -        -  <unknown>  <unknown>     <unknown>
+ceph-exporter.gluster4      gluster4  *:9926       running (3h)    14m ago   3h    8066k        -  20.2.5     505b5c083868  5fbc0caba8d0
+crash.gluster1              gluster1               running (3h)    14m ago   4d    11.6M        -  20.2.5     505b5c083868  31ec2d7e7973
+crash.gluster2              gluster2               running (3h)    14m ago   4d    11.8M        -  20.2.5     505b5c083868  b993132ba8aa
+crash.gluster3              gluster3               stopped         14m ago   4d        -        -  <unknown>  <unknown>     <unknown>
+crash.gluster4              gluster4               running (3h)    14m ago   3h    21.4M        -  20.2.5     505b5c083868  ff81285e008a
+grafana.gluster4            gluster4  *:3000       running (2h)    14m ago   3h     128M        -  12.3.1     83850d375221  d4fdefd2c72a
+mds.cephfs.gluster1.wmvdvt  gluster1               running (3h)    14m ago   4d    93.0M        -  20.2.5     505b5c083868  04b8a0381e1e
+mds.cephfs.gluster2.stwcqc  gluster2               running (3h)    14m ago   4d    32.4M        -  20.2.5     505b5c083868  a61c0d476919
+mgr.gluster1.bxuyky         gluster1  *:9283,8765  running (3h)    14m ago   4d     367M        -  20.2.5     505b5c083868  655ca12f253c
+mgr.gluster2.qhtcrw         gluster2  *:8765       running (3h)    14m ago   4d     284M        -  20.2.5     505b5c083868  2d5de45e9578
+mon.gluster1                gluster1               running (3h)    14m ago   4d     156M    2048M  20.2.5     505b5c083868  8eee035377c7
+mon.gluster2                gluster2               running (3h)    14m ago   4d     160M    2048M  20.2.5     505b5c083868  151357b81a73
+mon.gluster3                gluster3               stopped         14m ago   4d        -    2048M  <unknown>  <unknown>     <unknown>
+node-exporter.gluster1      gluster1  *:9100       running (3h)    14m ago   3h    13.2M        -  1.9.1      94b9e099be35  821da1e41eb1
+node-exporter.gluster2      gluster2  *:9100       running (3h)    14m ago   3h    12.8M        -  1.9.1      94b9e099be35  ebe141952ffe
+node-exporter.gluster3      gluster3  *:9100       error           14m ago   3h        -        -  <unknown>  <unknown>     <unknown>
+node-exporter.gluster4      gluster4  *:9100       running (3h)    14m ago   3h    13.9M        -  1.9.1      94b9e099be35  85e8eae66501
+osd.0                       gluster3               stopped         14m ago   4d        -    1536M  <unknown>  <unknown>     <unknown>
+osd.1                       gluster1               running (3h)    14m ago   4d     229M    1536M  20.2.5     505b5c083868  bd62a4c203ba
+osd.2                       gluster1               running (3h)    14m ago   4d     178M    1536M  20.2.5     505b5c083868  d722889a0f7d
+osd.3                       gluster3               stopped         14m ago  45h        -    1536M  <unknown>  <unknown>     <unknown>
+osd.4                       gluster2               running (3h)    14m ago   4d     204M    1536M  20.2.5     505b5c083868  cd5fe235d294
+osd.5                       gluster2               running (3h)    14m ago   4d     200M    1536M  20.2.5     505b5c083868  4b5b665ca33b
+prometheus.gluster4         gluster4  *:9095       running (2h)    14m ago   3h    97.6M        -  3.6.0      0a633b0b4a4e  9f28d60c0e4a
+root@gluster1:~# root@gluster1:~# ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            1 failed cephadm daemon(s)
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 6m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 2h), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 5m), 6 in (since 5m)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 15.77k objects, 2.1 GiB
+    usage:   6.8 GiB used, 53 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+root@gluster1:~# ceph orch ls
+NAME            PORTS        RUNNING  REFRESHED  AGE  PLACEMENT
+alertmanager    ?:9093,9094      1/1  14m ago    3h   label:monitoring
+ceph-exporter   ?:9926           3/4  14m ago    3h   *
+crash                            3/4  14m ago    4d   *
+grafana         ?:3000           1/1  14m ago    3h   label:monitoring
+mds.cephfs                       2/2  14m ago    4d   gluster1;gluster2
+mgr                              2/2  14m ago    4d   gluster1;gluster2
+mon                              2/3  14m ago    4d   gluster1;gluster2;gluster3
+node-exporter   ?:9100           3/4  14m ago    3h   *
+osd                                0  14m ago    -    <unmanaged>
+osd.data-disks                     4  14m ago    44h  gluster[1-3]
+prometheus      ?:9095           1/1  14m ago    3h   label:monitoring
+root@gluster1:~# ceph orch ps
+NAME                        HOST      PORTS        STATUS        REFRESHED  AGE  MEM USE  MEM LIM  VERSION    IMAGE ID      CONTAINER ID
+alertmanager.gluster4       gluster4  *:9093,9094  running (2h)    14m ago   3h    22.3M        -  0.28.1     d1950c730ae9  124279d68e39
+ceph-exporter.gluster1      gluster1  *:9926       running (3h)    14m ago   3h    15.7M        -  20.2.5     505b5c083868  5bb71fb3ca53
+ceph-exporter.gluster2      gluster2  *:9926       running (3h)    14m ago   3h    15.7M        -  20.2.5     505b5c083868  565ca7cd5688
+ceph-exporter.gluster3      gluster3  *:9926       stopped         14m ago   3h        -        -  <unknown>  <unknown>     <unknown>
+ceph-exporter.gluster4      gluster4  *:9926       running (3h)    14m ago   3h    8066k        -  20.2.5     505b5c083868  5fbc0caba8d0
+crash.gluster1              gluster1               running (3h)    14m ago   4d    11.6M        -  20.2.5     505b5c083868  31ec2d7e7973
+crash.gluster2              gluster2               running (3h)    14m ago   4d    11.8M        -  20.2.5     505b5c083868  b993132ba8aa
+crash.gluster3              gluster3               stopped         14m ago   4d        -        -  <unknown>  <unknown>     <unknown>
+crash.gluster4              gluster4               running (3h)    14m ago   3h    21.4M        -  20.2.5     505b5c083868  ff81285e008a
+grafana.gluster4            gluster4  *:3000       running (2h)    14m ago   3h     128M        -  12.3.1     83850d375221  d4fdefd2c72a
+mds.cephfs.gluster1.wmvdvt  gluster1               running (3h)    14m ago   4d    93.0M        -  20.2.5     505b5c083868  04b8a0381e1e
+mds.cephfs.gluster2.stwcqc  gluster2               running (3h)    14m ago   4d    32.4M        -  20.2.5     505b5c083868  a61c0d476919
+mgr.gluster1.bxuyky         gluster1  *:9283,8765  running (3h)    14m ago   4d     367M        -  20.2.5     505b5c083868  655ca12f253c
+mgr.gluster2.qhtcrw         gluster2  *:8765       running (3h)    14m ago   4d     284M        -  20.2.5     505b5c083868  2d5de45e9578
+prometheus.gluster4         gluster4  *:9095       running (2h)    14m ago   3h    97.6M        -  3.6.0      0a633b0b4a4e  9f28d60c0e4a[C
+bash: root@gluster1:~#: command not found
+bash: cluster:: command not found
+bash: id:: command not found
+bash: health:: command not found
+bash: syntax error near unexpected token `('
+bash: services:: command not found
+bash: syntax error near unexpected token `('
+bash: syntax error near unexpected token `('
+bash: mds:: command not found
+bash: syntax error near unexpected token `('
+bash: data:: command not found
+bash: volumes:: command not found
+bash: pools:: command not found
+bash: objects:: command not found
+bash: usage:: command not found
+bash: pgs:: command not found
+bash: root@gluster1:~#: command not found
+bash: NAME: command not found
+bash: alertmanager: command not found
+bash: ceph-exporter: command not found
+bash: crash: command not found
+bash: grafana: command not found
+bash: mds.cephfs: command not found
+bash: gluster2: command not found
+bash: mgr: command not found
+bash: gluster2: command not found
+bash: mon: command not found
+bash: gluster2: command not found
+bash: gluster3: command not found
+bash: node-exporter: command not found
+bash: syntax error near unexpected token `newline'
+bash: osd.data-disks: command not found
+bash: prometheus: command not found
+bash: root@gluster1:~#: command not found
+bash: NAME: command not found
+bash: syntax error near unexpected token `('
+bash: syntax error near unexpected token `('
+bash: syntax error near unexpected token `('
+bash: syntax error near unexpected token `<'
+bash: syntax error near unexpected token `('
+bash: syntax error near unexpected token `('
+bash: syntax error near unexpected token `('
+bash: syntax error near unexpected token `<'
+bash: syntax error near unexpected token `('
+bash: syntax error near unexpected token `('
+bash: syntax error near unexpected token `('
+bash: syntax error near unexpected token `('
+bash: syntax error near unexpected token `('
+bash: syntax error near unexpected token `('
+bash: syntax error near unexpected token `('
+bash: syntax error near unexpected token `('
+bash: syntax error near unexpected token `<'
+bash: syntax error near unexpected token `('
+bash: syntax error near unexpected token `('
+bash: syntax error near unexpected token `<'
+bash: syntax error near unexpected token `('
+bash: syntax error near unexpected token `<'
+bash: syntax error near unexpected token `('
+bash: syntax error near unexpected token `('
+bash: syntax error near unexpected token `<'
+bash: syntax error near unexpected token `('
+bash: syntax error near unexpected token `('
+bash: syntax error near unexpected token `('
+root@gluster1:~# clear
+root@gluster1:~# ceph orch ps gluster3 --refresh
+sleep 30
+ceph orch ps gluster3
+ceph health detail
+NAME                    HOST      PORTS   STATUS   REFRESHED  AGE  MEM USE  MEM LIM  VERSION    IMAGE ID
+ceph-exporter.gluster3  gluster3  *:9926  stopped    15m ago   3h        -        -  <unknown>  <unknown>
+crash.gluster3          gluster3          stopped    15m ago   4d        -        -  <unknown>  <unknown>
+mon.gluster3            gluster3          stopped    15m ago   4d        -    2048M  <unknown>  <unknown>
+node-exporter.gluster3  gluster3  *:9100  error      15m ago   3h        -        -  <unknown>  <unknown>
+osd.0                   gluster3          stopped    15m ago   4d        -    1536M  <unknown>  <unknown>
+osd.3                   gluster3          stopped    15m ago  45h        -    1536M  <unknown>  <unknown>
+NAME                    HOST      PORTS   STATUS        REFRESHED  AGE  MEM USE  MEM LIM  VERSION  IMAGE ID      CONTAINER ID
+ceph-exporter.gluster3  gluster3  *:9926  running (8m)    29s ago   3h    9248k        -  20.2.5   505b5c083868  c802baae2efa
+crash.gluster3          gluster3          running (8m)    29s ago   4d    7394k        -  20.2.5   505b5c083868  edb1dd60b8d7
+mon.gluster3            gluster3          running (8m)    29s ago   4d    61.2M    2048M  20.2.5   505b5c083868  64400ed783ef
+node-exporter.gluster3  gluster3  *:9100  running (8m)    29s ago   3h    12.6M        -  1.9.1    94b9e099be35  7c933d7290aa
+osd.0                   gluster3          running (8m)    29s ago   4d     174M    1536M  20.2.5   505b5c083868  cc7c06ded843
+osd.3                   gluster3          running (8m)    29s ago  45h     138M    1536M  20.2.5   505b5c083868  e118b08536e0
+HEALTH_OK
+root@gluster1:~# ceph -s
+ceph orch ls
+ceph orch ls --export > ~/ceph-drill9-specs.yml
+grep -E 'service_type|placement|label|host_pattern|count' ~/ceph-drill9-specs.yml
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_OK
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 26m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 2h), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 25m), 6 in (since 25m)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 15.77k objects, 2.1 GiB
+    usage:   6.8 GiB used, 53 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+  io:
+    client:   6.0 MiB/s rd, 1 op/s rd, 0 op/s wr
+
+NAME            PORTS        RUNNING  REFRESHED  AGE  PLACEMENT
+alertmanager    ?:9093,9094      1/1  8m ago     3h   label:monitoring
+ceph-exporter   ?:9926           4/4  8m ago     3h   *
+crash                            4/4  8m ago     4d   *
+grafana         ?:3000           1/1  8m ago     3h   label:monitoring
+mds.cephfs                       2/2  8m ago     4d   gluster1;gluster2
+mgr                              2/2  8m ago     4d   gluster1;gluster2
+mon                              3/3  8m ago     4d   gluster1;gluster2;gluster3
+node-exporter   ?:9100           4/4  8m ago     3h   *
+osd                                1  8m ago     -    <unmanaged>
+osd.data-disks                     5  8m ago     44h  gluster[1-3]
+prometheus      ?:9095           1/1  8m ago     3h   label:monitoring
+service_typ

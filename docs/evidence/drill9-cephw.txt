@@ -1,0 +1,453 @@
+# Drill 9: monitoring and alerts, cluster log
+# Captured 2026-11-07 with `ceph -w | tee` on gluster1, times UTC. Private addresses masked. Otherwise unchanged.
+# The VMs were paused twice while the Mac slept. Afterwards their clocks were stepped at different moments, so some
+# lines from other daemons carry times out of order, and the monitors report messages stamped 2406 s and 1870 s ahead.
+#
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_OK
+ 
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 21m) [leader: gluster1]
+    mgr: gluster2.qhtcrw(active, since 21m), standbys: gluster1.bxuyky
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 21m), 6 in (since 41h)
+ 
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 14.27k objects, 2.1 GiB
+    usage:   6.5 GiB used, 53 GiB / 60 GiB avail
+    pgs:     145 active+clean
+ 
+
+2026-11-07T15:40:00.001756+0000 mon.gluster1 [INF] overall HEALTH_OK
+2026-11-07T15:46:49.722732+0000 mon.gluster1 [INF] Active manager daemon gluster2.qhtcrw restarted
+2026-11-07T15:46:49.722938+0000 mon.gluster1 [INF] Activating manager daemon gluster2.qhtcrw
+2026-11-07T15:46:50.029425+0000 mon.gluster1 [INF] Manager daemon gluster2.qhtcrw is now available
+2026-11-07T15:50:00.000738+0000 mon.gluster1 [INF] overall HEALTH_OK
+2026-11-07T15:50:43.870626+0000 mon.gluster1 [INF] Active manager daemon gluster2.qhtcrw restarted
+2026-11-07T15:50:43.870835+0000 mon.gluster1 [INF] Activating manager daemon gluster2.qhtcrw
+2026-11-07T15:50:44.195301+0000 mon.gluster1 [INF] Manager daemon gluster2.qhtcrw is now available
+2026-11-07T16:00:00.002705+0000 mon.gluster1 [INF] overall HEALTH_OK
+2026-11-07T16:10:00.000759+0000 mon.gluster1 [INF] overall HEALTH_OK
+2026-11-07T16:20:00.004441+0000 mon.gluster1 [INF] overall HEALTH_OK
+2026-11-07T16:30:00.001618+0000 mon.gluster1 [INF] overall HEALTH_OK
+2026-11-07T16:40:00.002966+0000 mon.gluster1 [INF] overall HEALTH_OK
+2026-11-07T16:46:11.750984+0000 mon.gluster1 [WRN] message from mon.1 was stamped 2406.364616s in the future, clocks not synchronized
+2026-11-07T16:46:18.788864+0000 mon.gluster1 [WRN] message from mon.1 was stamped 2406.363307s in the future, clocks not synchronized
+2026-11-07T16:46:25.757383+0000 mon.gluster1 [WRN] Replacing daemon mds.cephfs.gluster2.stwcqc as rank 0 with standby daemon mds.cephfs.gluster1.wmvdvt
+2026-11-07T16:46:25.757546+0000 mon.gluster1 [INF] MDS daemon mds.cephfs.gluster2.stwcqc is removed because it is dead or otherwise unavailable.
+2026-11-07T16:46:25.759333+0000 mon.gluster1 [WRN] Health check failed: 1 filesystem is degraded (FS_DEGRADED)
+2026-11-07T16:46:25.759386+0000 mon.gluster1 [WRN] Health check failed: insufficient standby MDS daemons available (MDS_INSUFFICIENT_STANDBY)
+2026-11-07T16:46:27.941769+0000 mon.gluster1 [INF] daemon mds.cephfs.gluster1.wmvdvt is now active in filesystem cephfs as rank 0
+2026-11-07T16:46:28.925804+0000 mon.gluster1 [INF] Health check cleared: FS_DEGRADED (was: 1 filesystem is degraded)
+2026-11-07T16:46:40.784736+0000 mon.gluster1 [INF] Activating manager daemon gluster1.bxuyky
+2026-11-07T16:46:40.784814+0000 mon.gluster1 [INF] Manager daemon gluster2.qhtcrw is unresponsive, replacing it with standby daemon gluster1.bxuyky
+2026-11-07T16:46:41.644544+0000 mon.gluster1 [INF] Manager daemon gluster1.bxuyky is now available
+2026-11-07T16:46:43.628633+0000 mon.gluster1 [WRN] Health check failed: 16 slow ops, oldest one blocked for 30 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:46:43.805151+0000 mon.gluster1 [WRN] message from mon.1 was stamped 2406.364293s in the future, clocks not synchronized
+2026-11-07T16:46:49.729439+0000 mon.gluster1 [WRN] Health check update: 34 slow ops, oldest one blocked for 35 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:46:55.794548+0000 mon.gluster1 [WRN] Health check update: 74 slow ops, oldest one blocked for 40 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:47:00.795978+0000 mon.gluster1 [WRN] Health check update: 113 slow ops, oldest one blocked for 45 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:47:05.799799+0000 mon.gluster1 [WRN] Health check update: 149 slow ops, oldest one blocked for 50 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:47:10.802562+0000 mon.gluster1 [WRN] Health check update: 186 slow ops, oldest one blocked for 55 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:47:15.805843+0000 mon.gluster1 [WRN] Health check update: 224 slow ops, oldest one blocked for 60 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:47:20.807700+0000 mon.gluster1 [WRN] Health check update: 244 slow ops, oldest one blocked for 65 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:47:25.810674+0000 mon.gluster1 [WRN] Health check update: 267 slow ops, oldest one blocked for 70 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:47:30.818548+0000 mon.gluster1 [WRN] Health check update: 289 slow ops, oldest one blocked for 75 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:47:35.822423+0000 mon.gluster1 [WRN] Health check update: 312 slow ops, oldest one blocked for 80 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:47:40.825409+0000 mon.gluster1 [WRN] Health check update: 334 slow ops, oldest one blocked for 85 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:47:45.828393+0000 mon.gluster1 [WRN] Health check update: 357 slow ops, oldest one blocked for 90 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:47:50.831487+0000 mon.gluster1 [WRN] Health check update: 379 slow ops, oldest one blocked for 95 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:47:55.834759+0000 mon.gluster1 [WRN] Health check update: 402 slow ops, oldest one blocked for 100 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:48:00.835902+0000 mon.gluster1 [WRN] Health check update: 424 slow ops, oldest one blocked for 105 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:48:05.837259+0000 mon.gluster1 [WRN] Health check update: 447 slow ops, oldest one blocked for 110 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:48:10.841173+0000 mon.gluster1 [WRN] Health check update: 469 slow ops, oldest one blocked for 115 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:48:15.844672+0000 mon.gluster1 [WRN] Health check update: 492 slow ops, oldest one blocked for 120 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:48:20.848144+0000 mon.gluster1 [WRN] Health check update: 514 slow ops, oldest one blocked for 125 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:48:25.852327+0000 mon.gluster1 [WRN] Health check update: 537 slow ops, oldest one blocked for 130 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:48:30.855234+0000 mon.gluster1 [WRN] Health check update: 559 slow ops, oldest one blocked for 135 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:48:35.857773+0000 mon.gluster1 [WRN] Health check update: 582 slow ops, oldest one blocked for 140 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:48:40.860134+0000 mon.gluster1 [WRN] Health check update: 604 slow ops, oldest one blocked for 145 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:48:45.865131+0000 mon.gluster1 [WRN] Health check update: 627 slow ops, oldest one blocked for 150 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:48:49.391439+0000 mon.gluster1 [WRN] message from mon.1 was stamped 2406.366556s in the future, clocks not synchronized
+2026-11-07T16:48:50.868253+0000 mon.gluster1 [WRN] Health check update: 649 slow ops, oldest one blocked for 155 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:48:55.870982+0000 mon.gluster1 [WRN] Health check update: 672 slow ops, oldest one blocked for 160 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:49:00.872546+0000 mon.gluster1 [WRN] Health check update: 694 slow ops, oldest one blocked for 165 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:49:05.875579+0000 mon.gluster1 [WRN] Health check update: 716 slow ops, oldest one blocked for 170 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:49:10.877990+0000 mon.gluster1 [WRN] Health check update: 739 slow ops, oldest one blocked for 175 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:49:15.881040+0000 mon.gluster1 [WRN] Health check update: 761 slow ops, oldest one blocked for 180 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:49:20.885228+0000 mon.gluster1 [WRN] Health check update: 784 slow ops, oldest one blocked for 185 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:49:25.887135+0000 mon.gluster1 [WRN] Health check update: 806 slow ops, oldest one blocked for 190 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:49:30.890793+0000 mon.gluster1 [WRN] Health check update: 829 slow ops, oldest one blocked for 195 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:49:35.892938+0000 mon.gluster1 [WRN] Health check update: 851 slow ops, oldest one blocked for 200 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:49:40.895251+0000 mon.gluster1 [WRN] Health check update: 874 slow ops, oldest one blocked for 205 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:49:45.897552+0000 mon.gluster1 [WRN] Health check update: 896 slow ops, oldest one blocked for 210 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:49:50.900390+0000 mon.gluster1 [WRN] Health check update: 919 slow ops, oldest one blocked for 215 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:49:55.903139+0000 mon.gluster1 [WRN] Health check update: 941 slow ops, oldest one blocked for 220 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:50:00.001257+0000 mon.gluster1 [WRN] Health detail: HEALTH_WARN insufficient standby MDS daemons available; 964 slow ops, oldest one blocked for 225 sec, mon.gluster2 has slow ops
+2026-11-07T16:50:00.001305+0000 mon.gluster1 [WRN] [WRN] MDS_INSUFFICIENT_STANDBY: insufficient standby MDS daemons available
+2026-11-07T16:50:00.001315+0000 mon.gluster1 [WRN]     have 0; want 1 more
+2026-11-07T16:50:00.001322+0000 mon.gluster1 [WRN] [WRN] SLOW_OPS: 964 slow ops, oldest one blocked for 225 sec, mon.gluster2 has slow ops
+2026-11-07T16:50:00.904728+0000 mon.gluster1 [WRN] Health check update: 964 slow ops, oldest one blocked for 225 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:50:05.906593+0000 mon.gluster1 [WRN] Health check update: 986 slow ops, oldest one blocked for 230 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:50:10.908803+0000 mon.gluster1 [WRN] Health check update: 1009 slow ops, oldest one blocked for 235 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:50:15.911922+0000 mon.gluster1 [WRN] Health check update: 1031 slow ops, oldest one blocked for 240 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:50:18.998747+0000 mon.gluster1 [WRN] 1 clock skew 2406.37s > max 0.05s
+2026-11-07T16:50:20.915096+0000 mon.gluster1 [WRN] Health check update: 1054 slow ops, oldest one blocked for 245 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:50:20.917318+0000 mon.gluster1 [WRN] Health check failed: clock skew detected on mon.gluster2 (MON_CLOCK_SKEW)
+2026-11-07T16:50:25.925753+0000 mon.gluster1 [WRN] Health check update: 1076 slow ops, oldest one blocked for 250 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:50:30.927627+0000 mon.gluster1 [WRN] Health check update: 1099 slow ops, oldest one blocked for 255 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:50:35.940109+0000 mon.gluster1 [WRN] Health check update: 1121 slow ops, oldest one blocked for 260 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:50:40.941936+0000 mon.gluster1 [WRN] Health check update: 1144 slow ops, oldest one blocked for 265 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:50:45.943786+0000 mon.gluster1 [WRN] Health check update: 1166 slow ops, oldest one blocked for 270 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:50:49.002316+0000 mon.gluster1 [WRN] 1 clock skew 2406.37s > max 0.05s
+2026-11-07T16:50:50.945564+0000 mon.gluster1 [WRN] Health check update: 1189 slow ops, oldest one blocked for 275 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:50:55.954068+0000 mon.gluster1 [WRN] Health check update: 1211 slow ops, oldest one blocked for 280 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:51:00.956488+0000 mon.gluster1 [WRN] Health check update: 1234 slow ops, oldest one blocked for 285 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:51:05.959318+0000 mon.gluster1 [WRN] Health check update: 1256 slow ops, oldest one blocked for 290 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:51:10.961435+0000 mon.gluster1 [WRN] Health check update: 1279 slow ops, oldest one blocked for 295 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:51:15.974918+0000 mon.gluster1 [WRN] Health check update: 1301 slow ops, oldest one blocked for 300 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T16:51:20.976944+0000 mon.gluster1 [WRN] Health check update: 1324 slow ops, oldest one blocked for 305 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T15:10:20.013384+0000 osd.5 [WRN] OSD bench result of 7794.524365 IOPS is not within the threshold limit range of 50.000000 IOPS and 500.000000 IOPS for osd.5. IOPS capacity is unchanged at 315.000000 IOPS. The recommendation is to establish the osd's IOPS capacity using other benchmark tools (e.g. Fio) and then override osd_mclock_max_capacity_iops_[hdd|ssd].
+2026-11-07T16:51:24.494237+0000 mon.gluster3 [WRN] message from mon.0 was stamped 2406.376875s in the future, clocks not synchronized
+2026-11-07T16:51:26.040322+0000 osd.0 [WRN] Monitor daemon marked osd.0 down, but it is still running
+2026-11-07T17:31:31.948294+0000 mon.gluster1 [WRN] Health check update: 1346 slow ops, oldest one blocked for 310 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-07T17:31:32.360849+0000 mon.gluster1 [INF] osd.0 marked down after no beacon for 2457.536793 seconds
+2026-11-07T17:31:32.360878+0000 mon.gluster1 [INF] osd.3 marked down after no beacon for 2419.133292 seconds
+2026-11-07T17:31:32.361441+0000 mon.gluster1 [WRN] Health check failed: 2 osds down (OSD_DOWN)
+2026-11-07T17:31:32.361454+0000 mon.gluster1 [WRN] Health check failed: 1 host (2 osds) down (OSD_HOST_DOWN)
+2026-11-07T17:31:32.474426+0000 mon.gluster1 [INF] osd.0 marked itself dead as of e436
+2026-11-07T17:31:32.479688+0000 mon.gluster1 [INF] osd.3 marked itself dead as of e436
+2026-11-07T16:51:26.099350+0000 osd.3 [WRN] Monitor daemon marked osd.3 down, but it is still running
+2026-11-07T17:31:33.377821+0000 mon.gluster1 [INF] Health check cleared: OSD_DOWN (was: 2 osds down)
+2026-11-07T17:31:33.377839+0000 mon.gluster1 [INF] Health check cleared: OSD_HOST_DOWN (was: 1 host (2 osds) down)
+2026-11-07T17:31:33.397491+0000 mon.gluster1 [INF] osd.0 [v2:192.168.x.x:6808/1836762049,v1:192.168.x.x:6809/1836762049] boot
+2026-11-07T17:31:33.397522+0000 mon.gluster1 [INF] osd.3 [v2:192.168.x.x:6800/1868409613,v1:192.168.x.x:6801/1868409613] boot
+2026-11-07T17:31:33.710200+0000 mon.gluster1 [INF] Health check cleared: MDS_INSUFFICIENT_STANDBY (was: insufficient standby MDS daemons available)
+2026-11-07T16:51:29.699273+0000 mon.gluster3 [WRN] message from mon.0 was stamped 2406.370489s in the future, clocks not synchronized
+2026-11-07T17:31:36.052110+0000 mon.gluster1 [WRN] Health check failed: Reduced data availability: 51 pgs inactive, 62 pgs peering (PG_AVAILABILITY)
+2026-11-07T17:31:36.052135+0000 mon.gluster1 [INF] Health check cleared: SLOW_OPS (was: 1346 slow ops, oldest one blocked for 310 sec, mon.gluster2 has slow ops)
+2026-11-07T17:31:39.532191+0000 mon.gluster1 [INF] Health check cleared: PG_AVAILABILITY (was: Reduced data availability: 51 pgs inactive, 62 pgs peering)
+2026-11-07T17:31:55.387265+0000 mon.gluster1 [WRN] 2 clock skew 2406.38s > max 0.05s
+2026-11-07T17:31:57.383750+0000 mon.gluster1 [WRN] Health check update: clock skew detected on mon.gluster3 (MON_CLOCK_SKEW)
+2026-11-07T16:51:55.486158+0000 mon.gluster3 [WRN] message from mon.0 was stamped 2406.373560s in the future, clocks not synchronized
+2026-11-07T16:51:26.099350+0000 osd.3 [WRN] Monitor daemon marked osd.3 down, but it is still running
+2026-11-07T17:33:27.456807+0000 mon.gluster1 [INF] Health check cleared: MON_CLOCK_SKEW (was: clock skew detected on mon.gluster3)
+2026-11-07T17:33:27.456892+0000 mon.gluster1 [INF] Cluster is now healthy
+2026-11-07T17:40:06.381451+0000 mon.gluster1 [INF] overall HEALTH_OK
+2026-11-07T17:50:00.000938+0000 mon.gluster1 [INF] overall HEALTH_OK
+2026-11-07T18:00:00.001429+0000 mon.gluster1 [INF] overall HEALTH_OK
+2026-11-07T18:01:07.826920+0000 mon.gluster1 [WRN] Health check failed: 2 osds down (OSD_DOWN)
+2026-11-07T18:01:07.826936+0000 mon.gluster1 [WRN] Health check failed: 1 host (2 osds) down (OSD_HOST_DOWN)
+2026-11-07T18:01:16.844175+0000 mon.gluster2 [INF] mon.gluster2 calling monitor election
+2026-11-07T18:01:16.868852+0000 mon.gluster1 [INF] mon.gluster1 calling monitor election
+2026-11-07T18:01:21.896893+0000 mon.gluster1 [INF] mon.gluster1 is new leader, mons gluster1,gluster2 in quorum (ranks 0,1)
+2026-11-07T18:01:21.948174+0000 mon.gluster1 [WRN] Health check failed: 1/3 mons down, quorum gluster1,gluster2 (MON_DOWN)
+2026-11-07T18:01:21.954247+0000 mon.gluster1 [INF] osd.0 failed (root=default,host=gluster3) (connection refused reported by osd.2)
+2026-11-07T18:01:21.954465+0000 mon.gluster1 [INF] osd.3 failed (root=default,host=gluster3) (connection refused reported by osd.1)
+2026-11-07T18:01:21.973523+0000 mon.gluster1 [WRN] Health detail: HEALTH_WARN 1/3 mons down, quorum gluster1,gluster2
+2026-11-07T18:01:21.973602+0000 mon.gluster1 [WRN] [WRN] MON_DOWN: 1/3 mons down, quorum gluster1,gluster2
+2026-11-07T18:01:21.973639+0000 mon.gluster1 [WRN]     mon.gluster3 (rank 2) addr [v2:192.168.x.x:3300/0,v1:192.168.x.x:6789/0] is down (out of quorum)
+2026-11-07T18:01:22.951823+0000 mon.gluster1 [WRN] Health check failed: 2 osds down (OSD_DOWN)
+2026-11-07T18:01:22.951891+0000 mon.gluster1 [WRN] Health check failed: 1 host (2 osds) down (OSD_HOST_DOWN)
+2026-11-07T18:01:26.047022+0000 mon.gluster1 [WRN] Health check failed: Degraded data redundancy: 14380/43140 objects degraded (33.333%), 143 pgs degraded (PG_DEGRADED)
+2026-11-07T18:01:31.540371+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14390/43170 objects degraded (33.333%), 143 pgs degraded (PG_DEGRADED)
+2026-11-07T18:01:38.823635+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14399/43197 objects degraded (33.333%), 143 pgs degraded (PG_DEGRADED)
+2026-11-07T18:01:43.827213+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14408/43224 objects degraded (33.333%), 143 pgs degraded (PG_DEGRADED)
+2026-11-07T18:01:48.831318+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14417/43251 objects degraded (33.333%), 143 pgs degraded (PG_DEGRADED)
+2026-11-07T18:01:53.833598+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14426/43278 objects degraded (33.333%), 143 pgs degraded (PG_DEGRADED)
+2026-11-07T18:01:58.342585+0000 mon.gluster1 [WRN] Health check failed: 1 failed cephadm daemon(s) (CEPHADM_FAILED_DAEMON)
+2026-11-07T18:01:58.834769+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14436/43308 objects degraded (33.333%), 143 pgs degraded (PG_DEGRADED)
+2026-11-07T18:02:03.835792+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14445/43335 objects degraded (33.333%), 143 pgs degraded (PG_DEGRADED)
+2026-11-07T18:02:08.838630+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14455/43365 objects degraded (33.333%), 143 pgs degraded (PG_DEGRADED)
+2026-11-07T18:02:13.841680+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14465/43395 objects degraded (33.333%), 143 pgs degraded (PG_DEGRADED)
+2026-11-07T18:02:18.843846+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14474/43422 objects degraded (33.333%), 143 pgs degraded (PG_DEGRADED)
+2026-11-07T18:02:23.847597+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14483/43449 objects degraded (33.333%), 143 pgs degraded (PG_DEGRADED)
+2026-11-07T18:02:28.854832+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14492/43476 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:02:33.859078+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14501/43503 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:02:38.862934+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14512/43536 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:02:43.866197+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14521/43563 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:02:48.870749+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14530/43590 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:02:53.875212+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14540/43620 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:02:58.880249+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14549/43647 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:03:03.882404+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14558/43674 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:03:08.885626+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14568/43704 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:03:13.889987+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14577/43731 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:03:18.895215+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14587/43761 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:03:23.897650+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14596/43788 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:03:28.901886+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14605/43815 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:03:33.911929+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14615/43845 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:03:38.914760+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14624/43872 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:03:43.917689+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14633/43899 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:03:48.922283+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14643/43929 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:03:53.925391+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14652/43956 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:03:58.929027+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14661/43983 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:04:03.930552+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14671/44013 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:04:08.933540+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14680/44040 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:04:13.936787+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14689/44067 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:04:18.939328+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14698/44094 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:04:23.943420+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14708/44124 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:04:28.948626+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14719/44157 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:04:33.952922+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14728/44184 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:04:38.958005+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14737/44211 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:04:43.961753+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14746/44238 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:04:48.964777+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14756/44268 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:04:53.968497+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14765/44295 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:04:58.970568+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14774/44322 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:05:03.973422+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14783/44349 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:05:08.977483+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14793/44379 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:05:13.980404+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14802/44406 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:05:18.984615+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14812/44436 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:05:23.989383+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14822/44466 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:05:29.000079+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14831/44493 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:05:34.004848+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14840/44520 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:05:39.008162+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14850/44550 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:05:44.013697+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14859/44577 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:05:49.015979+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14868/44604 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:05:54.021637+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14878/44634 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:05:58.038801+0000 mon.gluster2 [WRN] message from mon.0 was stamped 1870.168307s in the future, clocks not synchronized
+2026-11-07T18:37:09.188271+0000 mon.gluster1 [INF] osd.4 marked down after no beacon for 2140.461189 seconds
+2026-11-07T18:37:09.188315+0000 mon.gluster1 [INF] osd.5 marked down after no beacon for 2139.067865 seconds
+2026-11-07T18:37:09.188365+0000 mon.gluster1 [INF] Marking osd.0 out (has been down for 2146 seconds)
+2026-11-07T18:37:09.188374+0000 mon.gluster1 [INF] Marking osd.3 out (has been down for 2146 seconds)
+2026-11-07T18:37:09.263615+0000 mon.gluster1 [INF] osd.4 marked itself dead as of e441
+2026-11-07T18:05:59.068135+0000 osd.4 [WRN] Monitor daemon marked osd.4 down, but it is still running
+2026-11-07T18:37:09.286601+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14887/44661 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:37:10.210094+0000 mon.gluster1 [WRN] Health check update: 1 osds down (OSD_DOWN)
+2026-11-07T18:37:10.210136+0000 mon.gluster1 [INF] Health check cleared: OSD_HOST_DOWN (was: 1 host (2 osds) down)
+2026-11-07T18:37:10.253629+0000 mon.gluster1 [INF] osd.4 [v2:192.168.x.x:6810/2790483448,v1:192.168.x.x:6811/2790483448] boot
+2026-11-07T18:37:10.571112+0000 mon.gluster1 [WRN] Health check failed: Reduced data availability: 6 pgs inactive, 140 pgs peering (PG_AVAILABILITY)
+2026-11-07T18:37:10.571130+0000 mon.gluster1 [INF] Health check cleared: PG_DEGRADED (was: Degraded data redundancy: 14887/44661 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized)
+2026-11-07T18:06:02.691013+0000 osd.5 [WRN] Monitor daemon marked osd.5 down, but it is still running
+2026-11-07T18:06:03.221500+0000 mon.gluster2 [WRN] message from mon.0 was stamped 1870.165098s in the future, clocks not synchronized
+2026-11-07T18:37:12.861009+0000 mon.gluster1 [INF] osd.5 marked itself dead as of e443
+2026-11-07T18:37:13.827197+0000 mon.gluster1 [INF] Health check cleared: OSD_DOWN (was: 1 osds down)
+2026-11-07T18:37:13.870302+0000 mon.gluster1 [INF] osd.5 [v2:192.168.x.x:6802/3994866609,v1:192.168.x.x:6803/3994866609] boot
+2026-11-07T18:37:16.906763+0000 mon.gluster1 [WRN] Health check update: Reduced data availability: 9 pgs inactive, 40 pgs peering (PG_AVAILABILITY)
+2026-11-07T18:37:16.906822+0000 mon.gluster1 [WRN] Health check failed: Degraded data redundancy: 6999/44691 objects degraded (15.661%), 66 pgs degraded, 33 pgs undersized (PG_DEGRADED)
+2026-11-07T18:37:20.384360+0000 mon.gluster1 [INF] Health check cleared: PG_AVAILABILITY (was: Reduced data availability: 9 pgs inactive, 40 pgs peering)
+2026-11-07T15:10:20.013384+0000 osd.5 [WRN] OSD bench result of 7794.524365 IOPS is not within the threshold limit range of 50.000000 IOPS and 500.000000 IOPS for osd.5. IOPS capacity is unchanged at 315.000000 IOPS. The recommendation is to establish the osd's IOPS capacity using other benchmark tools (e.g. Fio) and then override osd_mclock_max_capacity_iops_[hdd|ssd].
+2026-11-07T18:05:59.068135+0000 osd.4 [WRN] Monitor daemon marked osd.4 down, but it is still running
+2026-11-07T18:37:24.202915+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14906/44718 objects degraded (33.333%), 143 pgs degraded, 73 pgs undersized (PG_DEGRADED)
+2026-11-07T18:37:29.206982+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14915/44745 objects degraded (33.333%), 143 pgs degraded, 73 pgs undersized (PG_DEGRADED)
+2026-11-07T18:37:34.214181+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14924/44772 objects degraded (33.333%), 143 pgs degraded, 73 pgs undersized (PG_DEGRADED)
+2026-11-07T18:37:39.216990+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14933/44799 objects degraded (33.333%), 143 pgs degraded, 73 pgs undersized (PG_DEGRADED)
+2026-11-07T18:37:44.220565+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14943/44829 objects degraded (33.333%), 143 pgs degraded, 73 pgs undersized (PG_DEGRADED)
+2026-11-07T18:37:49.224685+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14952/44856 objects degraded (33.333%), 143 pgs degraded, 73 pgs undersized (PG_DEGRADED)
+2026-11-07T18:37:54.230108+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14962/44886 objects degraded (33.333%), 143 pgs degraded, 73 pgs undersized (PG_DEGRADED)
+2026-11-07T18:37:59.233720+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14971/44913 objects degraded (33.333%), 143 pgs degraded, 73 pgs undersized (PG_DEGRADED)
+2026-11-07T18:38:04.237561+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14980/44940 objects degraded (33.333%), 143 pgs degraded, 73 pgs undersized (PG_DEGRADED)
+2026-11-07T18:38:09.240621+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14990/44970 objects degraded (33.333%), 143 pgs degraded, 73 pgs undersized (PG_DEGRADED)
+2026-11-07T18:38:14.243633+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 14999/44997 objects degraded (33.333%), 143 pgs degraded, 107 pgs undersized (PG_DEGRADED)
+2026-11-07T18:38:19.249089+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15009/45027 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:38:24.253317+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15017/45051 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:38:29.262865+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15027/45081 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:38:34.269992+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15037/45111 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:38:39.272522+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15045/45135 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:38:44.276568+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15055/45165 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:38:49.278462+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15064/45192 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:38:54.282915+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15073/45219 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:38:59.286776+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15083/45249 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:39:04.289442+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15093/45279 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:39:09.294943+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15101/45303 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:39:14.298678+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15111/45333 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:39:19.302149+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15120/45360 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:39:24.306056+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15130/45390 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:39:29.309223+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15140/45420 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:39:34.312638+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15148/45444 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:39:39.317281+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15159/45477 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:39:44.319990+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15168/45504 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:39:49.322335+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15177/45531 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:39:54.325421+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15187/45561 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:39:59.328628+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15196/45588 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:40:04.331216+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15205/45615 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:40:09.341322+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15215/45645 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:40:14.344815+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15224/45672 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:40:19.347576+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15234/45702 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:40:24.350211+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15243/45729 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:40:29.353004+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15252/45756 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:40:34.356651+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15262/45786 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:40:39.359340+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15270/45810 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:40:44.363293+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15280/45840 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:40:49.369012+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15289/45867 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:40:54.372196+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15298/45894 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:40:59.379172+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15308/45924 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:41:04.383369+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15318/45954 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:41:09.388486+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15327/45981 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:41:10.166332+0000 mon.gluster1 [WRN] Health detail: HEALTH_WARN 1 failed cephadm daemon(s); 1/3 mons down, quorum gluster1,gluster2; Degraded data redundancy: 15327/45981 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized
+2026-11-07T18:41:10.166620+0000 mon.gluster1 [WRN] [WRN] CEPHADM_FAILED_DAEMON: 1 failed cephadm daemon(s)
+2026-11-07T18:41:10.166644+0000 mon.gluster1 [WRN]     daemon node-exporter.gluster3 on gluster3 is in error state
+2026-11-07T18:41:10.166656+0000 mon.gluster1 [WRN] [WRN] MON_DOWN: 1/3 mons down, quorum gluster1,gluster2
+2026-11-07T18:41:10.166668+0000 mon.gluster1 [WRN]     mon.gluster3 (rank 2) addr [v2:192.168.x.x:3300/0,v1:192.168.x.x:6789/0] is down (out of quorum)
+2026-11-07T18:41:10.166681+0000 mon.gluster1 [WRN] [WRN] PG_DEGRADED: Degraded data redundancy: 15327/45981 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized
+2026-11-07T18:41:10.166697+0000 mon.gluster1 [WRN]     pg 2.8 is active+undersized+degraded, acting [5,1]
+2026-11-07T18:41:10.166711+0000 mon.gluster1 [WRN]     pg 2.9 is stuck undersized for 3m, current state active+undersized, last acting [1,4]
+2026-11-07T18:41:10.166806+0000 mon.gluster1 [WRN]     pg 2.a is stuck undersized for 35m, current state active+undersized+degraded, last acting [5,1]
+2026-11-07T18:41:10.167044+0000 mon.gluster1 [WRN]     pg 2.b is stuck undersized for 35m, current state active+undersized+degraded, last acting [5,2]
+2026-11-07T18:41:10.167058+0000 mon.gluster1 [WRN]     pg 3.8 is stuck undersized for 35m, current state active+undersized+degraded, last acting [4,1]
+2026-11-07T18:41:10.167070+0000 mon.gluster1 [WRN]     pg 3.a is stuck undersized for 3m, current state active+undersized+degraded, last acting [1,5]
+2026-11-07T18:41:10.167080+0000 mon.gluster1 [WRN]     pg 3.b is stuck undersized for 3m, current state active+undersized+degraded, last acting [1,4]
+2026-11-07T18:41:10.167092+0000 mon.gluster1 [WRN]     pg 3.10 is stuck undersized for 35m, current state active+undersized+degraded, last acting [5,1]
+2026-11-07T18:41:10.167101+0000 mon.gluster1 [WRN]     pg 3.11 is stuck undersized for 35m, current state active+undersized+degraded, last acting [4,2]
+2026-11-07T18:41:10.167111+0000 mon.gluster1 [WRN]     pg 3.12 is stuck undersized for 3m, current state active+undersized+degraded, last acting [2,5]
+2026-11-07T18:41:10.167122+0000 mon.gluster1 [WRN]     pg 3.13 is stuck undersized for 3m, current state active+undersized+degraded, last acting [2,4]
+2026-11-07T18:41:10.167133+0000 mon.gluster1 [WRN]     pg 3.14 is stuck undersized for 35m, current state active+undersized+degraded, last acting [4,2]
+2026-11-07T18:41:10.167143+0000 mon.gluster1 [WRN]     pg 3.15 is stuck undersized for 35m, current state active+undersized+degraded, last acting [5,2]
+2026-11-07T18:41:10.167152+0000 mon.gluster1 [WRN]     pg 3.16 is stuck undersized for 3m, current state active+undersized+degraded, last acting [1,5]
+2026-11-07T18:41:10.167161+0000 mon.gluster1 [WRN]     pg 3.17 is stuck undersized for 3m, current state active+undersized+degraded, last acting [1,5]
+2026-11-07T18:41:10.167171+0000 mon.gluster1 [WRN]     pg 3.18 is stuck undersized for 3m, current state active+undersized+degraded, last acting [2,4]
+2026-11-07T18:41:10.167181+0000 mon.gluster1 [WRN]     pg 3.19 is stuck undersized for 3m, current state active+undersized+degraded, last acting [1,5]
+2026-11-07T18:41:10.167193+0000 mon.gluster1 [WRN]     pg 3.1a is stuck undersized for 35m, current state active+undersized+degraded, last acting [4,1]
+2026-11-07T18:41:10.167202+0000 mon.gluster1 [WRN]     pg 3.1b is stuck undersized for 35m, current state active+undersized+degraded, last acting [4,1]
+2026-11-07T18:41:10.167218+0000 mon.gluster1 [WRN]     pg 3.1c is stuck undersized for 3m, current state active+undersized+degraded, last acting [1,4]
+2026-11-07T18:41:10.167324+0000 mon.gluster1 [WRN]     pg 3.1d is stuck undersized for 35m, current state active+undersized+degraded, last acting [5,1]
+2026-11-07T18:41:10.167336+0000 mon.gluster1 [WRN]     pg 3.1e is stuck undersized for 3m, current state active+undersized+degraded, last acting [2,4]
+2026-11-07T18:41:10.167345+0000 mon.gluster1 [WRN]     pg 3.1f is stuck undersized for 3m, current state active+undersized+degraded, last acting [1,5]
+2026-11-07T18:41:10.167354+0000 mon.gluster1 [WRN]     pg 3.20 is stuck undersized for 35m, current state active+undersized+degraded, last acting [4,2]
+2026-11-07T18:41:10.167364+0000 mon.gluster1 [WRN]     pg 3.21 is stuck undersized for 35m, current state active+undersized+degraded, last acting [4,1]
+2026-11-07T18:41:10.167374+0000 mon.gluster1 [WRN]     pg 3.22 is stuck undersized for 35m, current state active+undersized+degraded, last acting [5,2]
+2026-11-07T18:41:10.167384+0000 mon.gluster1 [WRN]     pg 3.23 is stuck undersized for 3m, current state active+undersized+degraded, last acting [2,5]
+2026-11-07T18:41:10.167393+0000 mon.gluster1 [WRN]     pg 3.24 is stuck undersized for 3m, current state active+undersized+degraded, last acting [2,4]
+2026-11-07T18:41:10.167405+0000 mon.gluster1 [WRN]     pg 3.25 is stuck undersized for 35m, current state active+undersized+degraded, last acting [5,2]
+2026-11-07T18:41:10.167414+0000 mon.gluster1 [WRN]     pg 3.26 is stuck undersized for 35m, current state active+undersized+degraded, last acting [4,1]
+2026-11-07T18:41:10.167423+0000 mon.gluster1 [WRN]     pg 3.27 is stuck undersized for 3m, current state active+undersized+degraded, last acting [2,5]
+2026-11-07T18:41:10.167436+0000 mon.gluster1 [WRN]     pg 3.28 is stuck undersized for 35m, current state active+undersized+degraded, last acting [5,2]
+2026-11-07T18:41:10.167611+0000 mon.gluster1 [WRN]     pg 3.29 is stuck undersized for 3m, current state active+undersized+degraded, last acting [2,4]
+2026-11-07T18:41:10.167655+0000 mon.gluster1 [WRN]     pg 3.6e is stuck undersized for 35m, current state active+undersized+degraded, last acting [5,1]
+2026-11-07T18:41:10.167673+0000 mon.gluster1 [WRN]     pg 3.6f is stuck undersized for 3m, current state active+undersized+degraded, last acting [2,4]
+2026-11-07T18:41:10.167712+0000 mon.gluster1 [WRN]     pg 3.70 is stuck undersized for 3m, current state active+undersized+degraded, last acting [1,4]
+2026-11-07T18:41:10.167738+0000 mon.gluster1 [WRN]     pg 3.71 is stuck undersized for 3m, current state active+undersized+degraded, last acting [2,5]
+2026-11-07T18:41:10.167768+0000 mon.gluster1 [WRN]     pg 3.72 is stuck undersized for 3m, current state active+undersized+degraded, last acting [2,4]
+2026-11-07T18:41:10.167791+0000 mon.gluster1 [WRN]     pg 3.73 is stuck undersized for 3m, current state active+undersized+degraded, last acting [1,5]
+2026-11-07T18:41:10.167805+0000 mon.gluster1 [WRN]     pg 3.74 is stuck undersized for 3m, current state active+undersized+degraded, last acting [1,4]
+2026-11-07T18:41:10.167823+0000 mon.gluster1 [WRN]     pg 3.75 is stuck undersized for 3m, current state active+undersized+degraded, last acting [1,5]
+2026-11-07T18:41:10.167834+0000 mon.gluster1 [WRN]     pg 3.76 is stuck undersized for 35m, current state active+undersized+degraded, last acting [4,2]
+2026-11-07T18:41:10.167842+0000 mon.gluster1 [WRN]     pg 3.77 is stuck undersized for 35m, current state active+undersized+degraded, last acting [4,2]
+2026-11-07T18:41:10.167848+0000 mon.gluster1 [WRN]     pg 3.78 is stuck undersized for 35m, current state active+undersized+degraded, last acting [5,2]
+2026-11-07T18:41:10.167856+0000 mon.gluster1 [WRN]     pg 3.79 is stuck undersized for 3m, current state active+undersized+degraded, last acting [1,5]
+2026-11-07T18:41:10.167876+0000 mon.gluster1 [WRN]     pg 3.7a is stuck undersized for 3m, current state active+undersized+degraded, last acting [1,5]
+2026-11-07T18:41:10.167884+0000 mon.gluster1 [WRN]     pg 3.7b is stuck undersized for 35m, current state active+undersized+degraded, last acting [5,1]
+2026-11-07T18:41:10.167895+0000 mon.gluster1 [WRN]     pg 3.7c is stuck undersized for 35m, current state active+undersized+degraded, last acting [4,2]
+2026-11-07T18:41:10.167904+0000 mon.gluster1 [WRN]     pg 3.7d is stuck undersized for 35m, current state active+undersized+degraded, last acting [5,1]
+2026-11-07T18:41:10.167918+0000 mon.gluster1 [WRN]     pg 3.7e is stuck undersized for 35m, current state active+undersized+degraded, last acting [4,1]
+2026-11-07T18:41:10.167927+0000 mon.gluster1 [WRN]     pg 3.7f is stuck undersized for 3m, current state active+undersized+degraded, last acting [2,4]
+2026-11-07T18:41:14.390968+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15336/46008 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:41:19.395197+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15346/46038 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:41:24.398711+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15356/46068 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:41:29.402456+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15365/46095 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:41:34.404904+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15374/46122 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:41:39.408471+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15384/46152 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:41:44.415444+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15394/46182 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:41:49.421122+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15403/46209 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:41:54.426782+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15412/46236 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:41:59.430548+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15421/46263 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:42:04.435023+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15431/46293 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:42:09.437784+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15440/46320 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:42:14.441936+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15450/46350 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:42:19.447574+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15459/46377 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:42:24.449192+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15469/46407 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:42:29.453228+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15478/46434 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:42:34.458076+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15487/46461 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:42:39.460680+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15497/46491 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:42:44.465943+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15505/46515 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:42:49.472278+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15516/46548 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:42:54.477550+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15524/46572 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:42:59.479131+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15534/46602 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:43:04.483148+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15542/46626 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:43:09.487446+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15552/46656 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:43:14.490858+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15562/46686 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:43:19.492512+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15571/46713 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:43:24.495835+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15580/46740 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:43:29.497225+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15589/46767 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:43:34.498845+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15599/46797 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:43:39.501031+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15608/46824 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:43:44.504609+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15617/46851 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:43:49.508928+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15627/46881 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:43:54.512667+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15636/46908 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:43:59.515500+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15646/46938 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:44:04.518972+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15655/46965 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:44:09.522802+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15664/46992 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:44:14.526115+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15674/47022 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:44:19.528943+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15683/47049 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:44:24.533387+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15693/47079 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:44:29.538485+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15702/47106 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:44:34.541680+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15711/47133 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:44:39.544563+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15721/47163 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:44:42.790984+0000 mon.gluster3 [INF] mon.gluster3 calling monitor election
+2026-11-07T18:44:42.793967+0000 mon.gluster1 [INF] mon.gluster1 calling monitor election
+2026-11-07T18:44:42.808415+0000 mon.gluster1 [INF] mon.gluster1 is new leader, mons gluster1,gluster2,gluster3 in quorum (ranks 0,1,2)
+2026-11-07T18:44:42.823190+0000 mon.gluster1 [INF] Health check cleared: MON_DOWN (was: 1/3 mons down, quorum gluster1,gluster2)
+2026-11-07T18:44:42.840111+0000 mon.gluster1 [WRN] Health detail: HEALTH_WARN 1 failed cephadm daemon(s); Degraded data redundancy: 15730/47190 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized
+2026-11-07T18:44:42.840122+0000 mon.gluster1 [WRN] [WRN] CEPHADM_FAILED_DAEMON: 1 failed cephadm daemon(s)
+2026-11-07T18:44:42.840124+0000 mon.gluster1 [WRN]     daemon node-exporter.gluster3 on gluster3 is in error state
+2026-11-07T18:44:42.840125+0000 mon.gluster1 [WRN] [WRN] PG_DEGRADED: Degraded data redundancy: 15730/47190 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized
+2026-11-07T18:44:42.840127+0000 mon.gluster1 [WRN]     pg 2.8 is active+undersized+degraded, acting [5,1]
+2026-11-07T18:44:42.840128+0000 mon.gluster1 [WRN]     pg 2.9 is stuck undersized for 7m, current state active+undersized, last acting [1,4]
+2026-11-07T18:44:42.840130+0000 mon.gluster1 [WRN]     pg 2.a is stuck undersized for 38m, current state active+undersized+degraded, last acting [5,1]
+2026-11-07T18:44:42.840131+0000 mon.gluster1 [WRN]     pg 2.b is stuck undersized for 38m, current state active+undersized+degraded, last acting [5,2]
+2026-11-07T18:44:42.840133+0000 mon.gluster1 [WRN]     pg 3.8 is stuck undersized for 38m, current state active+undersized+degraded, last acting [4,1]
+2026-11-07T18:44:42.840134+0000 mon.gluster1 [WRN]     pg 3.a is stuck undersized for 7m, current state active+undersized+degraded, last acting [1,5]
+2026-11-07T18:44:42.840150+0000 mon.gluster1 [WRN]     pg 3.b is stuck undersized for 7m, current state active+undersized+degraded, last acting [1,4]
+2026-11-07T18:44:42.840153+0000 mon.gluster1 [WRN]     pg 3.10 is stuck undersized for 38m, current state active+undersized+degraded, last acting [5,1]
+2026-11-07T18:44:42.840161+0000 mon.gluster1 [WRN]     pg 3.11 is stuck undersized for 38m, current state active+undersized+degraded, last acting [4,2]
+2026-11-07T18:44:42.840166+0000 mon.gluster1 [WRN]     pg 3.12 is stuck undersized for 7m, current state active+undersized+degraded, last acting [2,5]
+2026-11-07T18:44:42.840170+0000 mon.gluster1 [WRN]     pg 3.13 is stuck undersized for 7m, current state active+undersized+degraded, last acting [2,4]
+2026-11-07T18:44:42.840175+0000 mon.gluster1 [WRN]     pg 3.14 is stuck undersized for 38m, current state active+undersized+degraded, last acting [4,2]
+2026-11-07T18:44:42.840185+0000 mon.gluster1 [WRN]     pg 3.15 is stuck undersized for 38m, current state active+undersized+degraded, last acting [5,2]
+2026-11-07T18:44:42.840200+0000 mon.gluster1 [WRN]     pg 3.16 is stuck undersized for 7m, current state active+undersized+degraded, last acting [1,5]
+2026-11-07T18:44:42.840213+0000 mon.gluster1 [WRN]     pg 3.17 is stuck undersized for 7m, current state active+undersized+degraded, last acting [1,5]
+2026-11-07T18:44:42.840216+0000 mon.gluster1 [WRN]     pg 3.18 is stuck undersized for 7m, current state active+undersized+degraded, last acting [2,4]
+2026-11-07T18:44:42.840222+0000 mon.gluster1 [WRN]     pg 3.19 is stuck undersized for 7m, current state active+undersized+degraded, last acting [1,5]
+2026-11-07T18:44:42.840223+0000 mon.gluster1 [WRN]     pg 3.1a is stuck undersized for 38m, current state active+undersized+degraded, last acting [4,1]
+2026-11-07T18:44:42.840225+0000 mon.gluster1 [WRN]     pg 3.1b is stuck undersized for 38m, current state active+undersized+degraded, last acting [4,1]
+2026-11-07T18:44:42.840226+0000 mon.gluster1 [WRN]     pg 3.1c is stuck undersized for 7m, current state active+undersized+degraded, last acting [1,4]
+2026-11-07T18:44:42.840228+0000 mon.gluster1 [WRN]     pg 3.1d is stuck undersized for 38m, current state active+undersized+degraded, last acting [5,1]
+2026-11-07T18:44:42.840229+0000 mon.gluster1 [WRN]     pg 3.1e is stuck undersized for 7m, current state active+undersized+degraded, last acting [2,4]
+2026-11-07T18:44:42.840231+0000 mon.gluster1 [WRN]     pg 3.1f is stuck undersized for 7m, current state active+undersized+degraded, last acting [1,5]
+2026-11-07T18:44:42.840290+0000 mon.gluster1 [WRN]     pg 3.20 is stuck undersized for 38m, current state active+undersized+degraded, last acting [4,2]
+2026-11-07T18:44:42.840294+0000 mon.gluster1 [WRN]     pg 3.21 is stuck undersized for 38m, current state active+undersized+degraded, last acting [4,1]
+2026-11-07T18:44:42.840296+0000 mon.gluster1 [WRN]     pg 3.22 is stuck undersized for 38m, current state active+undersized+degraded, last acting [5,2]
+2026-11-07T18:44:42.840299+0000 mon.gluster1 [WRN]     pg 3.23 is stuck undersized for 7m, current state active+undersized+degraded, last acting [2,5]
+2026-11-07T18:44:42.840303+0000 mon.gluster1 [WRN]     pg 3.24 is stuck undersized for 7m, current state active+undersized+degraded, last acting [2,4]
+2026-11-07T18:44:42.840306+0000 mon.gluster1 [WRN]     pg 3.25 is stuck undersized for 38m, current state active+undersized+degraded, last acting [5,2]
+2026-11-07T18:44:42.840311+0000 mon.gluster1 [WRN]     pg 3.26 is stuck undersized for 38m, current state active+undersized+degraded, last acting [4,1]
+2026-11-07T18:44:42.840315+0000 mon.gluster1 [WRN]     pg 3.27 is stuck undersized for 7m, current state active+undersized+degraded, last acting [2,5]
+2026-11-07T18:44:42.840318+0000 mon.gluster1 [WRN]     pg 3.28 is stuck undersized for 38m, current state active+undersized+degraded, last acting [5,2]
+2026-11-07T18:44:42.840319+0000 mon.gluster1 [WRN]     pg 3.29 is stuck undersized for 7m, current state active+undersized+degraded, last acting [2,4]
+2026-11-07T18:44:42.840323+0000 mon.gluster1 [WRN]     pg 3.6e is stuck undersized for 38m, current state active+undersized+degraded, last acting [5,1]
+2026-11-07T18:44:42.840326+0000 mon.gluster1 [WRN]     pg 3.6f is stuck undersized for 7m, current state active+undersized+degraded, last acting [2,4]
+2026-11-07T18:44:42.840330+0000 mon.gluster1 [WRN]     pg 3.70 is stuck undersized for 7m, current state active+undersized+degraded, last acting [1,4]
+2026-11-07T18:44:42.840333+0000 mon.gluster1 [WRN]     pg 3.71 is stuck undersized for 7m, current state active+undersized+degraded, last acting [2,5]
+2026-11-07T18:44:42.840336+0000 mon.gluster1 [WRN]     pg 3.72 is stuck undersized for 7m, current state active+undersized+degraded, last acting [2,4]
+2026-11-07T18:44:42.840338+0000 mon.gluster1 [WRN]     pg 3.73 is stuck undersized for 7m, current state active+undersized+degraded, last acting [1,5]
+2026-11-07T18:44:42.840347+0000 mon.gluster1 [WRN]     pg 3.74 is stuck undersized for 7m, current state active+undersized+degraded, last acting [1,4]
+2026-11-07T18:44:42.840350+0000 mon.gluster1 [WRN]     pg 3.75 is stuck undersized for 7m, current state active+undersized+degraded, last acting [1,5]
+2026-11-07T18:44:42.840351+0000 mon.gluster1 [WRN]     pg 3.76 is stuck undersized for 38m, current state active+undersized+degraded, last acting [4,2]
+2026-11-07T18:44:42.840352+0000 mon.gluster1 [WRN]     pg 3.77 is stuck undersized for 38m, current state active+undersized+degraded, last acting [4,2]
+2026-11-07T18:44:42.840354+0000 mon.gluster1 [WRN]     pg 3.78 is stuck undersized for 38m, current state active+undersized+degraded, last acting [5,2]
+2026-11-07T18:44:42.840356+0000 mon.gluster1 [WRN]     pg 3.79 is stuck undersized for 7m, current state active+undersized+degraded, last acting [1,5]
+2026-11-07T18:44:42.840358+0000 mon.gluster1 [WRN]     pg 3.7a is stuck undersized for 7m, current state active+undersized+degraded, last acting [1,5]
+2026-11-07T18:44:42.840360+0000 mon.gluster1 [WRN]     pg 3.7b is stuck undersized for 38m, current state active+undersized+degraded, last acting [5,1]
+2026-11-07T18:44:42.840362+0000 mon.gluster1 [WRN]     pg 3.7c is stuck undersized for 38m, current state active+undersized+degraded, last acting [4,2]
+2026-11-07T18:44:42.840373+0000 mon.gluster1 [WRN]     pg 3.7d is stuck undersized for 38m, current state active+undersized+degraded, last acting [5,1]
+2026-11-07T18:44:42.840379+0000 mon.gluster1 [WRN]     pg 3.7e is stuck undersized for 38m, current state active+undersized+degraded, last acting [4,1]
+2026-11-07T18:44:42.840383+0000 mon.gluster1 [WRN]     pg 3.7f is stuck undersized for 7m, current state active+undersized+degraded, last acting [2,4]
+2026-11-07T18:44:46.507665+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 15740/47220 objects degraded (33.333%), 143 pgs degraded, 145 pgs undersized (PG_DEGRADED)
+2026-11-07T18:44:49.548602+0000 osd.3 [WRN] OSD bench result of 12740.497541 IOPS is not within the threshold limit range of 50.000000 IOPS and 500.000000 IOPS for osd.3. IOPS capacity is unchanged at 315.000000 IOPS. The recommendation is to establish the osd's IOPS capacity using other benchmark tools (e.g. Fio) and then override osd_mclock_max_capacity_iops_[hdd|ssd].
+2026-11-07T18:44:49.558442+0000 osd.0 [WRN] OSD bench result of 12635.394624 IOPS is not within the threshold limit range of 50.000000 IOPS and 500.000000 IOPS for osd.0. IOPS capacity is unchanged at 315.000000 IOPS. The recommendation is to establish the osd's IOPS capacity using other benchmark tools (e.g. Fio) and then override osd_mclock_max_capacity_iops_[hdd|ssd].
+2026-11-07T18:44:49.679995+0000 mon.gluster1 [INF] osd.3 [v2:192.168.x.x:6808/1417073101,v1:192.168.x.x:6809/1417073101] boot
+2026-11-07T18:44:49.680023+0000 mon.gluster1 [INF] osd.0 [v2:192.168.x.x:6800/658337655,v1:192.168.x.x:6801/658337655] boot
+2026-11-07T18:44:53.960222+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 10670/47256 objects degraded (22.579%), 108 pgs degraded, 96 pgs undersized (PG_DEGRADED)
+2026-11-07T18:44:59.555384+0000 mon.gluster1 [WRN] Health check update: Degraded data redundancy: 973/47259 objects degraded (2.059%), 53 pgs degraded (PG_DEGRADED)
+2026-11-07T18:45:00.300346+0000 mon.gluster1 [INF] Health check cleared: PG_DEGRADED (was: Degraded data redundancy: 973/47259 objects degraded (2.059%), 53 pgs degraded)
+2026-11-07T18:46:00.483886+0000 mon.gluster1 [WRN] Health check failed: Reduced data availability: 2 pgs peering (PG_AVAILABILITY)
+2026-11-07T18:46:05.978166+0000 mon.gluster1 [INF] Health check cleared: PG_AVAILABILITY (was: Reduced data availability: 2 pgs peering)
+2026-11-07T18:50:00.001172+0000 mon.gluster1 [WRN] Health detail: HEALTH_WARN 1 failed cephadm daemon(s)
+2026-11-07T18:50:00.001235+0000 mon.gluster1 [WRN] [WRN] CEPHADM_FAILED_DAEMON: 1 failed cephadm daemon(s)
+2026-11-07T18:50:00.001247+0000 mon.gluster1 [WRN]     daemon node-exporter.gluster3 on gluster3 is in error state
+2026-11-07T18:52:41.164904+0000 mon.gluster1 [INF] Health check cleared: CEPHADM_FAILED_DAEMON (was: 1 failed cephadm daemon(s))
+2026-11-07T18:52:41.164923+0000 mon.gluster1 [INF] Cluster is now healthy
+2026-11-07T19:00:00.000835+0000 mon.gluster1 [INF] overall HEALTH_OK
+2026-11-07T19:10:00.001093+0000 mon.gluster1 [INF] overall HEALTH_OK
