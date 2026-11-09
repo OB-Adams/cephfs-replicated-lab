@@ -13,7 +13,7 @@ This is phase 2 of a storage study. Phase 1, the GlusterFS build and its nine dr
 | Milestone 3: OSD replacement and expansion | Complete ([docs/replacement-expansion.md](docs/replacement-expansion.md)) |
 | Milestone 4a: cephx capabilities and encryption on the wire | Complete ([docs/security.md](docs/security.md)) |
 | Milestone 4b: monitoring and alerts | Complete ([docs/monitoring.md](docs/monitoring.md)) |
-| Milestone 5: `fio` benchmark against the Gluster baseline | Planned |
+| Milestone 5: `fio` benchmark against the Gluster baseline | Complete ([docs/benchmark.md](docs/benchmark.md)) |
 | Milestone 6: Gluster and CephFS comparison | Planned |
 | Raw evidence (session recordings) | Added in [docs/evidence](docs/evidence) |
 | Screenshots | Added in [screenshots/](screenshots) |
@@ -47,6 +47,9 @@ The full tracker is in [docs/milestones.md](docs/milestones.md). Anything not li
 | 4b. Host down | With every Ceph daemon on gluster3 stopped, `CephOSDDownHigh` fired 37 s after the OSDs went down; four alerts reached Alertmanager and the Ceph Dashboard, and resolved after recovery |
 | 4b. Blind spots | Alerts built on `OSD_DOWN` cleared once the OSDs were marked out, though still down; one failed scrape of the manager reset every cluster alert; `CephadmDaemonFailed` lasted 8 minutes past recovery, until cephadm's cache refreshed |
 | 4b. Mac asleep | The VMs were paused 31 minutes mid-drill. On resume the monitors marked running OSDs down for missed beacons and marked gluster3's out; no data moved, with no third host to move it to |
+| 5. Reads | CephFS through the kernel client read faster than Gluster through FUSE: 1,225 against 847 MiB/s (145 %), and 20,396 against 12,260 random 4 KiB IOPS (166 %), 3.1 ms per read against 5.2 |
+| 5. Writes | CephFS wrote slower: 140 against 199 MiB/s (70 %), 1,639 against 3,278 random 4 KiB IOPS (50 %), 241 against 322 small files a second (75 %). A 4 KiB write took 39 ms against 18 |
+| 5. Conditions | gluster1's clock fell minutes behind four times during the run, its VM starved by a Mac with 27.5 of 36 GiB given to VMs; the writes varied by up to 50 % between runs, the reads by under 2 %. A control on a spare disk matched phase 1 within 10 % |
 
 ## Objectives
 
@@ -182,6 +185,7 @@ Issues actually encountered, with causes and fixes, are in [docs/troubleshooting
 | The Dashboard has no links to Grafana, Alertmanager or Prometheus | Milestone 4b, drill 9 |
 | `CephadmDaemonFailed` stays up after the daemon is running again | Milestone 4b, drill 9 |
 | False failures after the Mac sleeps | Milestones 1 and 4b |
+| A host VM's clock falls minutes behind, and writes stall | Milestone 5 |
 
 ## Repository structure
 
@@ -204,6 +208,7 @@ cephfs-replicated-lab/
 │   ├── replacement-expansion.md   milestone 3: an OSD rebuilt, the cluster expanded and shrunk
 │   ├── security.md            milestone 4a: cephx keys and caps, msgr2 secure mode
 │   ├── monitoring.md          milestone 4b: Prometheus, Alertmanager, Grafana and the Dashboard, and a host-down drill
+│   ├── benchmark.md           milestone 5: the fio profiles on CephFS against Gluster, and a control
 │   ├── milestones.md
 │   ├── troubleshooting.md
 │   └── evidence/
@@ -221,7 +226,9 @@ cephfs-replicated-lab/
 │       ├── drill7-cephw.txt, drill7-writes.log, drill7-session-gluster{1,4}.txt
 │       ├── m3-scrub-session-gluster1.txt, m3-checks-session-gluster4.txt
 │       ├── drill8-cephw.txt, drill8-writes.log, drill8-session-gluster{1,2,4}.txt
-│       └── drill9-cephw.txt, drill9-writes.log, drill9-alertlog.txt, drill9-alerts.txt, drill9-rules.txt, drill9-session-gluster{1,4}.txt
+│       ├── drill9-cephw.txt, drill9-writes.log, drill9-alertlog.txt, drill9-alerts.txt, drill9-rules.txt, drill9-session-gluster{1,4}.txt
+│       ├── bench-session-gluster{1,4}.txt, bench-w2-session-gluster4.txt, bench-cephw.txt, bench-w2-cephw.txt, bench-chrony-gluster1.txt
+│       └── benchmark/         fio's JSON for every target, with phase 1's copied in, and results.md
 ├── scripts/
 │   ├── drill-writer.sh        the client writer used in the drills: one file per write, with fsync, timed
 │   ├── ceph-check.sh          checks the drill files, the 2 GB fill set and the reference file on the client
@@ -248,7 +255,12 @@ cephfs-replicated-lab/
     ├── 18-drill9-alertmanager-firing.png
     ├── 19-drill9-dashboard-incident.png
     ├── 20-drill9-alert-timeline.png
-    └── 21-drill9-grafana-incident.png
+    ├── 21-drill9-grafana-incident.png
+    ├── 22-bench-direct-io-check.png
+    ├── 23-bench-raw-run.png
+    ├── 24-bench-cephfs-during-run.png
+    ├── 25-bench-cephfs-run.png
+    └── 26-bench-results.png
 ```
 
 ## Screenshots and evidence
@@ -336,6 +348,26 @@ cephfs-replicated-lab/
 ### Drill 9: the incident in Grafana
 
 ![Grafana's PG states panel: PGs undersized and degraded during the incident, a gap while the VMs were paused, then all active+clean](screenshots/21-drill9-grafana-incident.png)
+
+### Benchmark: direct I/O on CephFS
+
+![A 64 MiB O_DIRECT write to CephFS with err= 0, at 68 MiB/s](screenshots/22-bench-direct-io-check.png)
+
+### Benchmark: the control on a spare disk
+
+![run-bench.sh on XFS on gluster1's vdd: 18 runs and the done line](screenshots/23-bench-raw-run.png)
+
+### Benchmark: the cluster under a sequential write
+
+![ceph -s showing 179 MiB/s of client writes and ceph osd perf with every OSD at 110 to 121 ms](screenshots/24-bench-cephfs-during-run.png)
+
+### Benchmark: the CephFS run
+
+![run-bench.sh on /mnt/cephfs/bench: 18 runs and the done line](screenshots/25-bench-cephfs-run.png)
+
+### Benchmark: the summary, before the write re-runs
+
+![summarize.py with gluster-fuse as the baseline: every target's medians and percentages](screenshots/26-bench-results.png)
 
 What each screenshot shows and the commands behind it are in [screenshots/README.md](screenshots/README.md). The session recordings are in [docs/evidence](docs/evidence).
 

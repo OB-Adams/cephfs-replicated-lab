@@ -1,0 +1,377 @@
+# Milestone 5: benchmark, session log from gluster1 (the raw control on vdd, ceph -s and ceph osd perf during the CephFS run)
+# Captured 2026-11-09 with script(1), times UTC. Private addresses masked.
+# Cleaned for reading: terminal control codes removed, and commands that were pasted together and drawn twice by the
+# terminal written once each. Typing mistakes are left as typed. Output is unchanged.
+# On the progress lines, the text after 'run N of 3' is the end of fio's last status line from the previous run.
+# The recording was not closed with exit, so it stops part-way through a ceph -s.
+#
+Script started on 2026-11-09 00:35:42+00:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="162" LINES="48"]
+root@gluster1:~# clear
+root@gluster1:~# dnf info fio
+CentOS Stream 9 - BaseOS                                                                                                           17 kB/s |  23 kB     00:01
+CentOS Stream 9 - AppStream                                                                                                        16 kB/s |  23 kB     00:01
+CentOS Stream 9 - CRB                                                                                                              16 kB/s |  22 kB     00:01
+CentOS Stream 9 - Extras packages                                                                                                  22 kB/s |  25 kB     00:01
+Installed Packages
+Name         : fio
+Version      : 3.35
+Release      : 1.el9
+Architecture : aarch64
+Size         : 8.6 M
+Source       : fio-3.35-1.el9.src.rpm
+Repository   : @System
+From repo    : appstream
+Summary      : Multithreaded IO generation tool
+URL          : http://git.kernel.dk/?p=fio.git;a=summary
+License      : GPLv2
+Description  : fio is an I/O tool that will spawn a number of threads or processes doing
+             : a particular type of io action as specified by the user.  fio takes a
+             : number of global parameters, each inherited by the thread unless
+             : otherwise parameters given to them overriding that setting is given.
+             : The typical use of fio is to write a job file matching the io load
+             : one wants to simulate.
+
+root@gluster1:~# fio --version
+fio-3.35
+root@gluster1:~# uname -r; nproc; free -h | head -2
+5.14.0-759.el9.aarch64
+5
+               total        used        free      shared  buff/cache   available
+Mem:           7.4Gi       1.1Gi       5.6Gi        46Mi       916Mi       6.3Gi
+root@gluster1:~# ceph osd metadata 0 | grep -E '"rotational"|"bluestore_bdev_type"|"osd_objectstore"'
+ceph config show osd.0 osd_op_queue
+ceph config show osd.0 osd_mclock_profile
+ceph config show osd.0 osd_memory_target
+cat /sys/block/vdb/queue/rotational
+ceph fs get cephfs | grep -E 'max_mds|session_timeout'
+    "bluestore_bdev_type": "hdd",
+    "osd_objectstore": "bluestore",
+    "rotational": "1"
+mclock_scheduler
+balanced
+1610612736
+1
+session_timeout 60
+max_mds 1
+root@gluster1:~# ceph orch device ls gluster1 --refresh
+HOST      PATH      TYPE  DEVICE ID                SIZE  AVAILABLE  REFRESHED  REJECT REASONS
+gluster1  /dev/sda  hdd   Apple_Virtual_Disk-0:0  12.8G  No         5m ago     Has a FileSystem, id_bus, read-only
+gluster1  /dev/vdb  hdd   F6766C50FDA84EEE829F    10.0G  No         5m ago     Has a FileSystem, Insufficient space (<10 extents) on vgs, LVM detected
+gluster1  /dev/vdc  hdd   AC66AF4D1E504BDFAA27    10.0G  No         5m ago     Has a FileSystem, Insufficient space (<10 extents) on vgs, LVM detected
+gluster1  /dev/vdd  hdd   73B5C9A68207430A9E98    10.0G  Yes        5m ago
+root@gluster1:~# mkfs.xfs -f /dev/vdd
+meta-data=/dev/vdd               isize=512    agcount=4, agsize=655360 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=1    bigtime=1 inobtcount=1 nrext64=0
+data     =                       bsize=4096   blocks=2621440, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=16384, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+Discarding blocks...Done.
+root@gluster1:~# mkdir -p /mnt/raw-vdd
+root@gluster1:~# mount /dev/vdd /mnt/raw-vdd/
+root@gluster1:~# df -h /mnt/raw-vdd
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/vdd         10G  104M  9.9G   2% /mnt/raw-vdd
+root@gluster1:~# clear
+root@gluster1:~# ./benchmarks/run-bench.sh raw-xfs-vdd /mnt/raw-vdd 3
+00:54:24  seq-write      run 1 of 3
+00:55:41  seq-write      run 2 of 39GiB/s][w=18.3k IOPS][eta 00m:00s]
+00:56:57  seq-write      run 3 of 38GiB/s][w=19.3k IOPS][eta 00m:00s]
+00:58:14  seq-read       run 1 of 35GiB/s][w=18.9k IOPS][eta 00m:00s]
+00:59:24  seq-read       run 2 of 37GiB/s][r=22.2k IOPS][eta 00m:00s]
+01:00:35  seq-read       run 3 of 34GiB/s][r=21.9k IOPS][eta 00m:00s]
+01:01:45  rand-read-4k   run 1 of 37GiB/s][r=22.3k IOPS][eta 00m:00s]
+01:02:56  rand-read-4k   run 2 of 3MiB/s][r=168k IOPS][eta 00m:00s]
+01:04:06  rand-read-4k   run 3 of 3MiB/s][r=166k IOPS][eta 00m:00s]
+01:05:17  rand-write-4k  run 1 of 3MiB/s][r=166k IOPS][eta 00m:00s]
+01:06:31  rand-write-4k  run 2 of 3MiB/s][w=147k IOPS][eta 00m:00s]
+01:07:45  rand-write-4k  run 3 of 3MiB/s][w=129k IOPS][eta 00m:00s]
+01:08:59  mixed-70-30    run 1 of 3MiB/s][w=143k IOPS][eta 00m:00s]
+01:10:10  mixed-70-30    run 2 of 3MiB/s,w=175MiB/s][r=104k,w=44.8k IOPS][eta 00m:00s]
+01:11:21  mixed-70-30    run 3 of 3MiB/s,w=149MiB/s][r=88.8k,w=38.1k IOPS][eta 00m:00s]
+01:12:33  small-files    run 1 of 3MiB/s,w=173MiB/s][r=103k,w=44.3k IOPS][eta 00m:00s]
+01:12:34  small-files    run 2 of 3
+01:12:35  small-files    run 3 of 3
+01:12:36  done: /root/benchmarks/results/raw-xfs-vdd
+root@gluster1:~# ls
+anaconda-ks.cfg                    ceph-drill7-session-gluster1.txt    drill3-session-gluster1.txt  drill9-cmd-history-gluster1.txt
+benchmarks                         ceph-drill8-cephw.txt               drill4-cephw.txt             drill9-session-gluster1.txt
+benchmark-session-gluster1.txt     ceph-drill8-session-gluster1.txt    drill4-session-gluster1.txt  drill9-shd-gluster1.txt
+bench-session-gluster1.txt         ceph-drill9-cephw.txt               drill5-gluster1.txt          drill9-start
+ceph-client.conf                   ceph-drill9-session-gluster1.txt    drill6-session-gluster1.txt  drills-checks-session-gluster1.txt
+ceph.client.gluster4.keyring       ceph-drill9-specs.yml               drill6-shd-gluster1.txt      drills-scrub-session-gluster1.txt
+ceph-deploy-session-gluster1.txt   ceph-m3-scrub-session-gluster1.txt  drill6-start                 lab-ca
+ceph-drill5-cephw.txt              ceph-verify-session-gluster1.txt    drill7-rebalance.log         osd-spec.yml
+ceph-drill5-session-gluster1.txt   dash-pw                             drill7-session-gluster1.txt  scripts
+ceph-drill6a-cephw-gluster1.txt    drill1-cephw.txt                    drill7-start                 teardown-session-gluster1.txt
+ceph-drill6a-session-gluster1.txt  drill1-session-gluster1.txt         drill8-brick-log.txt         victim.gluster1.bak
+ceph-drill6b-cephw.txt             drill2-cephw.txt                    drill8-cmd-history.txt
+ceph-drill6b-session-gluster1.txt  drill2-session-gluster1.txt         drill8-glusterd-log.txt
+ceph-drill7-cephw.txt              drill3-cephw.txt                    drill8-session-gluster1.txt
+root@gluster1:~# df -h /mnt/raw-vdd/
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/vdd         10G  4.2G  5.9G  42% /mnt/raw-vdd
+root@gluster1:~# cd /mnt/raw-vdd/
+root@gluster1:/mnt/raw-vdd# ls
+bench.0.0  bench.1.0  bench.2.0  bench.3.0  small
+root@gluster1:/mnt/raw-vdd# rm -rf *
+root@gluster1:/mnt/raw-vdd# ls
+root@gluster1:/mnt/raw-vdd# cd ..
+root@gluster1:/mnt# cd ..
+root@gluster1:/# clear
+root@gluster1:/# cd ~
+root@gluster1:~# clear
+root@gluster1:~# ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_OK
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 70m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 75m), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 75m), 6 in (since 30h)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 16.56k objects, 5.2 GiB
+    usage:   16 GiB used, 44 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+  io:
+    client:   183 MiB/s wr, 0 op/s rd, 186 op/s wr
+
+root@gluster1:~# ceph osd perf
+osd  commit_latency(ms)  apply_latency(ms)
+  5                 236                236
+  1                  83                 83
+  4                 206                206
+  3                 214                214
+  2                 204                204
+  0                 207                207
+root@gluster1:~# ceph osd perf
+osd  commit_latency(ms)  apply_latency(ms)
+  5                 224                224
+  1                  99                 99
+  4                 244                244
+  3                 272                272
+  2                 237                237
+  0                 215                215
+root@gluster1:~# ceph osd perf
+osd  commit_latency(ms)  apply_latency(ms)
+  5                 191                191
+  1                  80                 80
+  4                 183                183
+  3                 189                189
+  2                 221                221
+  0                 178                178
+root@gluster1:~# ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_OK
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 70m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 75m), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 75m), 6 in (since 30h)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 16.80k objects, 6.1 GiB
+    usage:   19 GiB used, 41 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+  io:
+    client:   81 MiB/s wr, 0 op/s rd, 81 op/s wr
+
+root@gluster1:~# ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_OK
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 70m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 75m), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 75m), 6 in (since 30h)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 16.80k objects, 6.1 GiB
+    usage:   19 GiB used, 41 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+  io:
+    client:   71 MiB/s wr, 0 op/s rd, 70 op/s wr
+
+root@gluster1:~# clear
+root@gluster1:~# ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_OK
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 70m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 76m), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 75m), 6 in (since 30h)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 16.80k objects, 6.1 GiB
+    usage:   19 GiB used, 41 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+  io:
+    client:   64 MiB/s wr, 0 op/s rd, 63 op/s wr
+
+root@gluster1:~# ceph osd perf
+osd  commit_latency(ms)  apply_latency(ms)
+  5                 383                383
+  1                 110                110
+  4                 369                369
+  3                 277                277
+  2                 418                418
+  0                 333                333
+root@gluster1:~# cleawr
+bash: cleawr: command not found
+root@gluster1:~# clear
+root@gluster1:~# ls /mnt/raw-vdd/
+root@gluster1:~# ./benchmarks/run-bench.sh raw-xfs-vdd /mnt/raw-vdd 3
+01:25:25  seq-write      run 1 of 3
+01:26:43  seq-write      run 2 of 37GiB/s][w=19.1k IOPS][eta 00m:00s]
+01:28:01  seq-write      run 3 of 38GiB/s][w=19.2k IOPS][eta 00m:00s]
+01:29:18  seq-read       run 1 of 38GiB/s][w=19.3k IOPS][eta 00m:00s]
+01:30:28  seq-read       run 2 of 36GiB/s][r=22.1k IOPS][eta 00m:00s]
+01:31:39  seq-read       run 3 of 32GiB/s][r=21.7k IOPS][eta 00m:00s]
+01:32:49  rand-read-4k   run 1 of 37GiB/s][r=22.2k IOPS][eta 00m:00s]
+01:34:00  rand-read-4k   run 2 of 3MiB/s][r=169k IOPS][eta 00m:00s]
+01:35:10  rand-read-4k   run 3 of 3MiB/s][r=168k IOPS][eta 00m:00s]
+01:36:20  rand-write-4k  run 1 of 3MiB/s][r=168k IOPS][eta 00m:00s]
+01:37:36  rand-write-4k  run 2 of 3MiB/s][w=159k IOPS][eta 00m:00s]
+01:38:51  rand-write-4k  run 3 of 3MiB/s][w=110k IOPS][eta 00m:00s]
+01:40:06  mixed-70-30    run 1 of 3MiB/s][w=139k IOPS][eta 00m:00s]
+01:41:18  mixed-70-30    run 2 of 3MiB/s,w=176MiB/s][r=105k,w=45.1k IOPS][eta 00m:00s]
+01:42:30  mixed-70-30    run 3 of 3MiB/s,w=153MiB/s][r=91.1k,w=39.1k IOPS][eta 00m:00s]
+01:43:41  small-files    run 1 of 3MiB/s,w=176MiB/s][r=105k,w=45.2k IOPS][eta 00m:00s]
+01:43:42  small-files    run 2 of 3
+01:43:43  small-files    run 3 of 3
+01:43:44  done: /root/benchmarks/results/raw-xfs-vdd
+root@gluster1:~# umount /mnt/raw-vdd
+rmdir /mnt/raw-vdd
+wipefs -a /dev/vdd
+lsblk /dev/vdd
+/dev/vdd: 4 bytes were erased at offset 0x00000000 (xfs): 58 46 53 42
+NAME MAJ:MIN RM SIZE RO TYPE MOUNTPOINTS
+vdd  252:48   0  10G  0 disk
+root@gluster1:~# clear
+root@gluster1:~# ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            insufficient standby MDS daemons available
+            clock skew detected on mon.gluster2
+            188 slow ops, oldest one blocked for 160 sec, mon.gluster2 has slow ops
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 93m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 98m)
+    mds: 1/1 daemons up
+    osd: 6 osds: 6 up (since 98m), 6 in (since 31h)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 16.48k objects, 4.8 GiB
+    usage:   15 GiB used, 45 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+  io:
+    client:   234 MiB/s wr, 0 op/s rd, 238 op/s wr
+
+root@gluster1:~# ceph osd perf
+osd  commit_latency(ms)  apply_latency(ms)
+  5                 130                130
+  1                 129                129
+  4                 122                122
+  3                 107                107
+  2                 128                128
+  0                 115                115
+root@gluster1:~# ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            insufficient standby MDS daemons available
+            clock skew detected on mon.gluster2
+            211 slow ops, oldest one blocked for 175 sec, mon.gluster2 has slow ops
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 93m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 98m)
+    mds: 1/1 daemons up
+    osd: 6 osds: 6 up (since 98m), 6 in (since 31h)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 16.80k objects, 6.1 GiB
+    usage:   19 GiB used, 41 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+  io:
+    client:   131 MiB/s wr, 0 op/s rd, 131 op/s wr
+
+root@gluster1:~# ceph osd perf
+osd  commit_latency(ms)  apply_latency(ms)
+  5                 119                119
+  1                 120                120
+  4                 120                120
+  3                 119                119
+  2                 114                114
+  0                 114                114
+root@gluster1:~# ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            insufficient standby MDS daemons available
+            clock skew detected on mon.gluster2
+            226 slow ops, oldest one blocked for 185 sec, mon.gluster2 has slow ops
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 93m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 98m)
+    mds: 1/1 daemons up
+    osd: 6 osds: 6 up (since 98m), 6 in (since 31h)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 16.80k objects, 6.1 GiB
+    usage:   19 GiB used, 41 GiB / 60 GiB avail
+    pgs:     145 active+clean
+
+  io:
+    client:   128 MiB/s wr, 0 op/s rd, 128 op/s wr
+
+root@gluster1:~# clear
+root@gluster1:~# ceph -s
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            insufficient standby MDS daemons available
+            clock skew detected on mon.gluster2
+            233 slow ops, oldest one blocked for 190 sec, mon.gluster2 has slow ops
+
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 93m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 98m)
+    mds: 1

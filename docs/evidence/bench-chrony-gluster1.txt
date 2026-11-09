@@ -1,0 +1,17 @@
+# Milestone 5: chrony's clock corrections on gluster1 on 2026-11-09, times UTC (gluster1's own clock)
+# Command run on gluster1 after the benchmark, output pasted from the terminal. Mac readings taken the same night.
+#
+root@gluster1:~# journalctl -u chronyd --since "2026-11-09 00:00" | grep -iE 'step|wrong|jump'
+Nov 09 00:19:26 gluster1 chronyd[839]: System clock wrong by 306.825185 seconds
+Nov 09 00:24:33 gluster1 chronyd[839]: System clock was stepped by 306.825080 seconds
+Nov 09 01:46:29 gluster1 chronyd[839]: System clock wrong by 261.564511 seconds
+Nov 09 01:50:50 gluster1 chronyd[839]: System clock was stepped by 261.564511 seconds
+Nov 09 02:12:25 gluster1 chronyd[839]: System clock wrong by 232.835453 seconds
+Nov 09 02:16:17 gluster1 chronyd[839]: System clock was stepped by 232.835453 seconds
+Nov 09 02:33:31 gluster1 chronyd[839]: System clock wrong by 139.949272 seconds
+Nov 09 02:35:51 gluster1 chronyd[839]: System clock was stepped by 139.949274 seconds
+
+# On the Mac:
+$ sysctl -n hw.memsize | awk '{printf "%.0f GiB RAM\n", $1/1073741824}'; sysctl vm.swapusage
+36 GiB RAM
+vm.swapusage: total = 4096.00M  used = 2880.75M  free = 1215.25M  (encrypted)

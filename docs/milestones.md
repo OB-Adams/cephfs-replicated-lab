@@ -9,7 +9,7 @@ Status values: Planned, In progress, Blocked, Complete. A milestone is marked Co
 | 3 | OSD replacement and expansion | Complete |
 | 4a | cephx capabilities and encryption on the wire | Complete |
 | 4b | Monitoring and alerts | Complete |
-| 5 | Benchmark against the Gluster baseline | Planned |
+| 5 | Benchmark against the Gluster baseline | Complete |
 | 6 | Gluster and CephFS comparison | Planned |
 
 ## Milestone 1: deploy Ceph and mount CephFS
@@ -123,6 +123,20 @@ Split in two, as in phase 1: 4a for access control and encryption, 4b for monito
 ## Milestone 5: benchmark against the Gluster baseline
 
 **Goal.** The same six `fio` profiles as phase 1, run with the kit in [../benchmarks](../benchmarks), on the CephFS kernel mount, and compared with phase 1's results.
+
+**Changes.** None left behind: `fio` installed on `gluster1` and `gluster4`, an XFS filesystem made on `gluster1`'s spare `vdd` for the control run and wiped again, and the test directory on CephFS removed.
+
+**Concepts covered.** Bandwidth, IOPS and latency, and Little's law between them; the path of a CephFS request against a Gluster one: kernel client against FUSE, primary-copy replication against client fan-out; BlueStore's hard-disk settings and deferred writes; the mClock scheduler; why a guest's clock falls behind when its host is short of resources.
+
+**Acceptance criteria and result.**
+
+| Criterion | Result |
+|---|---|
+| All six profiles run three times against CephFS without errors, at the configured load | Met: 18 runs with `error` 0, queue depth 16 for 100 % of the time; the write profiles run again, 8 more runs |
+| The results compared with Gluster's, with the limits recorded | Met: [benchmark.md](benchmark.md), with phase 1's runs and a control on the same Mac |
+| The cluster healthy before and after, test data removed, the spare disk left empty | Partly met: the first CephFS run started on `HEALTH_WARN` (clock skew on gluster1); test data removed and `vdd` wiped |
+
+**Result (2026-11-09).** Met, with the writes less certain than the reads. Against Gluster through FUSE, CephFS through the kernel client read faster: 1,225 MiB/s against 847 for large blocks (145 %), and 20,396 against 12,260 IOPS for 4 KiB (166 %), each 4 KiB read taking 3.1 ms against 5.2. It wrote slower: 140 against 199 MiB/s (70 %), 1,639 against 3,278 random 4 KiB IOPS (50 %), a 70/30 mix at 62 %, and 241 against 322 small files a second (75 %), where the 4 KiB write, not the file creation, took the time. The control on a spare disk matched phase 1's raw figures within 10 %. During the run gluster1's clock fell behind by minutes four times, a sign of its VM being starved by a host that had 27.5 of its 36 GiB given to VMs and was paging; the writes, which wait for all three hosts, varied by up to 50 % between runs while the reads stayed within 2 %. Full write-up in [benchmark.md](benchmark.md).
 
 ## Milestone 6: Gluster and CephFS comparison
 

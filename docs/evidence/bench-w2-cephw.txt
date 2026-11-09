@@ -1,0 +1,42 @@
+# Milestone 5: cluster log during the re-run of the write profiles, `ceph -w | tee` on gluster1, times UTC.
+# Private addresses masked. gluster1's clock was 140 s slow until chrony stepped it at 02:35:51.
+#
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_OK
+ 
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 2h) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 2h), standbys: gluster2.qhtcrw
+    mds: 1/1 daemons up, 1 standby
+    osd: 6 osds: 6 up (since 2h), 6 in (since 31h)
+ 
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 15.83k objects, 2.2 GiB
+    usage:   12 GiB used, 48 GiB / 60 GiB avail
+    pgs:     145 active+clean
+ 
+
+2026-11-09T02:32:32.006915+0000 mon.gluster1 [WRN] message from mon.1 was stamped 139.926744s in the future, clocks not synchronized
+2026-11-09T02:32:46.621138+0000 mon.gluster1 [INF] MDS daemon mds.cephfs.gluster2.stwcqc is removed because it is dead or otherwise unavailable.
+2026-11-09T02:32:46.621661+0000 mon.gluster1 [WRN] Health check failed: insufficient standby MDS daemons available (MDS_INSUFFICIENT_STANDBY)
+2026-11-09T02:33:04.009381+0000 mon.gluster1 [WRN] Health check failed: 5 slow ops, oldest one blocked for 30 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-09T02:33:11.652764+0000 mon.gluster1 [WRN] Health check update: 9 slow ops, oldest one blocked for 35 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-09T02:33:16.657029+0000 mon.gluster1 [WRN] Health check update: 16 slow ops, oldest one blocked for 40 sec, daemons [mon.gluster2,mon.gluster3] have slow ops. (SLOW_OPS)
+2026-11-09T02:33:21.659883+0000 mon.gluster1 [WRN] Health check update: 20 slow ops, oldest one blocked for 45 sec, daemons [mon.gluster2,mon.gluster3] have slow ops. (SLOW_OPS)
+2026-11-09T02:33:26.662672+0000 mon.gluster1 [WRN] Health check update: 24 slow ops, oldest one blocked for 50 sec, daemons [mon.gluster2,mon.gluster3] have slow ops. (SLOW_OPS)
+2026-11-09T02:33:28.195078+0000 mon.gluster1 [WRN] 2 clock skew 139.925s > max 0.05s
+2026-11-09T02:33:28.195419+0000 mon.gluster1 [WRN] 1 clock skew 139.922s > max 0.05s
+2026-11-09T00:06:39.008214+0000 osd.0 [WRN] OSD bench result of 7388.445937 IOPS is not within the threshold limit range of 50.000000 IOPS and 500.000000 IOPS for osd.0. IOPS capacity is unchanged at 315.000000 IOPS. The recommendation is to establish the osd's IOPS capacity using other benchmark tools (e.g. Fio) and then override osd_mclock_max_capacity_iops_[hdd|ssd].
+2026-11-09T00:06:39.573433+0000 osd.5 [WRN] OSD bench result of 14158.280992 IOPS is not within the threshold limit range of 50.000000 IOPS and 500.000000 IOPS for osd.5. IOPS capacity is unchanged at 315.000000 IOPS. The recommendation is to establish the osd's IOPS capacity using other benchmark tools (e.g. Fio) and then override osd_mclock_max_capacity_iops_[hdd|ssd].
+2026-11-09T01:50:56.241684+0000 osd.0 [WRN] 17 slow requests (by type [ 'queued for pg' : 1 'started' : 4 'waiting for sub ops' : 12 ] most affected pool [ 'cephfs.cephfs.data' : 17 ])
+2026-11-09T02:35:51.619556+0000 mon.gluster1 [WRN] Health check update: 31 slow ops, oldest one blocked for 55 sec, daemons [mon.gluster2,mon.gluster3] have slow ops. (SLOW_OPS)
+2026-11-09T02:35:51.620778+0000 mon.gluster1 [WRN] Health check failed: clock skew detected on mon.gluster2, mon.gluster3 (MON_CLOCK_SKEW)
+2026-11-09T02:35:52.653641+0000 mon.gluster1 [INF] Health check cleared: MDS_INSUFFICIENT_STANDBY (was: insufficient standby MDS daemons available)
+2026-11-09T02:35:56.627223+0000 mon.gluster1 [WRN] Health check update: 38 slow ops, oldest one blocked for 60 sec, daemons [mon.gluster2,mon.gluster3] have slow ops. (SLOW_OPS)
+2026-11-09T02:35:58.420046+0000 mon.gluster1 [INF] Health check cleared: SLOW_OPS (was: 38 slow ops, oldest one blocked for 60 sec, daemons [mon.gluster2,mon.gluster3] have slow ops.)
+2026-11-09T02:36:21.665701+0000 mon.gluster1 [INF] Health check cleared: MON_CLOCK_SKEW (was: clock skew detected on mon.gluster2, mon.gluster3)
+2026-11-09T02:36:21.665769+0000 mon.gluster1 [INF] Cluster is now healthy
+2026-11-09T02:42:19.949823+0000 mon.gluster1 [INF] overall HEALTH_OK

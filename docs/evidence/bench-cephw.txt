@@ -1,0 +1,56 @@
+# Milestone 5: cluster log during the CephFS run, `ceph -w | tee` on gluster1, times UTC. Private addresses masked.
+# The status block at the top is what ceph -w prints when it starts. Lines from 00:06 are OSD start-up messages
+# delivered late. gluster1's clock was 261 s slow until chrony stepped it at 01:50:50.
+#
+  cluster:
+    id:     01ada8b6-d718-11f1-9fbe-d6454780e5d3
+    health: HEALTH_WARN
+            insufficient standby MDS daemons available
+            clock skew detected on mon.gluster2
+            149 slow ops, oldest one blocked for 135 sec, mon.gluster2 has slow ops
+ 
+  services:
+    mon: 3 daemons, quorum gluster1,gluster2,gluster3 (age 92m) [leader: gluster1]
+    mgr: gluster1.bxuyky(active, since 98m)
+    mds: 1/1 daemons up
+    osd: 6 osds: 6 up (since 97m), 6 in (since 30h)
+ 
+  data:
+    volumes: 1/1 healthy
+    pools:   3 pools, 145 pgs
+    objects: 15.77k objects, 2.1 GiB
+    usage:   6.7 GiB used, 53 GiB / 60 GiB avail
+    pgs:     145 active+clean
+ 
+
+2026-11-09T01:44:40.087918+0000 mon.gluster1 [WRN] Health check update: 157 slow ops, oldest one blocked for 140 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-09T01:44:45.327415+0000 mon.gluster1 [WRN] message from mon.1 was stamped 261.556384s in the future, clocks not synchronized
+2026-11-09T01:44:49.594914+0000 mon.gluster1 [WRN] Health check update: 172 slow ops, oldest one blocked for 150 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-09T01:44:54.941329+0000 mon.gluster1 [WRN] Health check update: 179 slow ops, oldest one blocked for 155 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-09T01:45:00.378732+0000 mon.gluster1 [WRN] Health check update: 188 slow ops, oldest one blocked for 160 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-09T01:45:09.722397+0000 mon.gluster1 [WRN] Health check update: 203 slow ops, oldest one blocked for 170 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-09T01:45:15.035696+0000 mon.gluster1 [WRN] Health check update: 211 slow ops, oldest one blocked for 175 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-09T01:45:20.038601+0000 mon.gluster1 [WRN] Health check update: 218 slow ops, oldest one blocked for 180 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-09T01:45:25.039392+0000 mon.gluster1 [WRN] Health check update: 226 slow ops, oldest one blocked for 185 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-09T01:45:33.681891+0000 mon.gluster1 [WRN] Health check update: 241 slow ops, oldest one blocked for 195 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-09T01:45:40.350674+0000 mon.gluster1 [WRN] Health check update: 248 slow ops, oldest one blocked for 200 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-09T01:45:43.775053+0000 mon.gluster1 [WRN] 1 clock skew 261.556s > max 0.05s
+2026-11-09T01:45:49.757561+0000 mon.gluster1 [WRN] Health check update: 263 slow ops, oldest one blocked for 210 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-09T01:45:55.144371+0000 mon.gluster1 [WRN] Health check update: 271 slow ops, oldest one blocked for 215 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-09T01:46:03.723683+0000 mon.gluster1 [WRN] Health check update: 286 slow ops, oldest one blocked for 225 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-09T01:46:09.858932+0000 mon.gluster1 [WRN] Health check update: 293 slow ops, oldest one blocked for 230 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-09T01:46:15.241779+0000 mon.gluster1 [WRN] Health check update: 301 slow ops, oldest one blocked for 235 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-09T01:46:23.712317+0000 mon.gluster1 [WRN] Health check update: 316 slow ops, oldest one blocked for 245 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-09T00:06:39.573433+0000 osd.5 [WRN] OSD bench result of 14158.280992 IOPS is not within the threshold limit range of 50.000000 IOPS and 500.000000 IOPS for osd.5. IOPS capacity is unchanged at 315.000000 IOPS. The recommendation is to establish the osd's IOPS capacity using other benchmark tools (e.g. Fio) and then override osd_mclock_max_capacity_iops_[hdd|ssd].
+2026-11-09T01:46:31.860500+0000 mon.gluster3 [WRN] message from mon.0 was stamped 261.563146s in the future, clocks not synchronized
+2026-11-09T01:50:53.520954+0000 mon.gluster1 [INF] Health check cleared: MDS_INSUFFICIENT_STANDBY (was: insufficient standby MDS daemons available)
+2026-11-09T01:50:54.649827+0000 mon.gluster1 [WRN] Health check update: 323 slow ops, oldest one blocked for 262 sec, daemons [osd.2,mon.gluster2] have slow ops. (SLOW_OPS)
+2026-11-09T00:06:39.008214+0000 osd.0 [WRN] OSD bench result of 7388.445937 IOPS is not within the threshold limit range of 50.000000 IOPS and 500.000000 IOPS for osd.0. IOPS capacity is unchanged at 315.000000 IOPS. The recommendation is to establish the osd's IOPS capacity using other benchmark tools (e.g. Fio) and then override osd_mclock_max_capacity_iops_[hdd|ssd].
+2026-11-09T01:50:56.241684+0000 osd.0 [WRN] 17 slow requests (by type [ 'queued for pg' : 1 'started' : 4 'waiting for sub ops' : 12 ] most affected pool [ 'cephfs.cephfs.data' : 17 ])
+2026-11-09T01:50:59.939989+0000 mon.gluster1 [WRN] Health check update: 331 slow ops, oldest one blocked for 255 sec, mon.gluster2 has slow ops (SLOW_OPS)
+2026-11-09T01:51:01.390228+0000 mon.gluster1 [INF] Health check cleared: SLOW_OPS (was: 331 slow ops, oldest one blocked for 255 sec, mon.gluster2 has slow ops)
+2026-11-09T01:52:07.089366+0000 mon.gluster1 [INF] Health check cleared: MON_CLOCK_SKEW (was: clock skew detected on mon.gluster2)
+2026-11-09T01:52:07.089388+0000 mon.gluster1 [INF] Cluster is now healthy
+2026-11-09T01:54:21.564968+0000 mon.gluster1 [INF] overall HEALTH_OK
+2026-11-09T02:00:00.002444+0000 mon.gluster1 [INF] overall HEALTH_OK
+2026-11-09T02:10:00.002547+0000 mon.gluster1 [INF] overall HEALTH_OK

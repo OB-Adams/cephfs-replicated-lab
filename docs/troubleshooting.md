@@ -175,6 +175,20 @@ Issues that were actually hit during this lab, followed by the diagnostic comman
 - **Cause:** UTM pauses the VMs while the Mac sleeps. When they resume, each guest's clock is behind until chrony steps it, and they are stepped at different moments. Each daemon then judges the others by a clock that has jumped half an hour, and the pause looks like silence.
 - **Fix:** keep the Mac awake for the whole session (`caffeinate -dims`, on mains power, lid open). After a pause, wait for `ceph -s` to settle: the daemons rejoin by themselves, and the cluster was `HEALTH_OK` again within a few minutes each time. Check `ceph time-sync-status` before starting a drill.
 
+### A host VM's clock falls minutes behind, and writes stall
+
+- **Where:** milestone 5, gluster1.
+- **Symptom:** `clock skew detected on mon.gluster2` (or on gluster2 and gluster3 together) with messages `stamped 261s in the future`; slow requests on the other monitors; the standby MDS and manager dropped as unavailable; fio's write runs stalling for minutes with nothing in the cluster log. `journalctl -u chronyd` on gluster1 shows `System clock wrong by 306.8 seconds` and similar, four times in under three hours.
+- **Cause:** the skew is in the leader, gluster1, whose clock is behind the others, not in the monitors it names. Its VM was not given enough processor time by the host: the four VMs are configured for 27.5 GiB on a 36 GiB Mac, and macOS was paging. The time is lost in short stalls that never last long enough to lose quorum. `ceph -w` runs on gluster1, so it logs nothing while gluster1 is stalled.
+- **Fix:** give the host room: quit other applications, and lower the VMs' memory if the Mac pages under load. Check `chronyc tracking` on every VM and `ceph time-sync-status` before a timed run, and look at `journalctl -u chronyd | grep -i wrong` afterwards. Do not trust write benchmarks from a run that overlaps a clock step.
+
+### Commands pasted with `script` run twice
+
+- **Where:** milestone 5, gluster4.
+- **Symptom:** commands pasted together with `script` seem to vanish; pasted again, they run inside the recording. After `exit`, they run a second time, outside it.
+- **Cause:** `script` starts a new shell; the lines pasted after it wait in the outer shell's input, and that shell reads them when the recording ends.
+- **Fix:** start `script` on its own, wait for the new prompt, then paste the rest. If it happens, press Ctrl-C at once after `exit`, and check what the second run overwrote.
+
 ## Diagnostic commands
 
 ```bash
@@ -200,6 +214,8 @@ ceph config dump | grep ms_               # the msgr2 mode settings in force
 dmesg -T | grep -iE 'ceph|libceph'        # on a client: why a mount or a session failed
 ceph mgr services                         # the URLs of the Dashboard and the manager's exporter
 ceph orch ps <host> --refresh             # refresh cephadm's view of a host's daemons
+ceph osd perf                             # each OSD's commit and apply latency, now
+journalctl -u chronyd | grep -i wrong     # on a VM: whether chrony found its clock off, and by how much
 curl -s <prometheus host>:9095/api/v1/alerts    # the alerts Prometheus has pending or firing
 ceph osd df tree                          # data and PGs per OSD and per host
 cephadm ceph-volume -- lvm list           # on a host: the OSDs prepared on its disks, with IDs and UUIDs

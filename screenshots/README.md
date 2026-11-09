@@ -20,6 +20,9 @@ This folder holds screenshots of real terminal output from the lab. Each one is 
 - Screenshots 15 to 19 and 21 are of web pages: Prometheus, the Ceph Dashboard, Alertmanager and Grafana. The browser's address bar and tabs are cropped out of 17 and 21. Screenshot 15 shows the servers' private addresses in the target URLs, unmasked.
 - Screenshot 20 shows the end of the cluster log rather than the alert log the runbook planned. The alert log is in `../docs/evidence/drill9-alertlog.txt`.
 - Screenshot 21 has a gap from about 18:10 to 18:36: the Mac slept and the VMs were paused, so Prometheus has no samples; see [../docs/monitoring.md](../docs/monitoring.md#recovery).
+- Screenshot 24 was taken during the first `seq-write` set, while the cluster was `HEALTH_WARN` with gluster1's clock 261 s behind; see [../docs/benchmark.md](../docs/benchmark.md#how-the-run-went).
+- Screenshot 26 shows the summary before the write profiles were run again, so its `cephfs-kernel` write figures are the first set's. The final figures are in `../docs/evidence/benchmark/results.md`.
+- In screenshots 23 and 25, the text after `run N of 3` on each progress line is the end of fio's last status line from the previous run.
 
 ## The set
 
@@ -46,3 +49,8 @@ This folder holds screenshots of real terminal output from the lab. Each one is 
 | `19-drill9-dashboard-incident.png` | browser | Ceph Dashboard, Observability, Alerts | The four active alerts, three critical and one warning, with notifications for `CephadmDaemonFailed` and `CephOSDDownHigh` |
 | `20-drill9-alert-timeline.png` | gluster1 | `ceph -w`, after recovery | gluster3's OSDs booting, degraded objects falling to none, `CEPHADM_FAILED_DAEMON` cleared and `Cluster is now healthy` |
 | `21-drill9-grafana-incident.png` | browser | Grafana, Ceph - Cluster, PG States | 145 PGs undersized and 143 degraded during the incident, the gap of the pause, then all `active+clean` from 18:45 |
+| `22-bench-direct-io-check.png` | gluster4 | `fio --name=direct-check ... --direct=1 --ioengine=libaio` on `/mnt/cephfs/bench` | `err= 0`; 64 MiB written at 68.0 MiB/s with one request in flight |
+| `23-bench-raw-run.png` | gluster1 | `./benchmarks/run-bench.sh raw-xfs-vdd /mnt/raw-vdd 3` | The control: 18 runs on XFS on the spare disk, and the `done:` line |
+| `24-bench-cephfs-during-run.png` | gluster1 | `ceph -s`, `ceph osd perf` during `seq-write` | The client writing 179 MiB/s; every OSD taking 110 to 121 ms to commit; the cluster `HEALTH_WARN` with clock skew and slow requests |
+| `25-bench-cephfs-run.png` | gluster4 | `./benchmarks/run-bench.sh cephfs-kernel /mnt/cephfs/bench 3` | 18 runs on CephFS, the stalled write runs visible in their times and estimates, and the `done:` line |
+| `26-bench-results.png` | Mac | `python3 benchmarks/summarize.py ~/Downloads/ceph-m5/results gluster-fuse` | Both tables, before the write re-runs |
