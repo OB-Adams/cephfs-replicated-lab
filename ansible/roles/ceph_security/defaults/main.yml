@@ -1,0 +1,9 @@
+---
+ceph_security_msgr_mode: secure
+ceph_security_msgr_settings:
+  - ms_cluster_mode
+  - ms_service_mode
+  - ms_client_mode
+  - ms_mon_cluster_mode
+  - ms_mon_service_mode
+  - ms_mon_client_mode

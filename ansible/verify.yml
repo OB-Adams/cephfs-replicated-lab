@@ -1,0 +1,51 @@
+---
+- name: Every VM
+  hosts: ceph
+  tasks:
+    - name: Base settings and time
+      ansible.builtin.import_role:
+        name: common
+        tasks_from: verify
+
+    - name: Ceph packages
+      ansible.builtin.import_role:
+        name: ceph_packages
+        tasks_from: verify
+
+- name: The cluster
+  hosts: ceph_servers[0]
+  gather_facts: false
+  tasks:
+    - name: Initial settings
+      ansible.builtin.import_role:
+        name: ceph_bootstrap
+        tasks_from: verify
+
+    - name: Hosts and labels
+      ansible.builtin.import_role:
+        name: ceph_hosts
+        tasks_from: verify
+
+    - name: Health, OSDs, placement groups, file system and pools
+      ansible.builtin.import_role:
+        name: ceph_services
+        tasks_from: verify
+
+    - name: The msgr2 modes
+      ansible.builtin.import_role:
+        name: ceph_security
+        tasks_from: verify
+
+    - name: Dashboard, monitoring stack, targets and rules
+      ansible.builtin.import_role:
+        name: ceph_monitoring
+        tasks_from: verify
+
+- name: Client
+  hosts: ceph_clients
+  gather_facts: false
+  tasks:
+    - name: Mount and key
+      ansible.builtin.import_role:
+        name: ceph_client
+        tasks_from: verify

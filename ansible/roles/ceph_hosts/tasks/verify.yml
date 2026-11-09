@@ -1,0 +1,20 @@
+---
+- name: Read the hosts the orchestrator manages
+  ansible.builtin.command: ceph orch host ls --format json
+  register: ceph_hosts_now
+  changed_when: false
+
+- name: Every host is managed, online and carries its labels
+  vars:
+    ceph_hosts_list: "{{ ceph_hosts_now.stdout | from_json }}"
+    ceph_hosts_pairs: "{{ ceph_hosts_list | subelements('labels') }}"
+    ceph_hosts_have: >-
+      {{ ceph_hosts_pairs | map(attribute='0.hostname') | zip(ceph_hosts_pairs | map(attribute='1')) | map('join', ' ') | list }}
+    ceph_hosts_want: "{{ ceph_hosts_labels | map('join', ' ') | list }}"
+  ansible.builtin.assert:
+    that:
+      - ceph_hosts_cephadm_hosts | difference(ceph_hosts_list | map(attribute='hostname') | list) | length == 0
+      - ceph_hosts_list | selectattr('status', 'ne', '') | list | length == 0
+      - ceph_hosts_want | difference(ceph_hosts_have) | length == 0
+    fail_msg: "Hosts or labels differ from the inventory: {{ ceph_hosts_list | map(attribute='hostname') | list }}, labels {{ ceph_hosts_have }}"
+    quiet: true

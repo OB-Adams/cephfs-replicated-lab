@@ -1,0 +1,10 @@
+---
+ceph_bootstrap_host: "{{ groups['all'][0] }}"
+ceph_bootstrap_msgr_mode: secure
+ceph_bootstrap_options:
+  - --skip-dashboard
+  - --skip-monitoring-stack
+ceph_bootstrap_config:
+  - {who: osd, name: osd_memory_target_autotune, value: "false"}
+  - {who: osd, name: osd_memory_target, value: "1610612736"}
+  - {who: mds, name: mds_cache_memory_limit, value: "1073741824"}

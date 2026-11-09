@@ -1,0 +1,35 @@
+---
+- name: Check cephadm is installed
+  ansible.builtin.stat:
+    path: /usr/sbin/cephadm
+  register: ceph_bootstrap_cephadm
+
+- name: Remove the clusters on this host
+  when: ceph_bootstrap_cephadm.stat.exists
+  block:
+    - name: List the Ceph daemons on this host
+      ansible.builtin.command: cephadm ls --no-detail
+      register: ceph_bootstrap_daemons
+      changed_when: false
+      check_mode: false
+
+    - name: Remove each cluster and zap its OSDs
+      ansible.builtin.command: cephadm rm-cluster --fsid {{ item }} --force --zap-osds
+      loop: "{{ ceph_bootstrap_daemons.stdout | from_json | map(attribute='fsid') | unique | list }}"
+      changed_when: true
+
+- name: Remove the cluster's files from /etc/ceph
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/ceph/ceph.conf
+    - /etc/ceph/ceph.pub
+    - /etc/ceph/ceph.client.admin.keyring
+    - /root/ceph-bootstrap.conf
+
+- name: Remove cephadm's SSH key from root's authorized keys
+  ansible.builtin.lineinfile:
+    path: /root/.ssh/authorized_keys
+    regexp: '\sceph-[0-9a-f-]{36}\s*$'
+    state: absent

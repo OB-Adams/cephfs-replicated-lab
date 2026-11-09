@@ -1,0 +1,44 @@
+---
+argument_specs:
+  main:
+    short_description: A kernel CephFS client with its own key, mounted from /etc/fstab
+    options: &ceph_client_options
+      ceph_client_fs_name:
+        type: str
+        default: cephfs
+        description: The file system to mount.
+      ceph_client_admin_host:
+        type: str
+        required: true
+        description: Admin host that creates the key and the minimal configuration.
+      ceph_client_name:
+        type: str
+        description: The client's cephx name, without "client.".
+      ceph_client_path:
+        type: str
+        default: /
+        description: The path of the file system the key is limited to, and the one mounted.
+      ceph_client_access:
+        type: str
+        choices: [r, rw]
+        default: rw
+        description: Read-only or read-write.
+      ceph_client_mount_point:
+        type: path
+        default: /mnt/cephfs
+        description: Where the file system is mounted.
+      ceph_client_ms_mode:
+        type: str
+        choices: [legacy, crc, secure, prefer-crc, prefer-secure]
+        default: secure
+        description: The kernel client's msgr mode.
+      ceph_client_mount_options:
+        type: list
+        elements: str
+        description: Mount options besides ms_mode.
+  verify:
+    short_description: Check the mount and the key
+    options: *ceph_client_options
+  teardown:
+    short_description: Unmount and remove the client's key and configuration
+    options: *ceph_client_options

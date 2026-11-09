@@ -25,3 +25,6 @@ benchmarks/results/
 
 # Raw screenshots before cropping and review
 screenshots/raw/
+
+# Ansible and ansible-lint caches
+.ansible/

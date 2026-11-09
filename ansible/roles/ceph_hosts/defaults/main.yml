@@ -1,0 +1,4 @@
+---
+ceph_hosts_bootstrap_host: "{{ groups['all'][0] }}"
+ceph_hosts_cephadm_hosts: "{{ groups['all'] }}"
+ceph_hosts_labels: []

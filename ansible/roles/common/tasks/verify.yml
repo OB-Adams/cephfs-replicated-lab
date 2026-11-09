@@ -1,0 +1,29 @@
+---
+- name: Read service state
+  ansible.builtin.service_facts:
+
+- name: Read chrony's source and offset
+  ansible.builtin.command: chronyc -n tracking
+  register: common_tracking
+  changed_when: false
+
+- name: Read chrony's configuration
+  ansible.builtin.slurp:
+    src: /etc/chrony.conf
+  register: common_chrony_conf
+
+- name: SELinux enforcing, base services running, chrony synchronised to the lab's source
+  vars:
+    common_conf: "{{ common_chrony_conf.content | b64decode }}"
+    common_offset: "{{ common_tracking.stdout | regex_search('System time\\s*:\\s*([0-9.]+)', '\\1') | first | float }}"
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.selinux.mode == 'enforcing'
+      - common_services | map('regex_replace', '$', '.service')
+        | map('extract', ansible_facts.services) | map(attribute='state')
+        | select('equalto', 'running') | list | length == common_services | length
+      - ('server ' ~ common_chrony_server) in common_conf
+      - "'Leap status     : Normal' in common_tracking.stdout"
+      - common_offset | float < 0.05
+    fail_msg: "Clock or base settings wrong on {{ inventory_hostname }}: {{ common_tracking.stdout_lines | select('search', 'System time|Leap') | list }}"
+    quiet: true

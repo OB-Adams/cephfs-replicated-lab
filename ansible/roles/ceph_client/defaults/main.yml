@@ -1,0 +1,11 @@
+---
+ceph_client_fs_name: cephfs
+ceph_client_admin_host: "{{ groups['all'][0] }}"
+ceph_client_name: "{{ inventory_hostname }}"
+ceph_client_path: /
+ceph_client_access: rw
+ceph_client_mount_point: /mnt/cephfs
+ceph_client_ms_mode: secure
+ceph_client_mount_options:
+  - noatime
+  - _netdev

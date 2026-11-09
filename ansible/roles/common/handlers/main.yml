@@ -1,0 +1,10 @@
+---
+- name: Restart chronyd
+  ansible.builtin.systemd_service:
+    name: chronyd
+    state: restarted
+  notify: Step the clock now
+
+- name: Step the clock now
+  ansible.builtin.command: chronyc -a makestep
+  changed_when: true

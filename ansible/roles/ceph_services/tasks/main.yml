@@ -1,0 +1,52 @@
+---
+- name: Monitors, managers and OSDs
+  ansible.builtin.include_tasks: apply_spec.yml
+  vars:
+    ceph_services_spec_name: "{{ item.name }}"
+    ceph_services_spec_content: "{{ lookup('ansible.builtin.template', item.template) }}"
+  loop:
+    - {name: mon, template: mon.yml.j2}
+    - {name: mgr, template: mgr.yml.j2}
+    - {name: "osd.{{ ceph_services_osd_service_id }}", template: osd.yml.j2}
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Wait until every OSD is up and in
+  ansible.builtin.command: ceph osd stat --format json
+  register: ceph_services_osd_stat
+  until: >-
+    (ceph_services_osd_stat.stdout | from_json).num_up_osds | int == ceph_services_expected_osds | int
+    and (ceph_services_osd_stat.stdout | from_json).num_in_osds | int == ceph_services_expected_osds | int
+  retries: 60
+  delay: 10
+  changed_when: false
+  check_mode: false
+
+- name: Read the file systems
+  ansible.builtin.command: ceph fs ls --format json
+  register: ceph_services_fs_list
+  changed_when: false
+  check_mode: false
+
+- name: Create the file system
+  ansible.builtin.command: >-
+    ceph fs volume create {{ ceph_services_fs_name }} --placement={{ ceph_services_mds_hosts | join(',') | quote }}
+  when: ceph_services_fs_name not in (ceph_services_fs_list.stdout | from_json | map(attribute='name') | list)
+  changed_when: true
+
+- name: MDS placement
+  ansible.builtin.include_tasks: apply_spec.yml
+  vars:
+    ceph_services_spec_name: "mds.{{ ceph_services_fs_name }}"
+    ceph_services_spec_content: "{{ lookup('ansible.builtin.template', 'mds.yml.j2') }}"
+
+- name: Wait until the file system has an active MDS
+  ansible.builtin.command: ceph fs status {{ ceph_services_fs_name }} --format json
+  register: ceph_services_fs_status
+  until: >-
+    ceph_services_fs_status.rc == 0
+    and (ceph_services_fs_status.stdout | from_json).mdsmap | selectattr('state', 'equalto', 'active') | list | length == 1
+  retries: 30
+  delay: 10
+  changed_when: false
+  check_mode: false

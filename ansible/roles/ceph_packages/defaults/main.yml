@@ -1,0 +1,20 @@
+---
+ceph_packages_release_package: centos-release-ceph-tentacle
+ceph_packages_old_release_packages:
+  - centos-release-ceph-pacific
+  - centos-release-ceph-quincy
+  - centos-release-ceph-reef
+  - centos-release-ceph-squid
+ceph_packages_cephadm_host: false
+ceph_packages_admin: false
+ceph_packages_cephadm_host_packages:
+  - podman
+  - lvm2
+  - python3
+  - python3-jinja2
+  - python3-pyyaml
+  - cephadm
+ceph_packages_admin_packages:
+  - ceph-common
+ceph_packages_extra: []
+ceph_packages_version_prefix: "20.2"

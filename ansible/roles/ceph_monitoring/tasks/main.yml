@@ -1,0 +1,122 @@
+---
+- name: Check a Dashboard password was given
+  ansible.builtin.assert:
+    that: ceph_monitoring_dashboard_password | length >= 8
+    fail_msg: "Export DASHBOARD_ADMIN_PASSWORD (read -rs) before running; at least 8 characters, mixed case, a digit and a symbol"
+    quiet: true
+  no_log: true
+
+- name: Read the manager modules
+  ansible.builtin.command: ceph mgr module ls --format json
+  register: ceph_monitoring_modules
+  changed_when: false
+  check_mode: false
+
+- name: Enable the Prometheus exporter and the Dashboard
+  ansible.builtin.command: ceph mgr module enable {{ item }}
+  loop: [prometheus, dashboard]
+  when: item not in (ceph_monitoring_modules.stdout | from_json).enabled_modules
+  changed_when: true
+
+- name: Check whether the Dashboard has a certificate
+  ansible.builtin.command: ceph config-key exists mgr/dashboard/crt
+  register: ceph_monitoring_crt
+  failed_when: false
+  changed_when: false
+  check_mode: false
+
+- name: Give the Dashboard a self-signed certificate
+  ansible.builtin.command: ceph dashboard create-self-signed-cert
+  when: ceph_monitoring_crt.rc != 0
+  changed_when: true
+
+- name: Open the Dashboard's port on every manager host
+  ansible.posix.firewalld:
+    port: "{{ ceph_monitoring_dashboard_port }}/tcp"
+    permanent: true
+    immediate: true
+    state: enabled
+  delegate_to: "{{ item }}"
+  loop: "{{ ceph_monitoring_mgr_hosts }}"
+
+- name: Wait for the Dashboard's address
+  ansible.builtin.command: ceph mgr services --format json
+  register: ceph_monitoring_services
+  until: "'dashboard' in (ceph_monitoring_services.stdout | from_json)"
+  retries: 30
+  delay: 5
+  changed_when: false
+  check_mode: false
+
+- name: Dashboard administrator
+  ansible.builtin.import_tasks: dashboard_user.yml
+
+- name: Monitoring services
+  ansible.builtin.include_role:
+    name: ceph_services
+    tasks_from: apply_spec
+  vars:
+    ceph_services_spec_name: "{{ item.name }}"
+    ceph_services_spec_content: "{{ item.spec | to_nice_yaml(indent=2) }}"
+  loop:
+    - name: node-exporter
+      spec: {service_type: node-exporter, placement: {host_pattern: "*"}}
+    - name: ceph-exporter
+      spec: {service_type: ceph-exporter, placement: {host_pattern: "*"}}
+    - name: prometheus
+      spec: {service_type: prometheus, placement: {label: "{{ ceph_monitoring_label }}"}}
+    - name: alertmanager
+      spec: {service_type: alertmanager, placement: {label: "{{ ceph_monitoring_label }}"}}
+    - name: grafana
+      spec:
+        service_type: grafana
+        placement: {label: "{{ ceph_monitoring_label }}"}
+        spec: {anonymous_access: true, protocol: https}
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Wait until every monitoring service is fully running
+  ansible.builtin.command: ceph orch ls --format json
+  register: ceph_monitoring_orch
+  vars:
+    ceph_monitoring_stack: "{{ ceph_monitoring_orch.stdout | from_json
+      | selectattr('service_name', 'in', ['node-exporter', 'ceph-exporter', 'prometheus', 'alertmanager', 'grafana']) | list }}"
+  until: >-
+    ceph_monitoring_stack | length == 5
+    and ceph_monitoring_stack | map(attribute='status') | map(attribute='running') | min > 0
+    and ceph_monitoring_stack | map(attribute='status') | map(attribute='running') | list
+    == ceph_monitoring_stack | map(attribute='status') | map(attribute='size') | list
+  retries: 40
+  delay: 15
+  changed_when: false
+  check_mode: false
+
+- name: Read the Dashboard's links to the monitoring stack
+  ansible.builtin.command: ceph dashboard {{ item }}
+  loop:
+    - get-grafana-api-url
+    - get-alertmanager-api-host
+    - get-prometheus-api-host
+  register: ceph_monitoring_links
+  changed_when: false
+  check_mode: false
+
+- name: Reconfigure the stack if any link is empty
+  ansible.builtin.command: ceph orch reconfig {{ item }}
+  loop: [grafana, alertmanager, prometheus]
+  when: ceph_monitoring_links.results | map(attribute='stdout') | map('trim') | select('equalto', '') | list | length > 0
+  changed_when: true
+
+- name: Read the Grafana address the browser uses
+  ansible.builtin.command: ceph dashboard get-grafana-frontend-api-url
+  register: ceph_monitoring_frontend
+  changed_when: false
+  check_mode: false
+
+- name: Point the browser at Grafana by IP address
+  ansible.builtin.command: >-
+    ceph dashboard set-grafana-frontend-api-url {{ ceph_monitoring_frontend_url }}
+  vars:
+    ceph_monitoring_frontend_url: "https://{{ hostvars[ceph_monitoring_host].ansible_facts.default_ipv4.address }}:{{ ceph_monitoring_grafana_port }}"
+  when: ceph_monitoring_frontend.stdout | trim != ceph_monitoring_frontend_url
+  changed_when: true

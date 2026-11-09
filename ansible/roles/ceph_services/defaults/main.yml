@@ -1,0 +1,13 @@
+---
+ceph_services_spec_dir: /etc/ceph/lab-specs
+ceph_services_mon_hosts: "{{ groups['all'][:3] }}"
+ceph_services_mgr_hosts: "{{ groups['all'][:2] }}"
+ceph_services_mds_hosts: "{{ groups['all'][:2] }}"
+ceph_services_osd_service_id: data-disks
+ceph_services_osd_hosts: "{{ groups['all'][:3] }}"
+ceph_services_osd_devices:
+  - /dev/vdb
+ceph_services_expected_osds: 3
+ceph_services_fs_name: cephfs
+ceph_services_pool_size: 3
+ceph_services_pool_min_size: 2

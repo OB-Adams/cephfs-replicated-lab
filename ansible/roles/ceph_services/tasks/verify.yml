@@ -1,0 +1,44 @@
+---
+- name: Read the cluster's status, file system and pools
+  ansible.builtin.command: "{{ item }}"
+  loop:
+    - ceph status --format json
+    - ceph fs status {{ ceph_services_fs_name }} --format json
+    - ceph osd pool ls detail --format json
+  register: ceph_services_state
+  changed_when: false
+
+- name: HEALTH_OK, monitors in quorum, every OSD up and in, every PG active+clean
+  vars:
+    ceph_services_status: "{{ ceph_services_state.results[0].stdout | from_json }}"
+    ceph_services_pgs: "{{ ceph_services_status.pgmap.pgs_by_state | default([]) }}"
+  ansible.builtin.assert:
+    that:
+      - ceph_services_status.health.status == 'HEALTH_OK'
+      - ceph_services_status.quorum_names | sort == ceph_services_mon_hosts | sort
+      - ceph_services_status.osdmap.num_up_osds | int == ceph_services_expected_osds | int
+      - ceph_services_status.osdmap.num_in_osds | int == ceph_services_expected_osds | int
+      - ceph_services_pgs | rejectattr('state_name', 'equalto', 'active+clean') | list | length == 0
+      - ceph_services_status.pgmap.num_pgs | int > 0
+    fail_msg: >-
+      {{ ceph_services_status.health.status }}; quorum {{ ceph_services_status.quorum_names }};
+      OSDs {{ ceph_services_status.osdmap.num_up_osds }} up, {{ ceph_services_status.osdmap.num_in_osds }} in;
+      PGs {{ ceph_services_pgs }}
+    quiet: true
+
+- name: One active MDS, a standby for every other MDS host, and the pools keep three copies
+  vars:
+    ceph_services_fs: "{{ ceph_services_state.results[1].stdout | from_json }}"
+    ceph_services_pools: "{{ ceph_services_state.results[2].stdout | from_json }}"
+    ceph_services_fs_pools: "{{ ceph_services_pools | selectattr('pool_name', 'match', 'cephfs\\.' ~ ceph_services_fs_name ~ '\\.') | list }}"
+  ansible.builtin.assert:
+    that:
+      - ceph_services_fs.mdsmap | selectattr('state', 'equalto', 'active') | list | length == 1
+      - ceph_services_fs.mdsmap | selectattr('state', 'match', 'standby') | list | length == ceph_services_mds_hosts | length - 1
+      - ceph_services_fs_pools | length == 2
+      - ceph_services_fs_pools | rejectattr('size', 'equalto', ceph_services_pool_size) | list | length == 0
+      - ceph_services_fs_pools | rejectattr('min_size', 'equalto', ceph_services_pool_min_size) | list | length == 0
+    fail_msg: >-
+      MDS states {{ ceph_services_fs.mdsmap | map(attribute='state') | list }};
+      pools {{ ceph_services_fs_pools | map(attribute='pool_name') | list }}
+    quiet: true

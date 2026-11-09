@@ -1,0 +1,35 @@
+---
+- name: Find the device holding the root filesystem
+  ansible.builtin.command: findmnt --noheadings --output SOURCE /
+  register: ceph_services_root
+  changed_when: false
+  check_mode: false
+
+- name: Refuse to wipe the root disk
+  ansible.builtin.assert:
+    that: not (ceph_services_root.stdout | trim).startswith(item)
+    fail_msg: "{{ item }} holds the root filesystem; it is not a lab data disk"
+    quiet: true
+  loop: "{{ ceph_services_osd_devices }}"
+
+- name: Clear any signatures left on the data devices
+  ansible.builtin.command: wipefs --all {{ item }}
+  loop: "{{ ceph_services_osd_devices }}"
+  register: ceph_services_wipe
+  changed_when: ceph_services_wipe.stdout | length > 0
+
+- name: Read what is on the data devices
+  ansible.builtin.command: lsblk --noheadings --output NAME,TYPE,FSTYPE {{ item }}
+  loop: "{{ ceph_services_osd_devices }}"
+  register: ceph_services_lsblk
+  changed_when: false
+  check_mode: false
+
+- name: Each data device is empty, with no partition, volume or filesystem
+  ansible.builtin.assert:
+    that: item.stdout_lines | length == 1 and item.stdout.split() | length == 2
+    fail_msg: "{{ item.item }} is not empty: {{ item.stdout_lines }}"
+    quiet: true
+  loop: "{{ ceph_services_lsblk.results }}"
+  loop_control:
+    label: "{{ item.item }}"

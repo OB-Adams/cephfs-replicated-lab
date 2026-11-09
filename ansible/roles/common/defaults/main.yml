@@ -1,0 +1,10 @@
+---
+common_hosts_entries: "{{ groups['all'] }}"
+common_packages:
+  - chrony
+  - firewalld
+common_services:
+  - chronyd
+  - firewalld
+common_chrony_server: time.google.com
+common_chrony_makestep: "1.0 -1"

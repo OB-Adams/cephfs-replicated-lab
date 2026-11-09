@@ -1,0 +1,16 @@
+---
+- name: Read the installed packages
+  ansible.builtin.package_facts:
+    manager: rpm
+
+- name: The Ceph packages are installed and from the expected release
+  ansible.builtin.assert:
+    that:
+      - item in ansible_facts.packages
+      - ansible_facts.packages[item][0].version is match((ceph_packages_version_prefix | regex_escape) ~ '\\.')
+    fail_msg: >-
+      {{ item }} on {{ inventory_hostname }} is {{ ansible_facts.packages[item] | default([{}]) | map(attribute='version', default='not installed') | first }},
+      expected {{ ceph_packages_version_prefix }}; an older package is not replaced by the build: dnf upgrade {{ item }}
+    quiet: true
+  loop: >-
+    {{ (ceph_packages_admin | ternary(['ceph-common'], [])) + (ceph_packages_cephadm_host | ternary(['cephadm'], [])) }}

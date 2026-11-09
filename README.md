@@ -15,6 +15,7 @@ This is phase 2 of a storage study. Phase 1, the GlusterFS build and its nine dr
 | Milestone 4b: monitoring and alerts | Complete ([docs/monitoring.md](docs/monitoring.md)) |
 | Milestone 5: `fio` benchmark against the Gluster baseline | Complete ([docs/benchmark.md](docs/benchmark.md)) |
 | Milestone 6: Gluster and CephFS comparison | Complete ([docs/comparison.md](docs/comparison.md)) |
+| Milestone 7: Ansible automation | In progress: playbooks written and passing `ansible-lint` in CI, not yet run against the lab ([ansible/](ansible)) |
 | Raw evidence (session recordings) | Added in [docs/evidence](docs/evidence) |
 | Screenshots | Added in [screenshots/](screenshots) |
 
@@ -197,6 +198,8 @@ cephfs-replicated-lab/
 ├── README.md
 ├── LICENSE
 ├── .gitignore
+├── .github/workflows/ansible-ci.yml   ansible-lint and syntax checks on every push to ansible/
+├── ansible/                   milestone 7: site.yml, verify.yml, teardown.yml and eight roles; see ansible/README.md
 ├── benchmarks/                the fio kit from phase 1, unchanged, so both systems run the same tests
 │   ├── README.md
 │   ├── run-bench.sh

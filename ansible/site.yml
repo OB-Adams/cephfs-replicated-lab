@@ -1,0 +1,70 @@
+---
+- name: Base settings on every VM
+  hosts: ceph
+  tags: [common]
+  roles:
+    - common
+
+- name: Ceph repositories and packages
+  hosts: ceph
+  gather_facts: false
+  tags: [packages]
+  roles:
+    - ceph_packages
+
+- name: Bootstrap the cluster
+  hosts: ceph_servers[0]
+  gather_facts: true
+  tags: [bootstrap]
+  roles:
+    - ceph_bootstrap
+
+- name: Hosts for cephadm
+  hosts: ceph_servers[0]
+  gather_facts: false
+  tags: [hosts]
+  pre_tasks:
+    - name: Gather the other hosts' addresses
+      ansible.builtin.setup:
+        gather_subset: [network]
+      delegate_to: "{{ item }}"
+      delegate_facts: true
+      loop: "{{ lab_cephadm_hosts }}"
+      when: hostvars[item].ansible_facts.default_ipv4 is not defined
+  roles:
+    - ceph_hosts
+
+- name: Monitors, managers, OSDs and the file system
+  hosts: ceph_servers[0]
+  gather_facts: false
+  tags: [services]
+  roles:
+    - ceph_services
+
+- name: Encryption on the wire
+  hosts: ceph_servers[0]
+  gather_facts: false
+  tags: [security]
+  roles:
+    - ceph_security
+
+- name: Client
+  hosts: ceph_clients
+  tags: [client]
+  roles:
+    - ceph_client
+
+- name: Dashboard and monitoring
+  hosts: ceph_servers[0]
+  gather_facts: false
+  tags: [monitoring]
+  pre_tasks:
+    - name: Gather the monitoring host's address
+      ansible.builtin.setup:
+        gather_subset: [network]
+      delegate_to: "{{ item }}"
+      delegate_facts: true
+      loop: "{{ groups['ceph_monitoring'] }}"
+      when: hostvars[item].ansible_facts.default_ipv4 is not defined
+  roles:
+    - ceph_monitoring

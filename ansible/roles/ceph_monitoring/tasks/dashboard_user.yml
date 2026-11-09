@@ -1,0 +1,55 @@
+---
+- name: Check whether the Dashboard administrator exists
+  ansible.builtin.command: ceph dashboard ac-user-show {{ ceph_monitoring_dashboard_user }}
+  register: ceph_monitoring_user
+  failed_when: false
+  changed_when: false
+  check_mode: false
+
+- name: Create the Dashboard administrator
+  ansible.builtin.command:
+    cmd: ceph dashboard ac-user-create {{ ceph_monitoring_dashboard_user }} -i - administrator
+    stdin: "{{ ceph_monitoring_dashboard_password }}"
+  when: ceph_monitoring_user.rc != 0
+  changed_when: true
+  no_log: true
+
+- name: Try the administrator's login with the intended password
+  ansible.builtin.uri:
+    url: "{{ (ceph_monitoring_services.stdout | from_json).dashboard }}api/auth"
+    method: POST
+    body_format: json
+    body:
+      username: "{{ ceph_monitoring_dashboard_user }}"
+      password: "{{ ceph_monitoring_dashboard_password }}"
+    headers:
+      Accept: application/vnd.ceph.api.v1.0+json
+    validate_certs: false
+    status_code: [201, 400, 401]
+  register: ceph_monitoring_login
+  check_mode: false
+  no_log: true
+
+- name: Set the password and confirm it
+  when: ceph_monitoring_login.status != 201
+  block:
+    - name: Set the administrator's password
+      ansible.builtin.command:
+        cmd: ceph dashboard ac-user-set-password {{ ceph_monitoring_dashboard_user }} -i -
+        stdin: "{{ ceph_monitoring_dashboard_password }}"
+      changed_when: true
+      no_log: true
+
+    - name: Confirm the login now works
+      ansible.builtin.uri:
+        url: "{{ (ceph_monitoring_services.stdout | from_json).dashboard }}api/auth"
+        method: POST
+        body_format: json
+        body:
+          username: "{{ ceph_monitoring_dashboard_user }}"
+          password: "{{ ceph_monitoring_dashboard_password }}"
+        headers:
+          Accept: application/vnd.ceph.api.v1.0+json
+        validate_certs: false
+        status_code: 201
+      no_log: true

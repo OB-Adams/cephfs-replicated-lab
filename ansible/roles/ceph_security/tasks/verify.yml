@@ -1,0 +1,12 @@
+---
+- name: Read the msgr2 modes
+  ansible.builtin.command: ceph config get mon {{ item }}
+  loop: "{{ ceph_security_msgr_settings }}"
+  register: ceph_security_now
+  changed_when: false
+
+- name: Every msgr2 connection type is in the mode
+  ansible.builtin.assert:
+    that: ceph_security_now.results | map(attribute='stdout') | map('trim') | reject('equalto', ceph_security_msgr_mode) | list | length == 0
+    fail_msg: "{{ ceph_security_msgr_settings | zip(ceph_security_now.results | map(attribute='stdout')) | list }}"
+    quiet: true

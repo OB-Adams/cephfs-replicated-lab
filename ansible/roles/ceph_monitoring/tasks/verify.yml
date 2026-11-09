@@ -1,0 +1,62 @@
+---
+- name: Read the manager's services and the orchestrator's services
+  ansible.builtin.command: "{{ item }}"
+  loop:
+    - ceph mgr services --format json
+    - ceph orch ls --format json
+  register: ceph_monitoring_state
+  changed_when: false
+
+- name: The Dashboard and the exporter are served, and every monitoring daemon runs
+  vars:
+    ceph_monitoring_mgr_services: "{{ ceph_monitoring_state.results[0].stdout | from_json }}"
+    ceph_monitoring_stack: "{{ ceph_monitoring_state.results[1].stdout | from_json
+      | selectattr('service_name', 'in', ['node-exporter', 'ceph-exporter', 'prometheus', 'alertmanager', 'grafana']) | list }}"
+  ansible.builtin.assert:
+    that:
+      - "'dashboard' in ceph_monitoring_mgr_services"
+      - "'prometheus' in ceph_monitoring_mgr_services"
+      - ceph_monitoring_stack | length == 5
+      - ceph_monitoring_stack | map(attribute='status') | map(attribute='running') | min > 0
+      - ceph_monitoring_stack | map(attribute='status') | map(attribute='running') | list
+        == ceph_monitoring_stack | map(attribute='status') | map(attribute='size') | list
+    fail_msg: "{{ ceph_monitoring_stack | map(attribute='service_name') | zip(ceph_monitoring_stack | map(attribute='status')) | list }}"
+    quiet: true
+
+- name: Read Prometheus's targets and rules
+  ansible.builtin.uri:
+    url: "http://{{ ceph_monitoring_host }}:{{ ceph_monitoring_prometheus_port }}/api/v1/{{ item }}"
+    return_content: true
+  loop: [targets, rules]
+  register: ceph_monitoring_prometheus
+
+- name: Every target is up and the alert rules are loaded
+  vars:
+    ceph_monitoring_targets: "{{ ceph_monitoring_prometheus.results[0].json.data.activeTargets }}"
+    ceph_monitoring_rules: "{{ ceph_monitoring_prometheus.results[1].json.data.groups | map(attribute='rules') | flatten }}"
+  ansible.builtin.assert:
+    that:
+      - ceph_monitoring_targets | selectattr('health', 'equalto', 'up') | list | length >= ceph_monitoring_expected_targets
+      - ceph_monitoring_targets | rejectattr('health', 'equalto', 'up') | list | length == 0
+      - ceph_monitoring_rules | selectattr('type', 'equalto', 'alerting') | list | length > 0
+    fail_msg: >-
+      Targets not up: {{ ceph_monitoring_targets | rejectattr('health', 'equalto', 'up') | map(attribute='scrapeUrl') | list }};
+      {{ ceph_monitoring_rules | selectattr('type', 'equalto', 'alerting') | list | length }} alert rules
+    quiet: true
+
+- name: Read the Dashboard's links to the monitoring stack
+  ansible.builtin.command: ceph dashboard {{ item }}
+  loop:
+    - get-grafana-api-url
+    - get-alertmanager-api-host
+    - get-prometheus-api-host
+  register: ceph_monitoring_links
+  changed_when: false
+
+- name: The Dashboard is linked to Grafana, Alertmanager and Prometheus
+  ansible.builtin.assert:
+    that: ceph_monitoring_links.results | map(attribute='stdout') | map('trim') | select('equalto', '') | list | length == 0
+    fail_msg: >-
+      Empty Dashboard link: {{ ceph_monitoring_links.results | map(attribute='item')
+      | zip(ceph_monitoring_links.results | map(attribute='stdout')) | list }}
+    quiet: true

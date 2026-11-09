@@ -1,0 +1,47 @@
+---
+lab_fs_name: cephfs
+lab_bootstrap_host: "{{ groups['ceph_servers'][0] }}"
+lab_mon_hosts: "{{ groups['ceph_servers'] }}"
+lab_mgr_hosts: "{{ groups['ceph_servers'][:2] }}"
+lab_mds_hosts: "{{ groups['ceph_servers'][:2] }}"
+lab_admin_hosts: "{{ groups['ceph_servers'][:2] }}"
+lab_cephadm_hosts: "{{ groups['ceph_servers'] + groups['ceph_monitoring'] }}"
+lab_osd_devices:
+  - /dev/vdb
+  - /dev/vdc
+lab_msgr_mode: secure
+lab_client_mount_point: /mnt/cephfs
+
+common_hosts_entries: "{{ groups['ceph'] }}"
+
+ceph_packages_cephadm_host: "{{ inventory_hostname in lab_cephadm_hosts }}"
+ceph_packages_admin: "{{ inventory_hostname in lab_admin_hosts or inventory_hostname in groups['ceph_clients'] }}"
+ceph_packages_extra: "{{ ['fio'] if inventory_hostname in groups['ceph_clients'] else [] }}"
+
+ceph_bootstrap_host: "{{ lab_bootstrap_host }}"
+ceph_bootstrap_msgr_mode: "{{ lab_msgr_mode }}"
+
+ceph_hosts_bootstrap_host: "{{ lab_bootstrap_host }}"
+ceph_hosts_cephadm_hosts: "{{ lab_cephadm_hosts }}"
+ceph_hosts_labels: >-
+  {{ (lab_admin_hosts | product(['_admin']) | list)
+     + (groups['ceph_monitoring'] | product(['monitoring']) | list) }}
+
+ceph_services_mon_hosts: "{{ lab_mon_hosts }}"
+ceph_services_mgr_hosts: "{{ lab_mgr_hosts }}"
+ceph_services_mds_hosts: "{{ lab_mds_hosts }}"
+ceph_services_osd_hosts: "{{ groups['ceph_servers'] }}"
+ceph_services_osd_devices: "{{ lab_osd_devices }}"
+ceph_services_expected_osds: "{{ (groups['ceph_servers'] | length) * (lab_osd_devices | length) }}"
+ceph_services_fs_name: "{{ lab_fs_name }}"
+
+ceph_security_msgr_mode: "{{ lab_msgr_mode }}"
+
+ceph_client_fs_name: "{{ lab_fs_name }}"
+ceph_client_admin_host: "{{ lab_bootstrap_host }}"
+ceph_client_mount_point: "{{ lab_client_mount_point }}"
+ceph_client_ms_mode: "{{ lab_msgr_mode }}"
+
+ceph_monitoring_mgr_hosts: "{{ lab_mgr_hosts }}"
+ceph_monitoring_host: "{{ groups['ceph_monitoring'][0] }}"
+ceph_monitoring_expected_targets: "{{ 1 + 2 * (lab_cephadm_hosts | length) }}"

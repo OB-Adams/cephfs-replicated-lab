@@ -1,0 +1,80 @@
+---
+argument_specs:
+  main:
+    short_description: Monitors, managers, OSDs and the CephFS file system, from service specs
+    options: &ceph_services_options
+      ceph_services_spec_dir:
+        type: path
+        default: /etc/ceph/lab-specs
+        description: Directory on the bootstrap host for the service specs.
+      ceph_services_mon_hosts:
+        type: list
+        elements: str
+        required: true
+        description: Hosts for the monitors; an odd number.
+      ceph_services_mgr_hosts:
+        type: list
+        elements: str
+        required: true
+        description: Hosts for the managers; one is active.
+      ceph_services_mds_hosts:
+        type: list
+        elements: str
+        required: true
+        description: Hosts for the file system's MDS daemons; one active, the others standby.
+      ceph_services_osd_service_id:
+        type: str
+        default: data-disks
+        description: Name of the OSD service spec.
+      ceph_services_osd_hosts:
+        type: list
+        elements: str
+        required: true
+        description: Hosts whose devices become OSDs.
+      ceph_services_osd_devices:
+        type: list
+        elements: path
+        required: true
+        description: Devices on each OSD host; each becomes one OSD.
+      ceph_services_expected_osds:
+        type: int
+        required: true
+        description: OSDs to wait for, up and in.
+      ceph_services_fs_name:
+        type: str
+        default: cephfs
+        description: The CephFS file system.
+      ceph_services_pool_size:
+        type: int
+        default: 3
+        description: Copies each file system pool must keep.
+      ceph_services_pool_min_size:
+        type: int
+        default: 2
+        description: Copies with which each file system pool still accepts I/O.
+  verify:
+    short_description: Check the cluster is healthy and the file system is served
+    options: *ceph_services_options
+  teardown:
+    short_description: Clear and check this host's data devices after the cluster is removed
+    options:
+      ceph_services_osd_devices:
+        type: list
+        elements: path
+        required: true
+        description: The data devices to clear.
+  apply_spec:
+    short_description: Write one service spec and apply it when it changed or its service is missing
+    options:
+      ceph_services_spec_dir:
+        type: path
+        default: /etc/ceph/lab-specs
+        description: Directory for the spec files.
+      ceph_services_spec_name:
+        type: str
+        required: true
+        description: The spec's service_name, as ceph orch ls shows it; also its file name.
+      ceph_services_spec_content:
+        type: str
+        required: true
+        description: The spec, as YAML.

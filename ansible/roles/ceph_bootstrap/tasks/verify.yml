@@ -1,0 +1,17 @@
+---
+- name: Read the initial settings
+  ansible.builtin.command: ceph config get {{ item.who }} {{ item.name }}
+  loop: "{{ ceph_bootstrap_config }}"
+  loop_control:
+    label: "{{ item.who }} {{ item.name }}"
+  register: ceph_bootstrap_config_now
+  changed_when: false
+
+- name: Every initial setting is in force
+  ansible.builtin.assert:
+    that: item.stdout | trim == item.item.value | string
+    fail_msg: "{{ item.item.who }} {{ item.item.name }} is {{ item.stdout | trim }}, expected {{ item.item.value }}"
+    quiet: true
+  loop: "{{ ceph_bootstrap_config_now.results }}"
+  loop_control:
+    label: "{{ item.item.who }} {{ item.item.name }}"

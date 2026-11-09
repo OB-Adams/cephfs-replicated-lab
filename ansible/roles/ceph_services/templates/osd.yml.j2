@@ -1,0 +1,13 @@
+service_type: osd
+service_id: {{ ceph_services_osd_service_id }}
+placement:
+  hosts:
+{% for h in ceph_services_osd_hosts %}
+    - {{ h }}
+{% endfor %}
+spec:
+  data_devices:
+    paths:
+{% for d in ceph_services_osd_devices %}
+      - {{ d }}
+{% endfor %}

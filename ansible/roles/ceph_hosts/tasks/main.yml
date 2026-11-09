@@ -1,0 +1,59 @@
+---
+- name: Check the role runs on the bootstrap host
+  ansible.builtin.assert:
+    that: inventory_hostname == ceph_hosts_bootstrap_host
+    fail_msg: "Run ceph_hosts on {{ ceph_hosts_bootstrap_host }} only"
+    quiet: true
+
+- name: Read cephadm's public key
+  ansible.builtin.slurp:
+    src: /etc/ceph/ceph.pub
+  register: ceph_hosts_pubkey
+
+- name: Let cephadm log in to every host as root
+  ansible.posix.authorized_key:
+    user: root
+    key: "{{ ceph_hosts_pubkey.content | b64decode }}"
+    state: present
+  delegate_to: "{{ item }}"
+  loop: "{{ ceph_hosts_cephadm_hosts }}"
+
+- name: Read the hosts the orchestrator manages
+  ansible.builtin.command: ceph orch host ls --format json
+  register: ceph_hosts_now
+  changed_when: false
+  check_mode: false
+
+- name: Add the missing hosts by their IPv4 addresses
+  ansible.builtin.command: >-
+    ceph orch host add {{ item }} {{ hostvars[item].ansible_facts.default_ipv4.address }}
+  loop: "{{ ceph_hosts_cephadm_hosts }}"
+  when: item not in (ceph_hosts_now.stdout | from_json | map(attribute='hostname') | list)
+  changed_when: true
+
+- name: Read the hosts and their labels again
+  ansible.builtin.command: ceph orch host ls --format json
+  register: ceph_hosts_after
+  changed_when: false
+  check_mode: false
+
+- name: Add the missing labels
+  ansible.builtin.command: ceph orch host label add {{ item.0 }} {{ item.1 }}
+  vars:
+    ceph_hosts_current: "{{ ceph_hosts_after.stdout | from_json | items2dict(key_name='hostname', value_name='labels') }}"
+  loop: "{{ ceph_hosts_labels }}"
+  loop_control:
+    label: "{{ item.0 }} {{ item.1 }}"
+  when: item.1 not in ceph_hosts_current[item.0] | default([])
+  changed_when: true
+
+- name: Wait until every host is online
+  ansible.builtin.command: ceph orch host ls --format json
+  register: ceph_hosts_status
+  until: >-
+    ceph_hosts_status.stdout | from_json | selectattr('status', 'ne', '') | list | length == 0
+    and ceph_hosts_status.stdout | from_json | length >= ceph_hosts_cephadm_hosts | length
+  retries: 30
+  delay: 5
+  changed_when: false
+  check_mode: false

@@ -1,0 +1,7 @@
+service_type: mds
+service_id: {{ ceph_services_fs_name }}
+placement:
+  hosts:
+{% for h in ceph_services_mds_hosts %}
+    - {{ h }}
+{% endfor %}

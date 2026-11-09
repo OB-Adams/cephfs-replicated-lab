@@ -1,0 +1,32 @@
+---
+argument_specs:
+  main:
+    short_description: Bootstrap the Ceph cluster on one host and apply the initial settings
+    options:
+      ceph_bootstrap_host:
+        type: str
+        required: true
+        description: Inventory name of the host that bootstraps the cluster.
+      ceph_bootstrap_msgr_mode:
+        type: str
+        choices: [crc, secure]
+        default: secure
+        description: msgr2 mode for every connection type, in the initial ceph.conf.
+      ceph_bootstrap_options:
+        type: list
+        elements: str
+        description: Extra options for cephadm bootstrap.
+      ceph_bootstrap_config:
+        type: list
+        elements: dict
+        description: Settings to apply with ceph config set, each with who, name and value.
+  verify:
+    short_description: Check the initial settings
+    options:
+      ceph_bootstrap_config:
+        type: list
+        elements: dict
+        description: Settings that must be in force.
+  teardown:
+    short_description: Remove every Ceph cluster's daemons and data from this host, and zap its OSD disks
+    options: {}

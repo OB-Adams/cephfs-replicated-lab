@@ -1,0 +1,33 @@
+---
+- name: Remove older Ceph release repositories
+  ansible.builtin.dnf:
+    name: "{{ ceph_packages_old_release_packages }}"
+    state: absent
+
+- name: Enable CodeReady Builder
+  community.general.dnf_config_manager:
+    name: crb
+    state: enabled
+
+- name: Add EPEL and the Ceph repository
+  ansible.builtin.dnf:
+    name:
+      - epel-release
+      - "{{ ceph_packages_release_package }}"
+    state: present
+
+- name: Work out this host's packages
+  ansible.builtin.set_fact:
+    ceph_packages_wanted: >-
+      {{ (ceph_packages_cephadm_host | ternary(ceph_packages_cephadm_host_packages, []))
+         + (ceph_packages_admin | ternary(ceph_packages_admin_packages, []))
+         + ceph_packages_extra }}
+
+- name: Install the packages
+  ansible.builtin.dnf:
+    name: "{{ ceph_packages_wanted }}"
+    state: present
+  when: ceph_packages_wanted | length > 0
+
+- name: Check the Ceph packages are the expected release
+  ansible.builtin.import_tasks: verify.yml

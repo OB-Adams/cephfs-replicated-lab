@@ -1,0 +1,55 @@
+---
+- name: Read the client's key
+  ansible.builtin.command: ceph auth get client.{{ ceph_client_name }}
+  delegate_to: "{{ ceph_client_admin_host }}"
+  register: ceph_client_key_now
+  failed_when: false
+  changed_when: false
+  check_mode: false
+  no_log: true
+
+- name: Create the client's key, limited to the file system and path
+  ansible.builtin.command: >-
+    ceph fs authorize {{ ceph_client_fs_name }} client.{{ ceph_client_name }} {{ ceph_client_path }} {{ ceph_client_access }}
+  delegate_to: "{{ ceph_client_admin_host }}"
+  when: ceph_client_key_now.rc != 0
+  changed_when: true
+  no_log: true
+
+- name: Read the keyring and the cluster's minimal configuration
+  ansible.builtin.command: "{{ item }}"
+  loop:
+    - ceph auth get client.{{ ceph_client_name }}
+    - ceph config generate-minimal-conf
+  delegate_to: "{{ ceph_client_admin_host }}"
+  register: ceph_client_files
+  changed_when: false
+  check_mode: false
+  no_log: true
+
+- name: Create /etc/ceph
+  ansible.builtin.file:
+    path: /etc/ceph
+    state: directory
+    mode: "0755"
+
+- name: Install the minimal configuration
+  ansible.builtin.copy:
+    dest: /etc/ceph/ceph.conf
+    content: "{{ ceph_client_files.results[1].stdout }}\n"
+    mode: "0644"
+
+- name: Install the keyring
+  ansible.builtin.copy:
+    dest: /etc/ceph/ceph.client.{{ ceph_client_name }}.keyring
+    content: "{{ ceph_client_files.results[0].stdout }}\n"
+    mode: "0600"
+  no_log: true
+
+- name: Mount the file system from /etc/fstab
+  ansible.posix.mount:
+    path: "{{ ceph_client_mount_point }}"
+    src: "{{ ceph_client_name }}@.{{ ceph_client_fs_name }}={{ ceph_client_path }}"
+    fstype: ceph
+    opts: "{{ (ceph_client_mount_options + ['ms_mode=' ~ ceph_client_ms_mode]) | join(',') }}"
+    state: mounted

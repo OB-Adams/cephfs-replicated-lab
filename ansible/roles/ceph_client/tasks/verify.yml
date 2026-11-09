@@ -1,0 +1,32 @@
+---
+- name: Read the mounts
+  ansible.builtin.setup:
+    gather_subset: [mounts]
+
+- name: The file system is mounted with the lab's msgr mode
+  vars:
+    ceph_client_mount: "{{ ansible_facts.mounts | selectattr('mount', 'equalto', ceph_client_mount_point) | list }}"
+  ansible.builtin.assert:
+    that:
+      - ceph_client_mount | length == 1
+      - ceph_client_mount[0].fstype == 'ceph'
+      - ('ms_mode=' ~ ceph_client_ms_mode) in ceph_client_mount[0].options
+    fail_msg: "{{ ceph_client_mount_point }}: {{ ceph_client_mount }}"
+    quiet: true
+
+- name: Read the key's capabilities
+  ansible.builtin.command: ceph auth get client.{{ ceph_client_name }} --format json
+  delegate_to: "{{ ceph_client_admin_host }}"
+  register: ceph_client_caps
+  changed_when: false
+  no_log: true
+
+- name: The key is limited to the file system
+  vars:
+    ceph_client_key_caps: "{{ (ceph_client_caps.stdout | from_json)[0].caps }}"
+  ansible.builtin.assert:
+    that:
+      - ('fsname=' ~ ceph_client_fs_name) in ceph_client_key_caps.mds
+      - ('data=' ~ ceph_client_fs_name) in ceph_client_key_caps.osd
+    fail_msg: "client.{{ ceph_client_name }} has caps {{ ceph_client_key_caps }}"
+    quiet: true

@@ -1,0 +1,26 @@
+---
+- name: Create the spec directory
+  ansible.builtin.file:
+    path: "{{ ceph_services_spec_dir }}"
+    state: directory
+    mode: "0750"
+
+- name: Write the spec for {{ ceph_services_spec_name }}
+  ansible.builtin.copy:
+    dest: "{{ ceph_services_spec_dir }}/{{ ceph_services_spec_name }}.yml"
+    content: "{{ ceph_services_spec_content }}"
+    mode: "0640"
+  register: ceph_services_spec_file
+
+- name: Read the services for {{ ceph_services_spec_name }}
+  ansible.builtin.command: ceph orch ls --format json
+  register: ceph_services_list
+  changed_when: false
+  check_mode: false
+
+- name: Apply the spec for {{ ceph_services_spec_name }}
+  ansible.builtin.command: ceph orch apply -i {{ ceph_services_spec_dir }}/{{ ceph_services_spec_name }}.yml
+  when: >-
+    ceph_services_spec_file is changed
+    or ceph_services_spec_name not in (ceph_services_list.stdout | from_json | map(attribute='service_name') | list)
+  changed_when: true

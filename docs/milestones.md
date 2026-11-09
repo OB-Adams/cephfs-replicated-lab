@@ -11,6 +11,7 @@ Status values: Planned, In progress, Blocked, Complete. A milestone is marked Co
 | 4b | Monitoring and alerts | Complete |
 | 5 | Benchmark against the Gluster baseline | Complete |
 | 6 | Gluster and CephFS comparison | Complete |
+| 7 | Ansible automation | In progress |
 
 ## Milestone 1: deploy Ceph and mount CephFS
 
@@ -152,3 +153,19 @@ Split in two, as in phase 1: 4a for access control and encryption, 4b for monito
 | What the comparison cannot say recorded | Met: the limits of one Mac, single runs, unequal memory in the benchmark, and what was not tested |
 
 **Result (2026-11-09).** Met. Both systems survived the loss of one server of three; with two lost, Gluster's mount failed while Ceph held requests for seven minutes and completed them. Ceph detected a silent server faster at default settings but paid a monitor election whenever a monitor left. Ceph rebuilt, expanded and drained without commands, where Gluster needed heal and rebalance commands and a forced rebalance; Ceph's orchestrator also did things it was not asked to. Ceph's access control was finer and its encryption needed no certificates or downtime, but revoking a key did not cut off a mounted client and msgr1 stayed open. Ceph shipped 99 alert rules against Gluster's five hand-written ones. CephFS read faster and wrote slower, with the write comparison weakened by unequal memory and a host that was paging. Clocks were Ceph's weak point in this environment. Full write-up in [comparison.md](comparison.md).
+
+## Milestone 7: Ansible automation
+
+**Goal.** Playbooks that rebuild the lab as it stands after milestone 5, from VMs with the base OS, in the same layout as phase 1's: one role per part, each with build, verify and teardown entry points.
+
+**Acceptance criteria.**
+
+| Criterion | Result |
+|---|---|
+| The playbooks pass `ansible-lint` at the `production` profile and a syntax check, in CI | Met locally; CI runs on push |
+| A check run against the hand-built lab, then a teardown and a build from scratch, complete without errors | Not yet run |
+| A second run of `site.yml` reports `changed=0` on every host | Not yet run |
+| `verify.yml` and milestone 1's checks pass on the rebuilt lab | Not yet run |
+
+**Status (2026-11-09).** In progress. [../ansible](../ansible) has eight roles: `common`, `ceph_packages`, `ceph_bootstrap`, `ceph_hosts`, `ceph_services`, `ceph_security`, `ceph_client` and `ceph_monitoring`, with `site.yml`, `verify.yml` and `teardown.yml`. The fixes the hand-built lab needed are built in: the monitor address from IPv4 facts, chrony stepping the clock with one source, `python3-jinja2` for `cephadm`, a release check on `ceph-common`, msgr2 `secure` from the bootstrap, and the Dashboard enabled before the monitoring stack with port 8443 opened. The procedure that completes the milestone is in [../ansible/README.md](../ansible/README.md#rebuilding-from-scratch).
+

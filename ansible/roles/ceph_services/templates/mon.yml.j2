@@ -1,0 +1,6 @@
+service_type: mon
+placement:
+  hosts:
+{% for h in ceph_services_mon_hosts %}
+    - {{ h }}
+{% endfor %}

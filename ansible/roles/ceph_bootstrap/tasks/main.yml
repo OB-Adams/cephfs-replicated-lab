@@ -1,0 +1,49 @@
+---
+- name: Check the role runs on the bootstrap host
+  ansible.builtin.assert:
+    that: inventory_hostname == ceph_bootstrap_host
+    fail_msg: "Run ceph_bootstrap on {{ ceph_bootstrap_host }} only"
+    quiet: true
+
+- name: Write the initial configuration for the bootstrap
+  ansible.builtin.copy:
+    dest: /root/ceph-bootstrap.conf
+    mode: "0600"
+    content: |
+      [global]
+      {% for t in ['cluster', 'service', 'client', 'mon_cluster', 'mon_service', 'mon_client'] %}
+      ms_{{ t }}_mode = {{ ceph_bootstrap_msgr_mode }}
+      {% endfor %}
+
+- name: Bootstrap the cluster
+  ansible.builtin.command:
+    cmd: >-
+      cephadm bootstrap --mon-ip {{ ansible_facts.default_ipv4.address }}
+      --config /root/ceph-bootstrap.conf {{ ceph_bootstrap_options | join(' ') }}
+    creates: /etc/ceph/ceph.conf
+
+- name: Wait until the cluster answers
+  ansible.builtin.command: ceph status --format json
+  register: ceph_bootstrap_status
+  until: ceph_bootstrap_status.rc == 0
+  retries: 30
+  delay: 5
+  changed_when: false
+  check_mode: false
+
+- name: Read the current values of the initial settings
+  ansible.builtin.command: ceph config get {{ item.who }} {{ item.name }}
+  loop: "{{ ceph_bootstrap_config }}"
+  loop_control:
+    label: "{{ item.who }} {{ item.name }}"
+  register: ceph_bootstrap_config_now
+  changed_when: false
+  check_mode: false
+
+- name: Set the settings that differ
+  ansible.builtin.command: ceph config set {{ item.item.who }} {{ item.item.name }} {{ item.item.value | quote }}
+  loop: "{{ ceph_bootstrap_config_now.results }}"
+  loop_control:
+    label: "{{ item.item.who }} {{ item.item.name }}={{ item.item.value }}"
+  when: item.stdout | trim != item.item.value | string
+  changed_when: true

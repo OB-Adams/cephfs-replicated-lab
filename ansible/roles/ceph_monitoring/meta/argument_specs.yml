@@ -1,0 +1,51 @@
+---
+argument_specs:
+  main:
+    short_description: The manager's Prometheus module, the Ceph Dashboard and cephadm's monitoring stack
+    options: &ceph_monitoring_options
+      ceph_monitoring_host:
+        type: str
+        required: true
+        description: The host that runs Prometheus, Alertmanager and Grafana.
+      ceph_monitoring_label:
+        type: str
+        default: monitoring
+        description: The cephadm host label the monitoring stack is placed by.
+      ceph_monitoring_mgr_hosts:
+        type: list
+        elements: str
+        required: true
+        description: Manager hosts, where the Dashboard's port is opened.
+      ceph_monitoring_dashboard_port:
+        type: int
+        default: 8443
+        description: The Dashboard's HTTPS port.
+      ceph_monitoring_dashboard_user:
+        type: str
+        default: admin
+        description: The Dashboard's administrator.
+      ceph_monitoring_dashboard_password:
+        type: str
+        description: The administrator's password; from the DASHBOARD_ADMIN_PASSWORD environment variable by default.
+      ceph_monitoring_prometheus_port:
+        type: int
+        default: 9095
+        description: Prometheus's port, as cephadm deploys it.
+      ceph_monitoring_alertmanager_port:
+        type: int
+        default: 9093
+        description: Alertmanager's port.
+      ceph_monitoring_grafana_port:
+        type: int
+        default: 3000
+        description: Grafana's HTTPS port.
+      ceph_monitoring_expected_targets:
+        type: int
+        default: 9
+        description: Prometheus scrape targets that must be up.
+  verify:
+    short_description: Check the stack runs, every target is up and the Dashboard is linked to it
+    options: *ceph_monitoring_options
+  teardown:
+    short_description: Close the Dashboard's port
+    options: *ceph_monitoring_options

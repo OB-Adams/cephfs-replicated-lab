@@ -1,0 +1,49 @@
+---
+- name: Check SELinux is enforcing
+  ansible.builtin.assert:
+    that: ansible_facts.selinux.status == 'enabled' and ansible_facts.selinux.mode == 'enforcing'
+    fail_msg: "SELinux must be enforcing; the lab does not turn it off"
+    quiet: true
+
+- name: Give every lab VM's name its IPv4 address in /etc/hosts
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: '^\S+\s+{{ item }}(\s|$)'
+    line: "{{ hostvars[item].ansible_facts.default_ipv4.address }} {{ item }}"
+  loop: "{{ common_hosts_entries }}"
+
+- name: Install the base packages
+  ansible.builtin.dnf:
+    name: "{{ common_packages }}"
+    state: present
+
+- name: Remove chrony's other server and pool lines
+  ansible.builtin.lineinfile:
+    path: /etc/chrony.conf
+    regexp: '^(pool|server)\s+(?!{{ common_chrony_server | regex_escape }}\s)'
+    state: absent
+  notify: Restart chronyd
+
+- name: Use one time source
+  ansible.builtin.lineinfile:
+    path: /etc/chrony.conf
+    regexp: '^server\s+{{ common_chrony_server | regex_escape }}\s'
+    line: "server {{ common_chrony_server }} iburst"
+  notify: Restart chronyd
+
+- name: Step the clock whenever it is more than a second out
+  ansible.builtin.lineinfile:
+    path: /etc/chrony.conf
+    regexp: '^makestep\s'
+    line: "makestep {{ common_chrony_makestep }}"
+  notify: Restart chronyd
+
+- name: Start the base services
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop: "{{ common_services }}"
+
+- name: Apply a chrony change before anything Ceph starts
+  ansible.builtin.meta: flush_handlers

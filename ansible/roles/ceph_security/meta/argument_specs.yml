@@ -1,0 +1,17 @@
+---
+argument_specs:
+  main:
+    short_description: Every msgr2 connection type in one mode, cluster-wide
+    options: &ceph_security_options
+      ceph_security_msgr_mode:
+        type: str
+        choices: [crc, secure]
+        default: secure
+        description: The mode for every msgr2 connection type.
+      ceph_security_msgr_settings:
+        type: list
+        elements: str
+        description: The settings that hold the modes.
+  verify:
+    short_description: Check every msgr2 connection type is in the mode
+    options: *ceph_security_options

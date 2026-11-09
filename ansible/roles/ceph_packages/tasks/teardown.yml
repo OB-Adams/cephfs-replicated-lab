@@ -1,0 +1,9 @@
+---
+- name: Remove the Ceph packages and the repository
+  ansible.builtin.dnf:
+    name:
+      - cephadm
+      - ceph-common
+      - "{{ ceph_packages_release_package }}"
+    state: absent
+    autoremove: true

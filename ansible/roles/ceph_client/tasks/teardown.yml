@@ -1,0 +1,18 @@
+---
+- name: Unmount the file system
+  ansible.posix.mount:
+    path: "{{ ceph_client_mount_point }}"
+    state: unmounted
+
+- name: Remove the file system's fstab entry
+  ansible.posix.mount:
+    path: "{{ ceph_client_mount_point }}"
+    state: absent_from_fstab
+
+- name: Remove the client's keyring and configuration
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/ceph/ceph.client.{{ ceph_client_name }}.keyring
+    - /etc/ceph/ceph.conf

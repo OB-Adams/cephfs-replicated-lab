@@ -1,0 +1,37 @@
+---
+argument_specs:
+  main:
+    short_description: Base settings for every lab VM
+    options:
+      common_hosts_entries:
+        type: list
+        elements: str
+        required: true
+        description: Inventory hosts added to /etc/hosts with the address from their facts.
+      common_packages:
+        type: list
+        elements: str
+        description: Packages every VM needs.
+      common_services:
+        type: list
+        elements: str
+        description: Services started and enabled on every VM.
+      common_chrony_server:
+        type: str
+        default: time.google.com
+        description: The only NTP server chrony uses.
+      common_chrony_makestep:
+        type: str
+        default: "1.0 -1"
+        description: chrony's makestep threshold and limit; -1 steps at any time.
+  verify:
+    short_description: Check the base settings
+    options:
+      common_services:
+        type: list
+        elements: str
+        description: Services that must be running.
+      common_chrony_server:
+        type: str
+        default: time.google.com
+        description: The NTP server chrony must use.

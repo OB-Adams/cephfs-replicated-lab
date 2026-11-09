@@ -1,0 +1,11 @@
+---
+ceph_monitoring_host: "{{ groups['all'][-1] }}"
+ceph_monitoring_label: monitoring
+ceph_monitoring_mgr_hosts: "{{ groups['all'][:2] }}"
+ceph_monitoring_dashboard_port: 8443
+ceph_monitoring_dashboard_user: admin
+ceph_monitoring_dashboard_password: "{{ lookup('ansible.builtin.env', 'DASHBOARD_ADMIN_PASSWORD') }}"
+ceph_monitoring_prometheus_port: 9095
+ceph_monitoring_alertmanager_port: 9093
+ceph_monitoring_grafana_port: 3000
+ceph_monitoring_expected_targets: 9

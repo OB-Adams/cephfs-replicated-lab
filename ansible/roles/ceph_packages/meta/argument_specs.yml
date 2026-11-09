@@ -1,0 +1,43 @@
+---
+argument_specs:
+  main:
+    short_description: Ceph repositories and packages for a cephadm host, an admin host or a client
+    options: &ceph_packages_options
+      ceph_packages_release_package:
+        type: str
+        default: centos-release-ceph-tentacle
+        description: The Storage SIG release package that adds the Ceph repository.
+      ceph_packages_old_release_packages:
+        type: list
+        elements: str
+        description: Older Ceph release packages to remove first.
+      ceph_packages_cephadm_host:
+        type: bool
+        default: false
+        description: Install cephadm and its host requirements.
+      ceph_packages_admin:
+        type: bool
+        default: false
+        description: Install the ceph command-line tools (ceph-common).
+      ceph_packages_cephadm_host_packages:
+        type: list
+        elements: str
+        description: Packages for a host cephadm manages.
+      ceph_packages_admin_packages:
+        type: list
+        elements: str
+        description: Packages for a host that runs ceph commands or mounts CephFS.
+      ceph_packages_extra:
+        type: list
+        elements: str
+        description: Any other packages for this host.
+      ceph_packages_version_prefix:
+        type: str
+        default: "20.2"
+        description: Version ceph --version must start with.
+  verify:
+    short_description: Check the Ceph packages
+    options: *ceph_packages_options
+  teardown:
+    short_description: Remove the Ceph packages and repository
+    options: *ceph_packages_options

@@ -1,0 +1,56 @@
+---
+- name: Confirm before destroying anything
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Require confirm_teardown set to the file system's name
+      ansible.builtin.assert:
+        that: confirm_teardown | default('') == lab_fs_name
+        fail_msg: "This destroys the Ceph cluster and zaps the data disks. Re-run with -e confirm_teardown={{ lab_fs_name }}"
+        quiet: true
+
+- name: Client
+  hosts: ceph_clients
+  gather_facts: false
+  tasks:
+    - name: Unmount and remove the client's key and configuration
+      ansible.builtin.import_role:
+        name: ceph_client
+        tasks_from: teardown
+
+- name: Dashboard port
+  hosts: ceph_servers[0]
+  gather_facts: false
+  tasks:
+    - name: Close the Dashboard's port
+      ansible.builtin.import_role:
+        name: ceph_monitoring
+        tasks_from: teardown
+
+- name: Cluster
+  hosts: ceph_servers:ceph_monitoring
+  gather_facts: false
+  tasks:
+    - name: Remove every daemon and the cluster's data, and zap the OSDs
+      ansible.builtin.import_role:
+        name: ceph_bootstrap
+        tasks_from: teardown
+
+- name: Data disks
+  hosts: ceph_servers
+  gather_facts: false
+  tasks:
+    - name: Check the data disks are empty
+      ansible.builtin.import_role:
+        name: ceph_services
+        tasks_from: teardown
+
+- name: Packages
+  hosts: ceph
+  gather_facts: false
+  tasks:
+    - name: Remove the Ceph packages and repository
+      ansible.builtin.import_role:
+        name: ceph_packages
+        tasks_from: teardown

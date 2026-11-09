@@ -1,0 +1,9 @@
+---
+- name: Close the Dashboard's port on every manager host
+  ansible.posix.firewalld:
+    port: "{{ ceph_monitoring_dashboard_port }}/tcp"
+    permanent: true
+    immediate: true
+    state: disabled
+  delegate_to: "{{ item }}"
+  loop: "{{ ceph_monitoring_mgr_hosts }}"

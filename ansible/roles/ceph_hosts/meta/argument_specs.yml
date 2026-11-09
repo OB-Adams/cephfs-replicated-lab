@@ -1,0 +1,21 @@
+---
+argument_specs:
+  main:
+    short_description: Give cephadm SSH access to every host, add the hosts and label them
+    options: &ceph_hosts_options
+      ceph_hosts_bootstrap_host:
+        type: str
+        required: true
+        description: The host the cluster was bootstrapped on, which holds cephadm's public key.
+      ceph_hosts_cephadm_hosts:
+        type: list
+        elements: str
+        required: true
+        description: Every host cephadm manages.
+      ceph_hosts_labels:
+        type: list
+        elements: list
+        description: "[host, label] pairs."
+  verify:
+    short_description: Check every host is managed, online and labelled
+    options: *ceph_hosts_options
