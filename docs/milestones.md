@@ -10,7 +10,7 @@ Status values: Planned, In progress, Blocked, Complete. A milestone is marked Co
 | 4a | cephx capabilities and encryption on the wire | Complete |
 | 4b | Monitoring and alerts | Complete |
 | 5 | Benchmark against the Gluster baseline | Complete |
-| 6 | Gluster and CephFS comparison | Planned |
+| 6 | Gluster and CephFS comparison | Complete |
 
 ## Milestone 1: deploy Ceph and mount CephFS
 
@@ -141,3 +141,14 @@ Split in two, as in phase 1: 4a for access control and encryption, 4b for monito
 ## Milestone 6: Gluster and CephFS comparison
 
 **Goal.** A written comparison of the two systems on the same hardware: architecture, failure behaviour, recovery, operations, security and performance, from what both labs measured.
+
+**Changes.** None to the lab; a document, [comparison.md](comparison.md).
+
+**Acceptance criteria and result.**
+
+| Criterion | Result |
+|---|---|
+| Each area compared from what the two labs measured, with sources | Met: architecture, failure behaviour, recovery and expansion, operations, security, monitoring and performance, each linked to the drill it comes from |
+| What the comparison cannot say recorded | Met: the limits of one Mac, single runs, unequal memory in the benchmark, and what was not tested |
+
+**Result (2026-11-09).** Met. Both systems survived the loss of one server of three; with two lost, Gluster's mount failed while Ceph held requests for seven minutes and completed them. Ceph detected a silent server faster at default settings but paid a monitor election whenever a monitor left. Ceph rebuilt, expanded and drained without commands, where Gluster needed heal and rebalance commands and a forced rebalance; Ceph's orchestrator also did things it was not asked to. Ceph's access control was finer and its encryption needed no certificates or downtime, but revoking a key did not cut off a mounted client and msgr1 stayed open. Ceph shipped 99 alert rules against Gluster's five hand-written ones. CephFS read faster and wrote slower, with the write comparison weakened by unequal memory and a host that was paging. Clocks were Ceph's weak point in this environment. Full write-up in [comparison.md](comparison.md).

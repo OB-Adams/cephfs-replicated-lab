@@ -14,11 +14,13 @@ This is phase 2 of a storage study. Phase 1, the GlusterFS build and its nine dr
 | Milestone 4a: cephx capabilities and encryption on the wire | Complete ([docs/security.md](docs/security.md)) |
 | Milestone 4b: monitoring and alerts | Complete ([docs/monitoring.md](docs/monitoring.md)) |
 | Milestone 5: `fio` benchmark against the Gluster baseline | Complete ([docs/benchmark.md](docs/benchmark.md)) |
-| Milestone 6: Gluster and CephFS comparison | Planned |
+| Milestone 6: Gluster and CephFS comparison | Complete ([docs/comparison.md](docs/comparison.md)) |
 | Raw evidence (session recordings) | Added in [docs/evidence](docs/evidence) |
 | Screenshots | Added in [screenshots/](screenshots) |
 
 The full tracker is in [docs/milestones.md](docs/milestones.md). Anything not listed as complete is not implemented.
+
+**The comparison with GlusterFS, area by area, is in [docs/comparison.md](docs/comparison.md).**
 
 ## Key results
 
@@ -50,6 +52,7 @@ The full tracker is in [docs/milestones.md](docs/milestones.md). Anything not li
 | 5. Reads | CephFS through the kernel client read faster than Gluster through FUSE: 1,225 against 847 MiB/s (145 %), and 20,396 against 12,260 random 4 KiB IOPS (166 %), 3.1 ms per read against 5.2 |
 | 5. Writes | CephFS wrote slower: 140 against 199 MiB/s (70 %), 1,639 against 3,278 random 4 KiB IOPS (50 %), 241 against 322 small files a second (75 %). A 4 KiB write took 39 ms against 18 |
 | 5. Conditions | gluster1's clock fell minutes behind four times during the run, its VM starved by a Mac with 27.5 of 36 GiB given to VMs; the writes varied by up to 50 % between runs, the reads by under 2 %. A control on a spare disk matched phase 1 within 10 % |
+| 6. Comparison | Ceph recovered, expanded and drained by itself, kept requests through the loss of a majority, and offered finer access control and shipped monitoring; Gluster was simpler, its commands did only what they said, and it was not troubled by clocks |
 
 ## Objectives
 
@@ -209,6 +212,7 @@ cephfs-replicated-lab/
 │   ├── security.md            milestone 4a: cephx keys and caps, msgr2 secure mode
 │   ├── monitoring.md          milestone 4b: Prometheus, Alertmanager, Grafana and the Dashboard, and a host-down drill
 │   ├── benchmark.md           milestone 5: the fio profiles on CephFS against Gluster, and a control
+│   ├── comparison.md          milestone 6: GlusterFS and CephFS compared, area by area
 │   ├── milestones.md
 │   ├── troubleshooting.md
 │   └── evidence/
